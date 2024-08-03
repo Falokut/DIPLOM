@@ -1,0 +1,43 @@
+version: "3.8"
+
+networks:
+  postgres_network:
+    name: "postgres_network"
+
+services:
+  postgres:
+    hostname: postgres
+    image: postgres:16.3
+    volumes:
+      - ./.container_data/database/postgres/data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - postgres_network
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      restart_policy:
+        condition: unless-stopped
+  pg_admin:
+    image: elestio/pgadmin
+    restart: unless-stopped
+    networks:
+      - postgres_network
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${ADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${ADMIN_PASSWORD}
+      - PGADMIN_LISTEN_PORT=8080
+    ports:
+      - 100:8080
+    depends_on:
+      - postgres

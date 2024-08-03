@@ -1,0 +1,49 @@
+version: "3.8"
+
+networks:
+  tracing_network:
+    name: "tracing_network"
+
+services:
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_PATHS_DATA=/var/lib/grafana
+    volumes:
+      - ./grafana/data:/var/lib/grafana/
+    ports:
+      - 3000:3000
+    networks:
+      - tracing_network
+    deploy:
+      restart_policy:
+        condition: unless-stopped
+    depends_on:
+      - loki
+      - promtail
+
+  loki:
+    image: grafana/loki
+    hostname: loki
+    ports:
+      - 3100:3100
+    volumes:
+      - ./docker/containers-configs/loki/:/mnt/config
+    command: -config.file=/mnt/config/loki-config.yaml
+    networks:
+      - tracing_network
+    deploy:
+      restart_policy:
+        condition: unless-stopped
+
+  promtail:
+    image: grafana/promtail
+    volumes:
+      - ./docker/containers-configs/promtail:/mnt/config
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    command: -config.file=/mnt/config/promtail-config.yaml
+    networks:
+      - tracing_network
+    deploy:
+      restart_policy:
+        condition: unless-stopped

@@ -1,0 +1,41 @@
+version: "3.8"
+
+
+include:
+   - ../minio_storage/minio_storage.yml
+networks:
+   images_storage_network:
+      name: "images_storage_network"
+
+services:
+   images_storage_service:
+      hostname: images_storage_service
+      image: falokut/images_storage_service-alpine:latest
+      expose:
+         - 8080
+      networks:
+         - images_storage_network
+         - gateway_network
+         - minio_storage_network
+      volumes:
+         - ./docker/containers-configs/:/configs
+      environment:
+         MINIO_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY_ID}
+         MINIO_SECRET_ACCESS_KEY: ${MINIO_SECRET_ACCESS_KEY}
+         MINIO_SECURE: ${MINIO_SECURE}
+         STORAGE_MODE: MINIO
+      depends_on:
+         minio_gateway:
+            condition: service_started
+      healthcheck:
+         test: wget --no-verbose --tries=1 --spider 'http://localhost:7001/healthcheck' || exit 1
+         interval: 10s
+         timeout: 10s
+         retries: 2
+         start_period: 20s
+      deploy:
+         mode: replicated
+         replicas: 1
+         endpoint_mode: dnsrr
+         restart_policy:
+          condition: unless-stopped

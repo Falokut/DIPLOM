@@ -1,0 +1,172 @@
+basePath: /api/dish_as_a_service
+definitions:
+  domain.AddDishRequest:
+    properties:
+      categories:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      image:
+        items:
+          type: integer
+        type: array
+      name:
+        minLength: 0
+        type: string
+      price:
+        type: integer
+    type: object
+  domain.Dish:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      url:
+        type: string
+    type: object
+  domain.GetUserIdByTelegramIdResponse:
+    properties:
+      userId:
+        type: string
+    type: object
+  domain.IsUserAdminResponse:
+    properties:
+      isAdmin:
+        type: boolean
+    type: object
+  domain.ProcessOrderResponse:
+    properties:
+      paymentUrl:
+        description: for some payment methods may be empty
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Сервис для заказа еды
+  title: falokut_dish_as_a_service
+  version: 1.0.0
+paths:
+  /dishes:
+    get:
+      consumes:
+      - application/json
+      description: возвращает список блюд
+      parameters:
+      - description: список идентификаторов блюд через запятую
+        in: query
+        name: ids
+        type: string
+      - description: максимальное количество блюд
+        in: query
+        name: limit
+        type: integer
+      - description: смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Dish'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: dish
+      tags:
+      - dishes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AddDishRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Add Dish
+      tags:
+      - dishes
+  /orders:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ProcessOrderResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Заказать
+      tags:
+      - order
+  /users/:user_id/is_admin:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.IsUserAdminResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить id пользователя по id чата
+      tags:
+      - users
+  /users/get_by_telegram_id/:telegram_id:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetUserIdByTelegramIdResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить id пользователя по telegram id
+      tags:
+      - users
+swagger: "2.0"

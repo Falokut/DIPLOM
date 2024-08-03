@@ -1,0 +1,90 @@
+version: "3"
+services:
+  init-dhparams:
+    image: docker.io/certbot/certbot
+    restart: "no"
+    entrypoint: /bin/sh
+    command: -c 'test -f /etc/letsencrypt/ssl-dhparams.pem || openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 4096'
+    volumes:
+      - ../certs/:/etc/letsencrypt:Z
+  certbot-oneshot:
+    image: docker.io/certbot/certbot
+    restart: "no"
+    entrypoint: /bin/sh
+    command: -c 'test -d /etc/letsencrypt/live/${BASE_DOMAIN} || certbot certonly --standalone --register-unsafely-without-email -d "${BASE_DOMAIN}" --rsa-key-size ${rsa_key_size:-2048} --agree-tos --force-renewal'
+    ports:
+      - 80:80
+    volumes:
+      - ../certs/:/etc/letsencrypt:Z
+  certbot:
+    image: docker.io/certbot/certbot
+    entrypoint: /bin/sh
+    command: -c 'trap exit TERM; while :; do certbot renew; sleep 24h && wait $${!}; done;'
+    volumes:
+      - ../certs/:/etc/letsencrypt:Z
+      - acme_challenge:/usr/share/nginx/html/.well-known:Z
+
+volumes:
+  acme_challenge: {}
+
+# configs:
+  # nginx-defaultserver:
+  #   content: |
+  #     upstream back {
+  #       server back-api:8000;
+  #       resolver 127.0.0.11 valid=30s;
+  #       resolver_timeout 5s;
+  #     }
+
+  #       server {
+  #               server_name _ default_server;
+  #               listen       443 ssl http2;
+
+  #       # мы уже примонтировали сертификаты в Docker Compose
+  #               ssl_certificate     /etc/letsencrypt/live/${STAND:-dev99}.${BASE_DOMAIN:-example.ru}/cert.pem;
+  #               ssl_certificate_key /etc/letsencrypt/live/${STAND:-dev99}.${BASE_DOMAIN:-example.ru}/key.pem;
+
+  #               location / {
+  #                       proxy_pass http://back;
+  #               }
+  #       }
+
+  #     server {
+  #       listen 80;
+
+  #       server_name _ default_server;
+  #       charset utf-8;
+
+  #       # max upload size
+  #       client_max_body_size 10M;
+
+  #       root /usr/share/nginx/html;
+  #       index index.html index.htm;
+
+  #       location / {
+  #         root /usr/share/nginx/html;
+  #         try_files $uri $uri/ /index.html =502;
+  #       }
+
+  #       error_page 500 502 503 504 /502.html;
+  #       location = /502.html {
+  #         root /usr/share/nginx/html;
+  #         internal;
+  #       }
+
+  #       # Django project's static files
+  #       location /static {
+  #         proxy_pass https://back;
+  #         expires max;
+  #         etag on;
+  #       }
+
+  #       # send REST API request to Django
+  #       location /api {
+  #         proxy_pass https://back;
+  #         proxy_pass_header X-CSRFToken;
+  #         proxy_pass_header X-RecaptchaResponse;
+  #         proxy_set_header X-Forwarded-Proto $scheme;
+  #       }
+
+  #     }
