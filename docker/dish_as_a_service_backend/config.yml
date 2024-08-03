@@ -1,0 +1,22 @@
+log:
+  level: DEBUG
+  console_output: true
+
+app:
+  id: dish_as_a_service
+  version: 1.0.0
+  debug: true
+
+images:
+  addr: http://gateway:3000
+  base_image_path: https://falokut.ru/image
+db:
+  schema: "dish_as_a_service"
+  host: postgres
+  port: 5432
+  database: postgres
+tg_bot:
+  timeout: 100
+
+payment:
+  expiration_delay: 30m

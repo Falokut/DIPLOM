@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  
+  dish_as_a_service_frontend:
+    hostname: dish_as_a_service_frontend
+    image: falokut/dish_as_a_service_frontend-alpine:latest
+    expose:
+      - 8080
+    networks:
+      - gateway_network
+    environment:
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      SERVER_ENABLE_CORS: false
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+      restart_policy:
+        condition: unless-stopped

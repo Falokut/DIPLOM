@@ -19,7 +19,6 @@
 *.env.yml
 *.env
 **/userlist.txt
-**/backend/config.yml
 
 # ignore all keys
 *.cnf
@@ -28,3 +27,6 @@
 
 *.log
 *.exe
+
+*/node_modules
+*/dist

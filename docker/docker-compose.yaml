@@ -1,0 +1,39 @@
+version: "3.8"
+
+include:
+  - ./postgres/postgres.yml
+  - ./dish_as_a_service_backend/dish_as_a_service.yml
+  - ./dish_as_a_service_frontend/dish_as_a_service.yml
+  - ./images_storage_service/images_storage_service.yml
+
+networks:
+  gateway_network:
+    driver: bridge
+    name: "gateway_network"
+
+services:
+  gateway:
+    image: nginx
+    hostname: gateway
+    ports:
+      - 8000:80
+      - 44300:443
+    networks:
+      - gateway_network
+    volumes:
+      - .nginx/:/etc/nginx
+      - ./certs:/certs/:ro
+    deploy:
+      restart_policy:
+        condition: unless-stopped
+    depends_on:
+      #-----------------services-----------------
+      images_storage_service:
+        condition: service_started
+      dish_as_a_service:
+        condition: service_started
+      dish_as_a_service_frontend:
+        condition: service_started
+      #------------------------------------------
+      pg_admin:
+        condition: service_started
