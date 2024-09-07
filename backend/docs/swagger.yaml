@@ -1,5 +1,10 @@
 basePath: /api/dish_as_a_service
 definitions:
+  domain.AddCategoryRequest:
+    properties:
+      name:
+        type: string
+    type: object
   domain.AddDishRequest:
     properties:
       categories:
@@ -13,9 +18,16 @@ definitions:
           type: integer
         type: array
       name:
-        minLength: 0
+        minLength: 1
         type: string
       price:
+        type: integer
+    required:
+    - name
+    type: object
+  domain.DeleteCategoryRequest:
+    properties:
+      id:
         type: integer
     type: object
   domain.Dish:
@@ -35,6 +47,20 @@ definitions:
       url:
         type: string
     type: object
+  domain.DishCategory:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  domain.Empty:
+    type: object
+  domain.GetDishesCategory:
+    properties:
+      id:
+        type: integer
+    type: object
   domain.GetUserIdByTelegramIdResponse:
     properties:
       userId:
@@ -49,6 +75,13 @@ definitions:
     properties:
       paymentUrl:
         description: for some payment methods may be empty
+        type: string
+    type: object
+  domain.RenameCategoryRequest:
+    properties:
+      id:
+        type: integer
+      name:
         type: string
     type: object
 info:
@@ -101,11 +134,20 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/domain.AddDishRequest'
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            type: string
+        "403":
+          description: Forbidden
           schema:
             type: string
         "500":
@@ -115,6 +157,166 @@ paths:
       summary: Add Dish
       tags:
       - dishes
+  /dishes/categories:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.DishCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить категории
+      tags:
+      - dishes_categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AddCategoryRequest'
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.DishCategory'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Создать категорию
+      tags:
+      - dishes_categories
+  /dishes/categories/:id:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.DeleteCategoryRequest'
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/domain.Empty'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Удалить категорию
+      tags:
+      - dishes_categories
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.GetDishesCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.DishCategory'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить категорию
+      tags:
+      - dishes_categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RenameCategoryRequest'
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/domain.Empty'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Переименовать категорию
+      tags:
+      - dishes_categories
   /orders:
     post:
       consumes:
@@ -126,6 +328,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/domain.ProcessOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
         "500":
           description: Internal Server Error
           schema:
@@ -148,7 +358,7 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      summary: Получить id пользователя по id чата
+      summary: Проверить, является ли пользователь админом
       tags:
       - users
   /users/get_by_telegram_id/:telegram_id:

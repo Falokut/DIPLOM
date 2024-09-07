@@ -86,6 +86,10 @@ func Locator(_ context.Context,
 	dishService := service.NewDish(dishRepo, imagesRepo, logger)
 	dishContrl := controller.NewDish(dishService)
 
+	dishesCategoriesRepo := repository.NewDishesCategories(dbCli)
+	dishesCategoriesService := service.NewDishesCategories(dishesCategoriesRepo)
+	dishesCategoriesContrl := controller.NewDishesCategories(dishesCategoriesService)
+
 	orderRepo := repository.NewOrder(dbCli)
 	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgbot)
 	paymentService, workers := payment.NewPayment(bgJobCli, paymentBot, logger, userRepo,
@@ -98,9 +102,10 @@ func Locator(_ context.Context,
 	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService)
 
 	hrouter := routes.Router{
-		Dish:  dishContrl,
-		Order: orderContr,
-		User:  userContr,
+		Dish:             dishContrl,
+		DishesCategories: dishesCategoriesContrl,
+		Order:            orderContr,
+		User:             userContr,
 	}
 	middlewares := []echo.MiddlewareFunc{
 		middleware.Recover(),

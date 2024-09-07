@@ -7,9 +7,17 @@ type User struct {
 }
 
 type RegisterUser struct {
-	Username string
-	Name     string
+	Username string    `validate:"required,min=3"`
+	Name     string    `validate:"required,min=3"`
 	Telegram *Telegram `json:",omitempty"`
+}
+
+type GetUserIdByTelegramIdRequest struct {
+	TelegramId int64 `path:"telegram_id" validate:"required"`
+}
+
+type IsUserAdminRequest struct {
+	UserId string `path:"user_id" validate:"required"`
 }
 
 type Telegram struct {

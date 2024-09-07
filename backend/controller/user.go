@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -36,15 +35,15 @@ func NewUser(service UserService) User {
 //	@Failure	500	{string}	string
 //	@Router		/users/get_by_telegram_id/:telegram_id [GET]
 func (c User) GetUserIdByTelegramId(ctx echo.Context) error {
-	telegramId, err := strconv.ParseInt(ctx.Param("telegram_id"), 10, 64)
+	req, err := bindRequest[domain.GetUserIdByTelegramIdRequest](ctx)
 	if err != nil {
-		return ctx.NoContent(http.StatusBadRequest)
+		return err
 	}
 
-	userId, err := c.service.GetUserIdByTelegramId(ctx.Request().Context(), telegramId)
+	userId, err := c.service.GetUserIdByTelegramId(ctx.Request().Context(), req.TelegramId)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotExist) {
-			return ctx.String(http.StatusNotFound, err.Error())
+			return ctx.String(http.StatusNotFound, domain.ErrUserNotExist.Error())
 		}
 		return err
 	}
@@ -52,27 +51,27 @@ func (c User) GetUserIdByTelegramId(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, domain.GetUserIdByTelegramIdResponse{UserId: userId})
 }
 
-// Get user by chat id
+// Is Admin
 //
 //	@Tags		users
-//	@Summary	Получить id пользователя по id чата
+//	@Summary	Проверить, является ли пользователь админом
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	domain.IsUserAdminResponse
 //	@Failure	500	{string}	string
 //	@Router		/users/:user_id/is_admin [GET]
 func (c User) IsAdmin(ctx echo.Context) error {
-	userId := ctx.Param("user_id")
-	if userId == "" {
-		return ctx.NoContent(http.StatusBadRequest)
-	}
-
-	isAdmin, err := c.service.IsAdmin(ctx.Request().Context(), userId)
+	req, err := bindRequest[domain.IsUserAdminRequest](ctx)
 	if err != nil {
 		return err
 	}
-	resp := domain.IsUserAdminResponse{
-		IsAdmin: isAdmin,
+
+	isAdmin, err := c.service.IsAdmin(ctx.Request().Context(), req.UserId)
+	if err != nil {
+		return err
 	}
-	return ctx.JSON(http.StatusOK, resp)
+	return ctx.JSON(http.StatusOK,
+		domain.IsUserAdminResponse{
+			IsAdmin: isAdmin,
+		})
 }

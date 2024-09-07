@@ -16,7 +16,7 @@ type GetDishesRequest struct {
 }
 
 type AddDishRequest struct {
-	Name        string `validate:"min=0"`
+	Name        string `validate:"required,min=1"`
 	Description string
 	Price       int32   `validate:"gt=0"`
 	Categories  []int32 `json:",omitempty"`

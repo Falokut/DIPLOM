@@ -43,7 +43,7 @@ func (c Order) ProcessOrder(ctx echo.Context) error {
 
 	url, err := c.service.ProcessOrder(ctx.Request().Context(), req)
 	switch {
-	case errors.Is(err, domain.ErrInvalidDishCount):
+	case errors.Is(err, domain.ErrDishNotFound):
 		return ctx.String(http.StatusNotFound, domain.ErrDishNotFound.Error())
 	case errors.Is(err, domain.ErrInvalidDishCount):
 		return ctx.String(http.StatusBadRequest, domain.ErrInvalidDishCount.Error())
