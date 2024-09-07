@@ -52,7 +52,6 @@ func (c Dish) List(ctx echo.Context) error {
 	}
 
 	if err != nil {
-		ctx.Error(err)
 		return err
 	}
 	return ctx.JSON(http.StatusOK, resp)

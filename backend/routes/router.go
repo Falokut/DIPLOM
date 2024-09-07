@@ -24,30 +24,80 @@ func (r Router) InitRoutes(authMiddleware UserAuth, customMiddlewares ...echo.Mi
 	e.JSONSerializer = JsonSerializer{}
 	e.Validator = Validate{v: validator.New()}
 
-	dishes := e.Group("/dishes")
-	{
-		dishes.GET("/", r.Dish.List)
-		dishes.POST("/", authMiddleware.UserAdminAuth(r.Dish.AddDish))
-
-		categories := dishes.Group("/categories")
-		{
-			categories.GET("/", r.DishesCategories.GetCategories)
-			categories.GET("/:id", r.DishesCategories.GetCategory)
-
-			categories.POST("/", authMiddleware.UserAdminAuth(r.DishesCategories.AddCategory))
-			categories.POST("/:id", authMiddleware.UserAdminAuth(r.DishesCategories.RenameCategory))
-
-			categories.DELETE("/:id", authMiddleware.UserAdminAuth(r.DishesCategories.DeleteCategory))
+	for _, desc := range endpointDescriptors(r) {
+		if desc.IsAdmin {
+			e.Add(desc.Method, desc.Path, authMiddleware.UserAdminAuth(desc.Handler))
+		} else {
+			e.Add(desc.Method, desc.Path, desc.Handler)
 		}
 	}
 
-	e.POST("/orders", r.Order.ProcessOrder)
-
-	users := e.Group("/users")
-	{
-		users.GET("/get_by_telegram_id/:telegram_id", r.User.GetUserIdByTelegramId)
-		users.GET("/:user_id/is_admin", r.User.IsAdmin)
-	}
-
 	return e.Server.Handler
+}
+
+type EndpointDescriptor struct {
+	Method  string
+	Path    string
+	IsAdmin bool
+	Handler echo.HandlerFunc
+}
+
+func endpointDescriptors(r Router) []EndpointDescriptor {
+	return []EndpointDescriptor{
+		{
+			Method:  http.MethodGet,
+			Path:    "/dishes",
+			Handler: r.Dish.List,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/dishes",
+			IsAdmin: true,
+			Handler: r.Dish.AddDish,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/dishes/categories",
+			Handler: r.DishesCategories.GetCategories,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/dishes/categories/:id",
+			Handler: r.DishesCategories.GetCategory,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/dishes/categories",
+			IsAdmin: true,
+			Handler: r.DishesCategories.AddCategory,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/dishes/categories/:id",
+			IsAdmin: true,
+			Handler: r.DishesCategories.RenameCategory,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/dishes/categories/:id",
+			IsAdmin: true,
+			Handler: r.DishesCategories.RenameCategory,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/orders",
+			IsAdmin: true,
+			Handler: r.Order.ProcessOrder,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users/get_by_telegram_id/:telegram_id",
+			Handler: r.User.GetUserIdByTelegramId,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users/:user_id/is_admin",
+			Handler: r.User.IsAdmin,
+		},
+	}
 }

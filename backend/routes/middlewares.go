@@ -29,7 +29,6 @@ func (m Logger) LoggerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		start := time.Now()
-
 		err := next(c)
 		stop := time.Now()
 		fields := []log.Field{
