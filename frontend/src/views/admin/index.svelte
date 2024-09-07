@@ -1,10 +1,10 @@
 <script>
-  import { navigateTo } from "svelte-router-spa";
+  import { navigate } from "svelte-routing";
 
   let buttons = [
     {
-      url: "/admin/dishes",
-      text: "блюда",
+      url: "/admin/dishes/add",
+      text: "Добавить блюдо",
     },
     {
       url: "/dishes",
@@ -15,7 +15,7 @@
 
 <div class="grid grid-cols-1 medium-grid-cols-3 grid-gap">
   {#each buttons as item}
-    <button class="btn" on:click={() => navigateTo(item.url, "", true)}
+    <button class="btn" on:click={() => navigate(item.url, { replace: true })}
       >{item.text}</button
     >
   {/each}
@@ -29,6 +29,6 @@
   }
   .btn {
     width: 40vw;
-    height: 10vh;
+    height: 20vh;
   }
 </style>

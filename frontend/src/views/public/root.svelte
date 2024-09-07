@@ -1,14 +1,14 @@
 <script>
-  import { navigateTo } from "svelte-router-spa";
+  import { navigate } from "svelte-routing";
   import { UserIsAdmin } from "../../client/user";
   import { onMount } from "svelte";
 
   onMount(async () => {
     let isAdmin = await UserIsAdmin();
     if (isAdmin) {
-      navigateTo("/admin");
+      navigate("/admin");
     } else {
-      navigateTo("/dishes");
+      navigate("/dishes");
     }
   });
 </script>

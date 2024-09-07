@@ -1,7 +1,7 @@
 <script>
-  import { Router } from "svelte-router-spa";
   import { routes } from "./routes";
   import { onMount } from "svelte";
+  import { Router, Route } from "svelte-routing";
   
   let tg = Telegram.WebApp;
   onMount(() => {
@@ -10,4 +10,8 @@
   
 </script>
 
-<Router {routes} />
+<Router>
+  {#each routes as route}
+    <Route path={route.name} component={route.component}></Route>
+  {/each}
+</Router>

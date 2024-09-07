@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { SetDishCount, GetDishCount } from "../../client/cart";
   import { DishFromObject } from "../../client/dish";
+  import PreviewImage from "../components/preview_image.svelte";
   export let dishInst = {
     id: 0,
     url: "",
@@ -40,13 +41,15 @@
       showIncrDecrButtons = true;
     }
   });
+  var previewSize = 90;
 </script>
 
 <div class="dish">
   {#if count > 0}
     <div class="dish-count">{count}</div>
   {/if}
-  <img class="dish-preview" src={dish.url} alt={dish.name} />
+  <PreviewImage bind:url={dish.url} bind:size={previewSize} bind:alt={dish.name}
+  ></PreviewImage>
   <div class="dish-caption">{dish.name}</div>
   <div class="dish-caption">{dish.price}</div>
   <div class="dish-count-buttons">
@@ -89,7 +92,7 @@
     border-radius: 40%;
 
     margin-left: calc(var(--dish-width) - var(--dish-counter-size));
-    margin-bottom: calc(var(--dish-counter-size)*-1);
+    margin-bottom: calc(var(--dish-counter-size) * -1);
 
     background-color: orange;
 
@@ -101,12 +104,6 @@
   .dish-caption {
     font-size: small;
     margin-top: auto;
-  }
-
-  .dish-preview {
-    width: var(--dish-preview-size);
-    height: var(--dish-preview-size);
-    object-fit: scale-down fill;
   }
 
   .dish {

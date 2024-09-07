@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { navigateTo } from "svelte-router-spa";
+  import { navigate } from "svelte-routing";
 
   import Dish from "./dish.svelte";
   import { GetDishes } from "../../client/dish";
@@ -14,7 +14,7 @@
     dishes = await GetDishes(null);
 
     removeListFn = mainButton.on("click", () => {
-      navigateTo("/cart", "", true);
+      navigate("/cart")
       mainButton.hide();
     });
   });

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { GetCart, ProcessOrder, SetDishCount } from "../../client/cart";
+  import { GetCart, ProcessOrder } from "../../client/cart";
   import { GetDishes } from "../../client/dish";
   import CartItem from "./cart_item.svelte";
   import {
@@ -9,7 +9,7 @@
     retrieveLaunchParams,
   } from "@telegram-apps/sdk";
   const { initData } = retrieveLaunchParams();
-  import { navigateTo } from "svelte-router-spa";
+  import { navigate } from "svelte-routing";
 
   const mainButtonRes = initMainButton();
   let mainButton = mainButtonRes[0];
@@ -53,18 +53,19 @@
       if (!result) {
         return;
       }
-      navigateTo("/", "", true);
+      navigate("/", { replace: true });
     });
 
     backButton.show();
     removeBackButtonListFn = backButton.on("click", () => {
-      navigateTo("/", "", true);
+      navigate("/", { replace: true });
     });
   });
 
   onDestroy(() => {
     removeMainButtonListFn();
     removeBackButtonListFn();
+    mainButton.hide();
   });
 </script>
 
