@@ -27,6 +27,7 @@ func NewUser(service UserService) User {
 }
 
 // Get user by telegram id
+//
 //	@Tags		users
 //	@Summary	Получить id пользователя по telegram id
 //	@Accept		json
@@ -52,6 +53,7 @@ func (c User) GetUserIdByTelegramId(ctx echo.Context) error {
 }
 
 // Get user by chat id
+//
 //	@Tags		users
 //	@Summary	Получить id пользователя по id чата
 //	@Accept		json

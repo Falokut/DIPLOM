@@ -25,6 +25,7 @@ func NewOrder(service OrderService) Order {
 }
 
 // Process order
+//
 //	@Tags		order
 //	@Summary	Заказать
 //	@Accept		json

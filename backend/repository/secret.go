@@ -13,4 +13,3 @@ func NewSecret(secret string) Secret {
 func (s Secret) GetSecret() string {
 	return s.secret
 }
-

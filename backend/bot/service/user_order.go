@@ -64,7 +64,7 @@ func (s UserOrder) getOrderInfoString(order *entity.Order, user *entity.User) st
 	}
 	return fmt.Sprintf(template,
 		order.Id, strings.Join(items, "\n"),
-		user.Name, user.Username, order.Total/100, order.Total%100,
+		user.Name, user.Username, order.Total/100, order.Total%100, // nolint:mnd
 		order.Wishes, order.CreatedAt.Local().Format(time.DateTime), // nolint:gosmopolitan
 	)
 }
