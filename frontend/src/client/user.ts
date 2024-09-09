@@ -36,3 +36,9 @@ export async function IsUserAdmin(userId: string): Promise<boolean> {
     let isUserAdminResp = await resp.json()
     return isUserAdminResp.isAdmin
 }
+
+export function GetUserIdHeader(userId: string): Headers {
+    let headers = new Headers();
+    headers.set("X-USER-ID", userId)
+    return headers
+}

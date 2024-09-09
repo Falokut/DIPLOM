@@ -120,7 +120,6 @@
     grid-template-columns: repeat(2, 1fr);
     grid-auto-flow: column;
     gap: 0.5rem;
-    color: white;
     text-align: center;
     font-size: medium;
     font-weight: bold;

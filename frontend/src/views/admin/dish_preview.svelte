@@ -4,7 +4,7 @@
   export let dish = {
     url: "",
     name: "",
-    categories: "",
+    categories: [],
     price: 0,
   };
   var previewSize = 90;
@@ -15,7 +15,6 @@
   ></PreviewImage>
   <div class="dish-caption">{dish.name}</div>
   <div class="dish-caption">{(dish.price / 100).toFixed(2) + "₽"}</div>
-  <div class="dish-caption">{dish.categories}</div>
 </div>
 
 <style>

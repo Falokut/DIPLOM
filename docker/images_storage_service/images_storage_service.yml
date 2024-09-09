@@ -1,6 +1,5 @@
 version: "3.8"
 
-
 include:
    - ../minio_storage/minio_storage.yml
 networks:
@@ -18,7 +17,7 @@ services:
          - gateway_network
          - minio_storage_network
       volumes:
-         - ./docker/containers-configs/:/configs
+         - ./config.yml/:/conf/config.yml
       environment:
          MINIO_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY_ID}
          MINIO_SECRET_ACCESS_KEY: ${MINIO_SECRET_ACCESS_KEY}
@@ -38,4 +37,4 @@ services:
          replicas: 1
          endpoint_mode: dnsrr
          restart_policy:
-          condition: unless-stopped
+            condition: unless-stopped

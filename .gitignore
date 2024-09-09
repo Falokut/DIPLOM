@@ -36,3 +36,5 @@
 /docker/.nginx/cache
 backend/docs/swagger.json
 backend/docs/docs.go
+docker/images_storage_service/config.yml
+backend/conf/dev_config.yml

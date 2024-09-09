@@ -10,6 +10,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --sms-bg: var(--tg-theme-secondary-bg-color);
+  --sms-options-bg: var(--tg-theme-bg-color);
+  --sms-selected-bg: var(--tg-theme-button-color);
+  --sms-selected-text-color: var(--tg-theme-button-text-color);
+  --sms-search-matches: var(--tg-theme-hint-color);
+  --sms-remove-btn-hover-color: var(--tg-theme-destructive-text-color);
+  --sms-padding: 0;
 }
 
 body {
@@ -60,7 +67,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 18px;
+  font-size: medium;
 }
 
 .hint {
@@ -69,4 +76,54 @@ body {
 
 .button:not(:last-child) {
   margin-bottom: 20px
+}
+
+:root {
+  user-select: none;
+}
+
+.input_container {
+  font-size: medium;
+  margin: auto;
+  vertical-align: middle;
+  align-items: center;
+  flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  height: 50px;
+  padding: 0;
+  margin: 0;
+}
+
+.input_label {
+  width: 40vw;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.input_box {
+  color: var(--tg-theme-text-color);
+  width: 50vw;
+  padding-right: 10px;
+}
+
+.input_area {
+  border: 1px solid var(--tg-theme-secondary-bg-color);
+  background-color: var(--tg-theme-bg-color);
+  margin-right: 10px;
+}
+
+.file_upload_button {
+  color: var(--tg-theme-button-text-color);
+  background-color: var(--tg-theme-button-color);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
