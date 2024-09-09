@@ -2,10 +2,10 @@ package assembly
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
-	"dish_as_a_service/app"
 	"dish_as_a_service/bot"
 	tgbotapi "dish_as_a_service/bot/api"
 	bcontroller "dish_as_a_service/bot/controller"
@@ -17,7 +17,11 @@ import (
 	"dish_as_a_service/routes"
 	"dish_as_a_service/service"
 	"dish_as_a_service/service/payment"
+
+	"github.com/Falokut/go-kit/app"
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/Falokut/go-kit/config"
+	"github.com/Falokut/go-kit/healthcheck"
 	"github.com/Falokut/go-kit/log"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,16 +30,22 @@ import (
 )
 
 type Assembly struct {
-	logger   log.Logger
-	db       *db.Client
-	tgBot    bot.TgBot
-	workers  []*bgjob.Worker
-	bgjobCli *bgjob.Client
-	server   *http.Server
+	logger             log.Logger
+	db                 *db.Client
+	tgBot              bot.TgBot
+	workers            []*bgjob.Worker
+	bgjobCli           *bgjob.Client
+	server             *http.Server
+	healthcheckManager *healthcheck.Manager
 }
 
-func New(ctx context.Context, logger log.Logger, cfg *conf.LocalConfig) (*Assembly, error) {
-	dbCli, err := db.NewDB(ctx, cfg.DB.Convert(), db.WithMigrationRunner("./migrations", logger))
+func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
+	cfg := conf.LocalConfig{}
+	err := config.Read(&cfg)
+	if err != nil {
+		return nil, errors.WithMessage(err, "read local config")
+	}
+	dbCli, err := db.NewDB(ctx, cfg.DB, db.WithMigrationRunner("./migrations", logger))
 	if err != nil {
 		return nil, errors.WithMessage(err, "init db")
 	}
@@ -47,19 +57,22 @@ func New(ctx context.Context, logger log.Logger, cfg *conf.LocalConfig) (*Assemb
 	}
 	locatorCfg := Locator(ctx, logger, dbCli, tgbot, bgjobCli, cfg)
 	tgBot := bot.NewBot(tgbot, locatorCfg.BotRouter, cfg.Bot.Timeout, logger)
+	healthcheckManager := healthcheck.NewHealthManager(logger, fmt.Sprint(cfg.HealthcheckPort))
+	healthcheckManager.Register("db", dbCli.PingContext)
 
 	server := &http.Server{
-		Addr:              cfg.Listen.Addr,
+		Addr:              cfg.Listen.GetAddress(),
 		ReadHeaderTimeout: time.Second * 15, //nolint:mnd
 		Handler:           locatorCfg.HttpHandler,
 	}
 	return &Assembly{
-		logger:   logger,
-		db:       dbCli,
-		tgBot:    tgBot,
-		server:   server,
-		workers:  locatorCfg.Workers,
-		bgjobCli: bgjobCli,
+		logger:             logger,
+		db:                 dbCli,
+		tgBot:              tgBot,
+		server:             server,
+		workers:            locatorCfg.Workers,
+		bgjobCli:           bgjobCli,
+		healthcheckManager: &healthcheckManager,
 	}, nil
 }
 
@@ -74,7 +87,7 @@ func Locator(_ context.Context,
 	dbCli *db.Client,
 	tgbot *tgbotapi.BotAPI,
 	bgJobCli *bgjob.Client,
-	cfg *conf.LocalConfig) Config {
+	cfg conf.LocalConfig) Config {
 	userRepo := repository.NewUser(dbCli)
 	secret := repository.NewSecret(cfg.App.AdminSecret)
 	userService := service.NewUser(userRepo, secret)
@@ -126,6 +139,9 @@ func (a *Assembly) Runners() []app.RunnerFunc {
 		a.tgBot.Run,
 		func(_ context.Context) error {
 			return a.server.ListenAndServe()
+		},
+		func(_ context.Context) error {
+			return a.healthcheckManager.RunHealthcheckEndpoint()
 		},
 		func(ctx context.Context) error {
 			for _, worker := range a.workers {

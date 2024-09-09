@@ -2,7 +2,7 @@ package payment
 
 import (
 	"context"
-	"github.com/Falokut/go-kit/encoding/json"
+	"github.com/Falokut/go-kit/json"
 
 	"dish_as_a_service/entity"
 	"github.com/pkg/errors"

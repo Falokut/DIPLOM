@@ -14,14 +14,14 @@ type AddCategoryResponse struct {
 }
 
 type RenameCategoryRequest struct {
-	Id   int32 `path:"id"`
+	Id   int32 `param:"id"`
 	Name string
 }
 
 type DeleteCategoryRequest struct {
-	Id int32 `path:"id"`
+	Id int32 `param:"id"`
 }
 
 type GetDishesCategory struct {
-	Id int32 `path:"id"`
+	Id int32 `param:"id"`
 }

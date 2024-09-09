@@ -13,11 +13,11 @@ type RegisterUser struct {
 }
 
 type GetUserIdByTelegramIdRequest struct {
-	TelegramId int64 `path:"telegram_id" validate:"required"`
+	TelegramId int64 `param:"telegram_id" validate:"required"`
 }
 
 type IsUserAdminRequest struct {
-	UserId string `path:"user_id" validate:"required"`
+	UserId string `param:"user_id" validate:"required"`
 }
 
 type Telegram struct {

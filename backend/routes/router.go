@@ -86,7 +86,6 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 		{
 			Method:  http.MethodPost,
 			Path:    "/orders",
-			IsAdmin: true,
 			Handler: r.Order.ProcessOrder,
 		},
 		{

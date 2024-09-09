@@ -2,11 +2,9 @@ log:
   level: DEBUG
   console_output: true
 app:
-  id: dish_as_a_service
-  version: 1.0.0
   debug: true
 listen:
-  addr: localhost:9999
+  port: 9999
 
 images:
   addr: https://falokut.ru/api/images-service
@@ -19,6 +17,5 @@ db:
 tg_bot:
   debug: true
   timeout: 100
-
 payment:
   expiration_delay: 30m

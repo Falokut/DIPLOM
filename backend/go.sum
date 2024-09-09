@@ -3,8 +3,14 @@ filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
-github.com/Falokut/go-kit v0.0.0-20240807192033-04179808062c h1:8uv53Gpf8FW/SifvBnJZ+DELHCQt5UbJAuhWUID4S1s=
-github.com/Falokut/go-kit v0.0.0-20240807192033-04179808062c/go.mod h1:j4Jj2EgqkSkfklqHNj7K8xpO2ZTIlctCijPH50BMOlU=
+github.com/Falokut/go-kit v0.0.0-20240909162920-ab8433c3a2b5 h1:dAMUfbHeHRjtknTjQTmU0IpXJWBZPHOvnb8Cw3O7JPg=
+github.com/Falokut/go-kit v0.0.0-20240909162920-ab8433c3a2b5/go.mod h1:fUYUa2PpgAakKCRpJG/Rc1/d1JbNS6Ekz7iezZ2jSB0=
+github.com/Falokut/go-kit v0.0.0-20240909165511-10d6f5f0738a h1:AQZBPqHhGWsvlxSs7laWh8p5RsfHBM2VAtA+6JR2yFM=
+github.com/Falokut/go-kit v0.0.0-20240909165511-10d6f5f0738a/go.mod h1:plq/ND8dJYPRp58n8jxB0KuhwaQyPvXbFsPhSvz2hBM=
+github.com/Falokut/go-kit v0.0.0-20240909171839-11443b5bd72d h1:A2AhO1BO+cajRq4vRnO6uHtr51fnvSNteC47X3+dTDo=
+github.com/Falokut/go-kit v0.0.0-20240909171839-11443b5bd72d/go.mod h1:plq/ND8dJYPRp58n8jxB0KuhwaQyPvXbFsPhSvz2hBM=
+github.com/Falokut/go-kit v0.0.0-20240909173033-814d5eb0ac3b h1:61PyMuHHMQn27ZAZ7LD79MfzhcDbGaUTFisX1vR6ivo=
+github.com/Falokut/go-kit v0.0.0-20240909173033-814d5eb0ac3b/go.mod h1:plq/ND8dJYPRp58n8jxB0KuhwaQyPvXbFsPhSvz2hBM=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

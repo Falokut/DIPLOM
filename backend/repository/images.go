@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Falokut/go-kit/encoding/json"
+	"github.com/Falokut/go-kit/json"
 	"net/http"
 
 	"dish_as_a_service/entity"

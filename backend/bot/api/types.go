@@ -3,7 +3,7 @@ package tgbotapi
 import (
 	"errors"
 	"fmt"
-	"github.com/Falokut/go-kit/encoding/json"
+	"github.com/Falokut/go-kit/json"
 	"net/url"
 	"strings"
 	"time"

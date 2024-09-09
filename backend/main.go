@@ -2,9 +2,11 @@
 package main
 
 import (
-	"dish_as_a_service/app"
 	"dish_as_a_service/assembly"
-	"dish_as_a_service/shutdown"
+	"log"
+
+	"github.com/Falokut/go-kit/app"
+	"github.com/Falokut/go-kit/shutdown"
 )
 
 //	@title			falokut_dish_as_a_service
@@ -15,10 +17,14 @@ import (
 //go:generate swag init --parseDependency
 //go:generate rm -f docs/swagger.json docs/docs.go
 func main() {
-	app := app.New()
+	app, err := app.New()
+	if err != nil {
+		log.Println("error while creating app: ", err.Error())
+		return
+	}
 	logger := app.GetLogger()
 
-	assembly, err := assembly.New(app.Context(), logger, app.Config().Local())
+	assembly, err := assembly.New(app.Context(), logger)
 	if err != nil {
 		logger.Fatal(app.Context(), err)
 	}

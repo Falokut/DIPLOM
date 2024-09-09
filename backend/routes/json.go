@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Falokut/go-kit/encoding/json"
+	"github.com/Falokut/go-kit/json"
 	"github.com/labstack/echo/v4"
 )
 

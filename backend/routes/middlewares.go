@@ -73,7 +73,7 @@ func (m UserAuth) UserAdminAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		if !isAdmin {
 			return c.String(http.StatusForbidden, domain.ErrUserOperationForbidden.Error())
 		}
-		return nil
+		return next(c)
 	}
 }
 
