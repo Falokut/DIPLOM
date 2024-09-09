@@ -2,19 +2,13 @@ package payment
 
 import (
 	"context"
-	"time"
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
 
 	"github.com/pkg/errors"
 
-	"dish_as_a_service/repository"
-	"dish_as_a_service/service/payment/expiration"
-	telegram_payment "dish_as_a_service/service/payment/telegram"
-
 	"github.com/Falokut/go-kit/log"
-	"github.com/txix-open/bgjob"
 )
 
 type PaymentService interface {
@@ -30,45 +24,15 @@ type Payment struct {
 	expiration     ExpirationService
 }
 
-// nolint:mnd,nonamedreturns
 func NewPayment(
-	bgJobCli *bgjob.Client,
-	paymentBot telegram_payment.PaymentBot,
 	logger log.Logger,
-	userRepo repository.User,
-	orderRepo repository.Order,
-	expirationDelay time.Duration,
-) (payment Payment, workers []*bgjob.Worker) {
-	telegramWorkerService := telegram_payment.NewWorker(paymentBot)
-	telegramController := telegram_payment.NewWorkerController(telegramWorkerService)
-
-	observer := NewObserver(logger)
-	telegramWorker := bgjob.NewWorker(bgJobCli,
-		telegram_payment.WorkerQueue,
-		telegramController,
-		bgjob.WithPollInterval(5*time.Second),
-		bgjob.WithObserver(observer),
-	)
-
-	expirationService := expiration.NewExpiration(bgJobCli, expirationDelay)
-	expirationWorkerService := expiration.NewWorker(orderRepo)
-	expirationController := expiration.NewWorkerController(expirationWorkerService)
-	expirationWorker := bgjob.NewWorker(bgJobCli,
-		expiration.WorkerQueue,
-		expirationController,
-		bgjob.WithPollInterval(5*time.Second),
-		bgjob.WithObserver(observer),
-	)
-
-	var paymentMethods = map[string]PaymentService{
-		telegram_payment.PaymentMethod: telegram_payment.NewPayment(userRepo, bgJobCli),
-	}
-
+	paymentMethods map[string]PaymentService,
+	expiration ExpirationService,
+) Payment {
 	return Payment{
-			paymentMethods: paymentMethods,
-			expiration:     expirationService,
-		},
-		[]*bgjob.Worker{telegramWorker, expirationWorker}
+		paymentMethods: paymentMethods,
+		expiration:     expiration,
+	}
 }
 
 func (s Payment) Process(ctx context.Context, order *entity.Order, method string) (string, error) {

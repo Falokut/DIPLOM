@@ -22,6 +22,7 @@ type TgBot struct {
 }
 
 type Config struct {
+	Disable      bool   `yaml:"disable" env:"TG_BOT_DISABLE"`
 	Token        string `yaml:"token" env:"TG_BOT_TOKEN"`
 	PaymentToken string `yaml:"payment_token" env:"TG_BOT_PAYMENT_TOKEN"`
 	Debug        bool   `yaml:"debug" env:"TG_BOT_DEBUG"`
