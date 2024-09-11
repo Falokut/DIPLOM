@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/Falokut/go-kit/http/apierrors"
 
 	"dish_as_a_service/domain"
 )
@@ -32,23 +32,21 @@ func NewUser(service UserService) User {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	domain.GetUserIdByTelegramIdResponse
-//	@Failure	500	{string}	string
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/users/get_by_telegram_id/:telegram_id [GET]
-func (c User) GetUserIdByTelegramId(ctx echo.Context) error {
-	req, err := bindRequest[domain.GetUserIdByTelegramIdRequest](ctx)
-	if err != nil {
-		return err
-	}
-
-	userId, err := c.service.GetUserIdByTelegramId(ctx.Request().Context(), req.TelegramId)
+func (c User) GetUserIdByTelegramId(
+	ctx context.Context,
+	req domain.GetUserIdByTelegramIdRequest,
+) (*domain.GetUserIdByTelegramIdResponse, error) {
+	userId, err := c.service.GetUserIdByTelegramId(ctx, req.TelegramId)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotExist) {
-			return ctx.String(http.StatusNotFound, domain.ErrUserNotExist.Error())
+			return nil, apierrors.New(http.StatusNotFound, domain.ErrCodeUserNotFound, domain.ErrUserNotExist.Error(), err)
 		}
-		return err
+		return nil, err
 	}
 
-	return ctx.JSON(http.StatusOK, domain.GetUserIdByTelegramIdResponse{UserId: userId})
+	return &domain.GetUserIdByTelegramIdResponse{UserId: userId}, nil
 }
 
 // Is Admin
@@ -59,19 +57,13 @@ func (c User) GetUserIdByTelegramId(ctx echo.Context) error {
 //	@Produce	json
 //	@Success	200	{object}	domain.IsUserAdminResponse
 //	@Failure	500	{string}	string
-//	@Router		/users/:user_id/is_admin [GET]
-func (c User) IsAdmin(ctx echo.Context) error {
-	req, err := bindRequest[domain.IsUserAdminRequest](ctx)
+//	@Router		/users/is_admin [GET]
+func (c User) IsAdmin(ctx context.Context, req domain.IsUserAdminRequest) (*domain.IsUserAdminResponse, error) {
+	isAdmin, err := c.service.IsAdmin(ctx, req.UserId)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	isAdmin, err := c.service.IsAdmin(ctx.Request().Context(), req.UserId)
-	if err != nil {
-		return err
-	}
-	return ctx.JSON(http.StatusOK,
-		domain.IsUserAdminResponse{
-			IsAdmin: isAdmin,
-		})
+	return &domain.IsUserAdminResponse{
+		IsAdmin: isAdmin,
+	}, nil
 }

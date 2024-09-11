@@ -28,7 +28,7 @@ export async function GetUserIdByTelegramId(telegramId: number): Promise<string>
 
 const isUserAdminUrl = 'https://falokut.ru/api/dish_as_a_service/users/'
 export async function IsUserAdmin(userId: string): Promise<boolean> {
-    let resp = await fetch(isUserAdminUrl + userId + '/is_admin')
+    let resp = await fetch(isUserAdminUrl + '/is_admin?userId=' + userId)
     if (!resp.ok) {
         console.error(resp)
         return false

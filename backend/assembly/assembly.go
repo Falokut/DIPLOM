@@ -3,8 +3,8 @@ package assembly
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"time"
+
+	"github.com/Falokut/go-kit/http"
 
 	"dish_as_a_service/bot"
 	tgbotapi "dish_as_a_service/bot/api"
@@ -27,45 +27,44 @@ type Assembly struct {
 	bgjobCli           *bgjob.Client
 	server             *http.Server
 	healthcheckManager *healthcheck.Manager
+	localCfg           conf.LocalConfig
 }
 
 func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
-	cfg := conf.LocalConfig{}
-	err := config.Read(&cfg)
+	localCfg := conf.LocalConfig{}
+	err := config.Read(&localCfg)
 	if err != nil {
 		return nil, errors.WithMessage(err, "read local config")
 	}
-	dbCli, err := db.NewDB(ctx, cfg.DB, db.WithMigrationRunner("./migrations", logger))
+	dbCli, err := db.NewDB(ctx, localCfg.DB, db.WithMigrationRunner("./migrations", logger))
 	if err != nil {
 		return nil, errors.WithMessage(err, "init db")
 	}
 	bgjobDb := bgjob.NewPgStore(dbCli.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
 	var tgbotApi *tgbotapi.BotAPI
-	if !cfg.Bot.Disable {
-		tgbotApi, err = bot.NewTgBot(ctx, cfg.Bot.Token, cfg.Bot.Debug, logger)
+	if !localCfg.Bot.Disable {
+		tgbotApi, err = bot.NewTgBot(ctx, localCfg.Bot.Token, localCfg.Bot.Debug, logger)
 		if err != nil {
 			return nil, errors.WithMessage(err, "init bot")
 		}
 	}
+	server := http.NewServer(logger)
 
-	locatorCfg := Locator(ctx, logger, dbCli, tgbotApi, bgjobCli, cfg)
+	locatorCfg := Locator(ctx, logger, dbCli, tgbotApi, bgjobCli, localCfg)
 	var tgBot *bot.TgBot
 	if locatorCfg.BotRouter != nil {
-		bot := bot.NewBot(tgbotApi, locatorCfg.BotRouter, cfg.Bot.Timeout, logger)
+		bot := bot.NewBot(tgbotApi, locatorCfg.BotRouter, localCfg.Bot.Timeout, logger)
 		tgBot = &bot
 	}
+	server.Upgrade(locatorCfg.HttpRouter)
 
-	healthcheckManager := healthcheck.NewHealthManager(logger, fmt.Sprint(cfg.HealthcheckPort))
+	healthcheckManager := healthcheck.NewHealthManager(logger, fmt.Sprint(localCfg.HealthcheckPort))
 	healthcheckManager.Register("db", dbCli.PingContext)
 
-	server := &http.Server{
-		Addr:              cfg.Listen.GetAddress(),
-		ReadHeaderTimeout: time.Second * 15, //nolint:mnd
-		Handler:           locatorCfg.HttpHandler,
-	}
 	return &Assembly{
 		logger:             logger,
+		localCfg:           localCfg,
 		db:                 dbCli,
 		tgBot:              tgBot,
 		server:             server,
@@ -79,7 +78,7 @@ func (a *Assembly) Runners() []app.RunnerFunc {
 	return []app.RunnerFunc{
 		a.tgBot.Run,
 		func(_ context.Context) error {
-			return a.server.ListenAndServe()
+			return a.server.ListenAndServe(a.localCfg.Listen.GetAddress())
 		},
 		func(_ context.Context) error {
 			return a.healthcheckManager.RunHealthcheckEndpoint()
@@ -104,8 +103,8 @@ func (a *Assembly) Closers() []app.CloserFunc {
 			}
 			return nil
 		},
-		func(context.Context) error {
-			return a.server.Close()
+		func(ctx context.Context) error {
+			return a.server.Shutdown(ctx)
 		},
 		func(_ context.Context) error {
 			for _, worker := range a.workers {

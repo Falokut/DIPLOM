@@ -2,11 +2,9 @@ package controller
 
 import (
 	"context"
-	"net/http"
-
-	"github.com/labstack/echo/v4"
 
 	"dish_as_a_service/domain"
+	_ "github.com/Falokut/go-kit/http/apierrors"
 )
 
 type DishService interface {
@@ -36,25 +34,22 @@ func NewDish(service DishService) Dish {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{array}		domain.Dish
-//	@Failure		500	{string}	string
+//	@Failure		500	{object}	apierrors.Error
 //	@Router			/dishes [GET]
-func (c Dish) List(ctx echo.Context) error {
-	req, err := bindRequest[domain.GetDishesRequest](ctx)
-	if err != nil {
-		return err
-	}
+func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.Dish, error) {
 	ids, _ := stringToIntSlice(req.Ids)
-	var resp []domain.Dish
+	var dishes []domain.Dish
+	var err error
 	if len(ids) > 0 {
-		resp, err = c.service.GetByIds(ctx.Request().Context(), ids)
+		dishes, err = c.service.GetByIds(ctx, ids)
 	} else {
-		resp, err = c.service.List(ctx.Request().Context(), req.Limit, req.Offset)
+		dishes, err = c.service.List(ctx, req.Limit, req.Offset)
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return ctx.JSON(http.StatusOK, resp)
+	return dishes, nil
 }
 
 // Add dish
@@ -67,19 +62,14 @@ func (c Dish) List(ctx echo.Context) error {
 //
 //	@Accept		json
 //	@Produce	json
-//	@Success	200	{string}	string
-//	@Failure	403	{string}	string
-//	@Failure	500	{string}	string
+//	@Success	200	{object} domain.Empty
+//	@Failure	403	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes [POST]
-func (c Dish) AddDish(ctx echo.Context) error {
-	req, err := bindRequest[domain.AddDishRequest](ctx)
+func (c Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
+	err := c.service.AddDish(ctx, &req)
 	if err != nil {
 		return err
 	}
-
-	err = c.service.AddDish(ctx.Request().Context(), &req)
-	if err != nil {
-		return err
-	}
-	return ctx.NoContent(http.StatusOK)
+	return nil
 }

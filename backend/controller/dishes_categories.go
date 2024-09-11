@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/Falokut/go-kit/http/apierrors"
 )
 
 type DishesCategoriesService interface {
@@ -31,14 +31,14 @@ func NewDishesCategories(service DishesCategoriesService) DishesCategories {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{array}	domain.DishCategory
-//	@Failure	500	{string}	string
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories [GET]
-func (c DishesCategories) GetCategories(ctx echo.Context) error {
-	categories, err := c.service.GetCategories(ctx.Request().Context())
+func (c DishesCategories) GetCategories(ctx context.Context) ([]domain.DishCategory, error) {
+	categories, err := c.service.GetCategories(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return ctx.JSON(http.StatusOK, categories)
+	return categories, nil
 }
 
 // Get category
@@ -50,23 +50,19 @@ func (c DishesCategories) GetCategories(ctx echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	domain.DishCategory
-//	@Failure	400	{string}	string
-//	@Failure	404	{string}	string
-//	@Failure	500	{string}	string
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure	404	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories/:id [GET]
-func (c DishesCategories) GetCategory(ctx echo.Context) error {
-	req, err := bindRequest[domain.GetDishesCategory](ctx)
-	if err != nil {
-		return err
-	}
-	category, err := c.service.GetCategory(ctx.Request().Context(), req.Id)
+func (c DishesCategories) GetCategory(ctx context.Context, req domain.GetDishesCategory) (*domain.DishCategory, error) {
+	category, err := c.service.GetCategory(ctx, req.Id)
 	switch {
 	case errors.Is(err, domain.ErrDishCategoryNotFound):
-		return ctx.String(http.StatusNotFound, domain.ErrDishCategoryNotFound.Error())
+		return nil, apierrors.New(http.StatusNotFound, domain.ErrCodeDishCategoryNotFound, domain.ErrDishCategoryNotFound.Error(), err)
 	case err != nil:
-		return err
+		return nil, err
 	default:
-		return ctx.JSON(http.StatusOK, category)
+		return &category, nil
 	}
 }
 
@@ -81,20 +77,16 @@ func (c DishesCategories) GetCategory(ctx echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	domain.DishCategory
-//	@Failure	400	{string}	string
-//	@Failure	403	{string}	string
-//	@Failure	500	{string}	string
+//	@Failure	400	{string}	apierrors.Error
+//	@Failure	403	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories [POST]
-func (c DishesCategories) AddCategory(ctx echo.Context) error {
-	req, err := bindRequest[domain.AddCategoryRequest](ctx)
+func (c DishesCategories) AddCategory(ctx context.Context, req domain.AddCategoryRequest) (*domain.AddCategoryResponse, error) {
+	id, err := c.service.AddCategory(ctx, req.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	id, err := c.service.AddCategory(ctx.Request().Context(), req.Name)
-	if err != nil {
-		return err
-	}
-	return ctx.JSON(http.StatusOK, domain.AddCategoryResponse{Id: id})
+	return &domain.AddCategoryResponse{Id: id}, nil
 }
 
 // Rename category
@@ -108,23 +100,20 @@ func (c DishesCategories) AddCategory(ctx echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Success	204	{object}	domain.Empty
-//	@Failure	400	{string}	string
-//	@Failure	403	{string}	string
-//	@Failure	500	{string}	string
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure	403	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories/:id [POST]
-func (c DishesCategories) RenameCategory(ctx echo.Context) error {
-	req, err := bindRequest[domain.RenameCategoryRequest](ctx)
-	if err != nil {
-		return err
-	}
-	err = c.service.RenameCategory(ctx.Request().Context(), req)
+func (c DishesCategories) RenameCategory(ctx context.Context, req domain.RenameCategoryRequest) error {
+	err := c.service.RenameCategory(ctx, req)
 	switch {
 	case errors.Is(err, domain.ErrDishCategoryNotFoundOrConflict):
-		return ctx.String(http.StatusBadRequest, domain.ErrDishCategoryNotFoundOrConflict.Error())
+		return apierrors.NewBusinessError(domain.ErrCodeDishCategoryNotFoundOrConflict,
+			domain.ErrDishCategoryNotFoundOrConflict.Error(), err)
 	case err != nil:
 		return err
 	default:
-		return ctx.NoContent(http.StatusNoContent)
+		return nil
 	}
 }
 
@@ -139,17 +128,13 @@ func (c DishesCategories) RenameCategory(ctx echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Success	204	{object}	domain.Empty
-//	@Failure	400	{string}	string
-//	@Failure	500	{string}	string
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure		500	{object}	apierrors.Error
 //	@Router		/dishes/categories/:id [DELETE]
-func (c DishesCategories) DeleteCategory(ctx echo.Context) error {
-	req, err := bindRequest[domain.DeleteCategoryRequest](ctx)
+func (c DishesCategories) DeleteCategory(ctx context.Context, req domain.DeleteCategoryRequest) error {
+	err := c.service.DeleteCategory(ctx, req.Id)
 	if err != nil {
 		return err
 	}
-	err = c.service.DeleteCategory(ctx.Request().Context(), req.Id)
-	if err != nil {
-		return err
-	}
-	return ctx.NoContent(http.StatusNoContent)
+	return nil
 }

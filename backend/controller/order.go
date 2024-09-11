@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/Falokut/go-kit/http/apierrors"
 
 	"dish_as_a_service/domain"
 )
@@ -31,25 +31,20 @@ func NewOrder(service OrderService) Order {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	domain.ProcessOrderResponse
-//	@Failure	400	{string}	string
-//	@Failure	404	{string}	string
-//	@Failure	500	{string}	string
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure	404	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/orders [POST]
-func (c Order) ProcessOrder(ctx echo.Context) error {
-	req, err := bindRequest[domain.ProcessOrderRequest](ctx)
-	if err != nil {
-		return err
-	}
-
-	url, err := c.service.ProcessOrder(ctx.Request().Context(), req)
+func (c Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (*domain.ProcessOrderResponse, error) {
+	url, err := c.service.ProcessOrder(ctx, req)
 	switch {
 	case errors.Is(err, domain.ErrDishNotFound):
-		return ctx.String(http.StatusNotFound, domain.ErrDishNotFound.Error())
+		return nil, apierrors.New(http.StatusNotFound, domain.ErrCodeDishNotFound, domain.ErrDishNotFound.Error(), err)
 	case errors.Is(err, domain.ErrInvalidDishCount):
-		return ctx.String(http.StatusBadRequest, domain.ErrInvalidDishCount.Error())
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidDishCount, domain.ErrInvalidDishCount.Error(), err)
 	case err != nil:
-		return err
+		return nil, err
 	default:
-		return ctx.JSON(http.StatusOK, domain.ProcessOrderResponse{PaymentUrl: url})
+		return &domain.ProcessOrderResponse{PaymentUrl: url}, nil
 	}
 }

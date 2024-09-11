@@ -21,16 +21,16 @@ import (
 	telegram_payment "dish_as_a_service/service/payment/telegram"
 
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/Falokut/go-kit/http/endpoint"
+	"github.com/Falokut/go-kit/http/router"
 	"github.com/Falokut/go-kit/log"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/txix-open/bgjob"
 )
 
 type Config struct {
-	BotRouter   *broutes.Router
-	HttpHandler http.Handler
-	Workers     []*bgjob.Worker
+	BotRouter  *broutes.Router
+	HttpRouter *router.Router
+	Workers    []*bgjob.Worker
 }
 
 func Locator(_ context.Context,
@@ -61,15 +61,10 @@ func Locator(_ context.Context,
 		User:             userContr,
 	}
 	authMiddleware := routes.NewAuthMiddleware(userRepo)
-	middlewares := []echo.MiddlewareFunc{
-		middleware.Recover(),
-		routes.HandleError,
-		routes.NewLogger(logger).LoggerMiddleware,
-	}
 
 	if cfg.Bot.Disable || tgbot == nil {
 		return Config{
-			HttpHandler: hrouter.InitRoutes(authMiddleware, middlewares...),
+			HttpRouter: hrouter.InitRoutes(authMiddleware, endpoint.DefaultWrapper(logger)),
 		}
 	}
 	orderRepo := repository.NewOrder(dbCli)
@@ -108,8 +103,8 @@ func Locator(_ context.Context,
 	)
 
 	return Config{
-		BotRouter:   &brouter,
-		HttpHandler: hrouter.InitRoutes(authMiddleware, middlewares...),
+		BotRouter:  &brouter,
+		HttpRouter: hrouter.InitRoutes(authMiddleware, endpoint.DefaultWrapper(logger)),
 		Workers: []*bgjob.Worker{
 			telegramWorker,
 			expirationWorker,

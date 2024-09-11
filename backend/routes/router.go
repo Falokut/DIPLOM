@@ -4,8 +4,8 @@ import (
 	"dish_as_a_service/controller"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"github.com/Falokut/go-kit/http/endpoint"
+	"github.com/Falokut/go-kit/http/router"
 )
 
 type Router struct {
@@ -15,31 +15,25 @@ type Router struct {
 	User             controller.User
 }
 
-//nolint:gochecknoglobals
-var DefaultValidator = validator.New()
-
-func (r Router) InitRoutes(authMiddleware UserAuth, customMiddlewares ...echo.MiddlewareFunc) http.Handler {
-	e := echo.New()
-	e.Use(customMiddlewares...)
-	e.JSONSerializer = JsonSerializer{}
-	e.Validator = Validate{v: validator.New()}
-
+func (r Router) InitRoutes(authMiddleware UserAuth, wrapper endpoint.Wrapper) *router.Router {
+	mux := router.New()
 	for _, desc := range endpointDescriptors(r) {
 		if desc.IsAdmin {
-			e.Add(desc.Method, desc.Path, authMiddleware.UserAdminAuth(desc.Handler))
+			withAuthWrapper := wrapper.WithMiddlewares(authMiddleware.UserAdminAuth)
+			mux.Handler(desc.Method, desc.Path, withAuthWrapper.Endpoint(desc.Handler))
 		} else {
-			e.Add(desc.Method, desc.Path, desc.Handler)
+			mux.Handler(desc.Method, desc.Path, wrapper.Endpoint(desc.Handler))
 		}
 	}
 
-	return e.Server.Handler
+	return mux
 }
 
 type EndpointDescriptor struct {
 	Method  string
 	Path    string
 	IsAdmin bool
-	Handler echo.HandlerFunc
+	Handler any
 }
 
 func endpointDescriptors(r Router) []EndpointDescriptor {
@@ -95,7 +89,7 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/users/:user_id/is_admin",
+			Path:    "/users/is_admin",
 			Handler: r.User.IsAdmin,
 		},
 	}

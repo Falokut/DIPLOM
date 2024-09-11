@@ -1,30 +1,10 @@
 package controller
 
 import (
-	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
-	"net/http"
 	"strconv"
 	"strings"
 )
-
-//nolint:ireturn
-func bindRequest[T any](ctx echo.Context) (T, error) {
-	var req T
-	err := ctx.Bind(&req)
-	if err != nil {
-		_ = ctx.NoContent(http.StatusBadRequest)
-		return req, err
-	}
-
-	err = ctx.Validate(req)
-	if err != nil {
-		_ = ctx.String(http.StatusBadRequest, err.Error())
-		return req, err
-	}
-
-	return req, nil
-}
 
 func stringToIntSlice(s string) ([]int32, error) {
 	if s == "" {

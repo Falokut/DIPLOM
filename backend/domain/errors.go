@@ -14,4 +14,16 @@ var (
 	ErrInvalidDishCount               = errors.New("невалидное значение количества блюд")
 	ErrDishCategoryNotFound           = errors.New("категория не найдена")
 	ErrDishCategoryNotFoundOrConflict = errors.New("категория не найдена или категория с таким именем уже существует")
+	ErrUnauthorized                   = errors.New("заголовок для авторизации не передан")
+)
+
+const (
+	ErrCodeInvalidDishCount               = 600
+	ErrCodeDishNotFound                   = 601
+	ErrCodeDishCategoryNotFound           = 602
+	ErrCodeDishCategoryNotFoundOrConflict = 603
+	ErrCodeUserNotFound                   = 604
+
+	ErrCodeEmptyUserIdHeader = 700
+	ErrCodeUserNotAdmin      = 701
 )
