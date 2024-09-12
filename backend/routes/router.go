@@ -84,7 +84,7 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/users/get_by_telegram_id/:telegram_id",
+			Path:    "/users/get_by_telegram_id/:telegramId",
 			Handler: r.User.GetUserIdByTelegramId,
 		},
 		{
