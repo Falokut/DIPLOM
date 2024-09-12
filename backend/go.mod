@@ -3,8 +3,7 @@ module dish_as_a_service
 go 1.23
 
 require (
-	github.com/Falokut/go-kit v0.0.0-20240911073632-3ffae51aa2a0
-	github.com/go-playground/validator/v10 v10.22.0
+	github.com/Falokut/go-kit v0.0.0-20240912115233-58e1a7825bff
 	github.com/google/uuid v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
@@ -18,6 +17,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.22.0 // indirect
 	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
