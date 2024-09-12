@@ -60,7 +60,7 @@ func (r Dish) AddDish(ctx context.Context, req *entity.AddDishRequest) error {
 		var args = make([]any, 0, len(req.Categories)+1)
 		args = append(args, id)
 		for i, catId := range req.Categories {
-			valuesPlaceholders[i] = fmt.Sprintf("($1,$%d)", len(args)+i+1)
+			valuesPlaceholders[i] = fmt.Sprintf("($1,$%d)", len(args)+1)
 			args = append(args, catId)
 		}
 		query = fmt.Sprintf(`INSERT INTO dish_categories(dish_id,category_id) VALUES %s ON CONFLICT DO NOTHING`,
