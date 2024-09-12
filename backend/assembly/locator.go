@@ -46,7 +46,7 @@ func Locator(_ context.Context,
 	userContr := controller.NewUser(userService)
 	userBotContr := bcontroller.NewUser(userService, cfg.App.Debug)
 
-	imagesRepo := repository.NewImage(http.DefaultClient, cfg.Images.Addr, cfg.Images.BaseImagePath)
+	imagesRepo := repository.NewImage(http.DefaultClient, cfg.Images.BaseServiceUrl, cfg.Images.BaseImagePath)
 	dishRepo := repository.NewDish(dbCli)
 	dishService := service.NewDish(dishRepo, imagesRepo, logger)
 	dishContrl := controller.NewDish(dishService)

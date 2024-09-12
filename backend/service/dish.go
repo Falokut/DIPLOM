@@ -67,7 +67,7 @@ func (s Dish) GetByIds(ctx context.Context, ids []int32) ([]domain.Dish, error) 
 	return converted, nil
 }
 
-func (s Dish) AddDish(ctx context.Context, req *domain.AddDishRequest) error {
+func (s Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 	var imageId string
 	var err error
 	if len(req.Image) > 0 {

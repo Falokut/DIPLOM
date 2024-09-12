@@ -10,7 +10,7 @@ import (
 type DishService interface {
 	List(ctx context.Context, limit, offset int32) ([]domain.Dish, error)
 	GetByIds(ctx context.Context, ids []int32) ([]domain.Dish, error)
-	AddDish(ctx context.Context, req *domain.AddDishRequest) error
+	AddDish(ctx context.Context, req domain.AddDishRequest) error
 }
 
 type Dish struct {
@@ -67,7 +67,7 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes [POST]
 func (c Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
-	err := c.service.AddDish(ctx, &req)
+	err := c.service.AddDish(ctx, req)
 	if err != nil {
 		return err
 	}

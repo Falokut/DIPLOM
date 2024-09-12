@@ -3,8 +3,9 @@ package conf
 
 import (
 	"dish_as_a_service/bot"
-	"github.com/Falokut/go-kit/config"
 	"time"
+
+	"github.com/Falokut/go-kit/config"
 )
 
 type LocalConfig struct {
@@ -17,8 +18,8 @@ type LocalConfig struct {
 	DB              config.Database `yaml:"db"`
 	Listen          config.Listen   `yaml:"listen"`
 	Images          struct {
-		Addr          string `yaml:"addr" env:"IMAGES_SERVICE_ADDR"`
-		BaseImagePath string `yaml:"base_image_path" env:"BASE_IMAGE_PATH"`
+		BaseServiceUrl string `yaml:"base_service_url" env:"IMAGES_BASE_SERVICE_URL"`
+		BaseImagePath  string `yaml:"base_image_path" env:"BASE_IMAGE_PATH"`
 	} `yaml:"images"`
 	Payment struct {
 		ExpirationDelay time.Duration `yaml:"expiration_delay" env:"PAYMENT_EXPIRATION_DELAY"`

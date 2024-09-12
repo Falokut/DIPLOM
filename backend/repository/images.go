@@ -18,21 +18,17 @@ type Image struct {
 	serviceAddr  string
 }
 
-func NewImage(cli *http.Client, serviceAddr, baseImageUrl string) Image {
+func NewImage(cli *http.Client, baseServiceUrl, baseImageUrl string) Image {
 	return Image{
 		cli:          cli,
 		baseImageUrl: baseImageUrl,
-		serviceAddr:  serviceAddr,
+		serviceAddr:  baseServiceUrl,
 	}
 }
 
 const (
-	uploadImageEndpoint = "%s/api/images-storage-service/image/%s"
-	deleteImageEndpoint = "%s/api/images-storage-service/image/%s/%s"
-)
-
-const (
-	JsonContentType = "json"
+	uploadImageEndpoint = "%s/image/%s"
+	deleteImageEndpoint = "%s/image/%s/%s"
 )
 
 func (r Image) UploadImage(ctx context.Context, category string, image []byte) (string, error) {
@@ -41,6 +37,7 @@ func (r Image) UploadImage(ctx context.Context, category string, image []byte) (
 	req, err := makeRequest(ctx, http.MethodPost, url, entity.UploadImageRequest{
 		Image: image,
 	})
+	req.Header.Add("Content-Type", "application/json")
 	if err != nil {
 		return "", errors.WithMessage(err, "make request")
 	}
@@ -50,6 +47,9 @@ func (r Image) UploadImage(ctx context.Context, category string, image []byte) (
 		return "", errors.WithMessage(err, "send request")
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("response status code not ok")
+	}
 
 	var uploadResp entity.UploadImageResponse
 	err = json.NewDecoder(resp.Body).Decode(&uploadResp)
