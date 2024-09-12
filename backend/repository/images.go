@@ -27,8 +27,8 @@ func NewImage(cli *http.Client, serviceAddr, baseImageUrl string) Image {
 }
 
 const (
-	uploadImageEndpoint = "%s/api/images-service/image/%s"
-	deleteImageEndpoint = "%s/api/images-service/image/%s/%s"
+	uploadImageEndpoint = "%s/api/images-storage-service/image/%s"
+	deleteImageEndpoint = "%s/api/images-storage-service/image/%s/%s"
 )
 
 const (
