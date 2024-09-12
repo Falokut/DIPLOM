@@ -56,13 +56,13 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 //
 //	@Tags		dishes
 //	@Summary	Add Dish
-//	@Param		body	body	domain.AddDishRequest	true	"request body"
+//	@Param		body		body	domain.AddDishRequest	true	"request body"
 //
-// @Param X-USER-ID header string true "id пользователя"
+//	@Param		X-USER-ID	header	string					true	"id пользователя"
 //
 //	@Accept		json
 //	@Produce	json
-//	@Success	200	{object} domain.Empty
+//	@Success	200	{object}	domain.Empty
 //	@Failure	403	{object}	apierrors.Error
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes [POST]

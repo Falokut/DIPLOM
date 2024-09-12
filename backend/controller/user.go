@@ -31,9 +31,12 @@ func NewUser(service UserService) User {
 //	@Summary	Получить id пользователя по telegram id
 //	@Accept		json
 //	@Produce	json
-//	@Success	200	{object}	domain.GetUserIdByTelegramIdResponse
-//	@Failure	500	{object}	apierrors.Error
-//	@Router		/users/get_by_telegram_id/:telegram_id [GET]
+//
+//	@Param		telegramId	path		int	true	"Идентификатор категории"
+//
+//	@Success	200			{object}	domain.GetUserIdByTelegramIdResponse
+//	@Failure	500			{object}	apierrors.Error
+//	@Router		/users/get_by_telegram_id/:telegramId [GET]
 func (c User) GetUserIdByTelegramId(
 	ctx context.Context,
 	req domain.GetUserIdByTelegramIdRequest,
@@ -55,8 +58,9 @@ func (c User) GetUserIdByTelegramId(
 //	@Summary	Проверить, является ли пользователь админом
 //	@Accept		json
 //	@Produce	json
-//	@Success	200	{object}	domain.IsUserAdminResponse
-//	@Failure	500	{string}	string
+//	@Param		body	body		domain.IsUserAdminRequest	true	"request body"
+//	@Success	200		{object}	domain.IsUserAdminResponse
+//	@Failure	500		{string}	string
 //	@Router		/users/is_admin [GET]
 func (c User) IsAdmin(ctx context.Context, req domain.IsUserAdminRequest) (*domain.IsUserAdminResponse, error) {
 	isAdmin, err := c.service.IsAdmin(ctx, req.UserId)

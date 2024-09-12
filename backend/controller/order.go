@@ -30,10 +30,11 @@ func NewOrder(service OrderService) Order {
 //	@Summary	Заказать
 //	@Accept		json
 //	@Produce	json
-//	@Success	200	{object}	domain.ProcessOrderResponse
-//	@Failure	400	{object}	apierrors.Error
-//	@Failure	404	{object}	apierrors.Error
-//	@Failure	500	{object}	apierrors.Error
+//	@Param		body	body		domain.ProcessOrderRequest	true	"request body"
+//	@Success	200		{object}	domain.ProcessOrderResponse
+//	@Failure	400		{object}	apierrors.Error
+//	@Failure	404		{object}	apierrors.Error
+//	@Failure	500		{object}	apierrors.Error
 //	@Router		/orders [POST]
 func (c Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (*domain.ProcessOrderResponse, error) {
 	url, err := c.service.ProcessOrder(ctx, req)
