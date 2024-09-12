@@ -39,12 +39,12 @@ export class AddDishObj {
     image: any
 }
 
-export async function AddDish(dish: AddDishObj, userId: string): Promise<boolean> {
+export async function AddDish(dish: AddDishObj, userId: string): Promise<boolean | void> {
     let headers = GetUserIdHeader(userId);
     headers.set("content-type", "application/json; charset=utf8")
     return await fetch(dishesUrl, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(dish)
-    }).catch(reason => reason.ok)
+    }).then(resp => resp.ok).catch(reason => alert(reason))
 }
