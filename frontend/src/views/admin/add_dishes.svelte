@@ -14,60 +14,53 @@
   import MultiSelectInput from "../components/multi_select_input.svelte";
   import { GetUserIdByTelegramId } from "../../client/user";
   import TextAreaInput from "../components/text_area_input.svelte";
-  const defaultDish = {
-    name: "",
-    categories: [],
-    description: "",
-    url: "",
-    price: 0,
-  };
-  let dish = defaultDish;
-  let selectedCategories = [];
-  let image = {};
 
-  let dishesCategoriesMap: Map<string, number> = new Map<string, number>();
+  const { initData } = retrieveLaunchParams();
+  const notAllowed = initData === undefined || initData.user === undefined;
+
+  class Dish {
+    name: string;
+    categories: number[];
+    description: string;
+    url: string;
+    price: number;
+
+    clear() {
+      this.name = "";
+      this.categories = [];
+      this.description = "";
+      this.url = "";
+      this.price = 0;
+    }
+  }
+
+  let dish = new Dish();
+  dish.clear();
+
+  var selectedCategories = [];
+  var image: File = null;
+
+  var dishesCategoriesMap: Map<string, number> = new Map<string, number>();
   const mainButtonRes = initMainButton();
-  let mainButton = mainButtonRes[0];
+  var mainButton = mainButtonRes[0];
 
   const backButtonRes = initBackButton();
-  let backButton = backButtonRes[0];
+  var backButton = backButtonRes[0];
 
-  let removeMainButtonListFn;
-  let removeBackButtonListFn;
+  var removeMainButtonListFn;
+  var removeBackButtonListFn;
   onMount(() => {
+    if (notAllowed) {
+      window.close();
+      return;
+    }
     mainButton.setParams({
       text: "Добавить блюдо",
       isVisible: true,
     });
 
     mainButton.enable();
-    removeMainButtonListFn = mainButton.on("click", async () => {
-      mainButton.disable();
-      const { initData } = retrieveLaunchParams();
-      if (initData === undefined || initData.user === undefined) {
-        return false;
-      }
-      let userId = await GetUserIdByTelegramId(initData.user.id);
-      if (userId.length == 0) {
-        return false;
-      }
-
-      let imageBody = {};
-      await ToBase64(image).then((data) => (imageBody = data));
-      let req = {
-        name: dish.name,
-        description: dish.description,
-        categories: dish.categories,
-        price: dish.price,
-        image: imageBody,
-      };
-      let ok = AddDish(req, userId);
-      if (ok) {
-        dish = defaultDish;
-        selectedCategories = [];
-      }
-      mainButton.enable();
-    });
+    removeMainButtonListFn = mainButton.on("click", addDish);
 
     removeBackButtonListFn = backButton.on("click", () => {
       navigate("/admin", { replace: true });
@@ -88,57 +81,91 @@
     });
     return dishCategories;
   }
+
+  async function addDish() {
+    mainButton.disable();
+    let userId = await GetUserIdByTelegramId(initData.user.id);
+    if (userId.length == 0) {
+      return;
+    }
+    let req = {
+      name: dish.name,
+      description: dish.description,
+      categories: dish.categories,
+      price: dish.price,
+      image: null,
+    };
+    if (image != null && image.size > 0) {
+      await ToBase64(image).then((data) => (req.image = data));
+    }
+
+    let ok = await AddDish(req, userId);
+    if (ok) {
+      dish.clear();
+      selectedCategories = [];
+      image = null;
+    }
+    mainButton.enable();
+  }
 </script>
 
-<h3>Добавить блюдо</h3>
-<div class="input_container">
-  <div class="input_div">
+<div class="add_dish_container">
+  <h3>Добавление блюда</h3>
+  <div class="input_container">
+    <TextInput bind:value={dish.name} label={"название:"} />
+    <NumInput bind:value={dish.price} label={"цена:"} min={0} max={1000000} />
     <ImageInput
       bind:outputUrl={dish.url}
       label={"картинка:"}
       bind:file={image}
       uploadLabel={"выбрать файл"}
     />
-  </div>
-  <div class="input_div">
-    <TextInput bind:value={dish.name} label={"название:"} />
-  </div>
-  <div class="input_div">
-    <NumInput bind:value={dish.price} label={"цена:"} min={0} max={1000000} />
-  </div>
-  {#await loadDishesCategories() then dishCategories}
-    <MultiSelectInput
-      options={dishCategories}
-      label={"категории:"}
-      bind:selected={selectedCategories}
-      onchange={() => {
-        dish.categories = [];
-        selectedCategories.forEach((name) => {
-          let id = dishesCategoriesMap.get(name);
-          dish.categories.push(id);
-        });
-      }}
-    />
-  {/await}
-
-  <div>
+    {#await loadDishesCategories() then dishCategories}
+      <MultiSelectInput
+        options={dishCategories}
+        label={"категории:"}
+        bind:selected={selectedCategories}
+        onchange={() => {
+          dish.categories = [];
+          selectedCategories.forEach((name) => {
+            let id = dishesCategoriesMap.get(name);
+            dish.categories.push(id);
+          });
+        }}
+      />
+    {/await}
     <TextAreaInput bind:value={dish.description} label={"описание"} />
+  </div>
+
+  <div class="dish_preview">
+    <h3>Предосмотр:</h3>
+    {#if dish.url != "" && dish.name != "" && dish.price > 0}
+      <DishPreview bind:dish />
+    {/if}
   </div>
 </div>
 
-<h3>Предосмотр:</h3>
-{#if dish.url != "" && dish.name != "" && dish.price > 0}
-  <DishPreview bind:dish />
-{/if}
-
 <style>
+  .add_dish_container {
+    height: 130vh;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-auto-flow: row;
+  }
   .input_container {
-    display: flex;
-    flex-flow: column;
-    vertical-align: middle;
-    justify-items: center;
+    font-size: large;
+    margin: auto;
     background-color: var(--tg-theme-secondary-bg-color);
-    border-radius: 5px;
-    height: 40vh;
+    display: grid;
+    grid-auto-flow: row;
+    gap: 1rem;
+    height: 90vh;
+    min-height: calc(var(--tg-viewport-height) * 0.9);
+    width: 95%;
+    border-radius: 8px;
+  }
+
+  .dish_preview {
+    height: 50vh;
   }
 </style>

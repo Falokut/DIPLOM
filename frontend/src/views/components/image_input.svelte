@@ -19,11 +19,13 @@
   }
 </script>
 
-<div class="input_container">
+<div class="input_div">
   <div class="input_label">{label}</div>
-  <button class="file_upload_button input_box" on:click={openFileInput}
-    >{uploadLabel}</button
-  >
+  <div class="input_box">
+    <button class="file_upload_button" on:click={openFileInput}
+      >{uploadLabel}</button
+    >
+  </div>
   <input
     type="file"
     id="file_upload_input"
@@ -33,3 +35,11 @@
     accept="image/png, image/jpeg"
   />
 </div>
+
+<style>
+  .file_upload_button {
+    font-size: medium;
+    text-align: center;
+    width: 100%;
+  }
+</style>

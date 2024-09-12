@@ -82,35 +82,41 @@ body {
   user-select: none;
 }
 
-.input_container {
-  font-size: medium;
+.input_div {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-flow: column;
   margin: auto;
-  vertical-align: middle;
-  align-items: center;
-  flex-wrap: wrap;
-  display: flex;
-  flex-direction: row;
-  height: 50px;
-  padding: 0;
-  margin: 0;
 }
 
 .input_label {
-  width: 40vw;
-  text-align: left;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   padding-left: 10px;
 }
 
 .input_box {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   color: var(--tg-theme-text-color);
-  width: 50vw;
   padding-right: 10px;
 }
 
 .input_area {
   border: 1px solid var(--tg-theme-secondary-bg-color);
   background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
   margin-right: 10px;
+}
+
+.textarea_box {
+  width: 90%;
+  aspect-ratio: 2/1;
+  resize: none;
+  margin-right: 0!important;
 }
 
 .file_upload_button {

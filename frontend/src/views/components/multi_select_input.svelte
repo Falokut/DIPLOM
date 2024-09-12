@@ -6,9 +6,9 @@
   import MultiSelect from "svelte-multiselect";
 </script>
 
-<div class="input_container">
+<div class="input_div">
   <div class="input_label">{label}</div>
-  <div class="input_box">
+  <div class="input_multiselect_box">
     <MultiSelect
       bind:selected
       bind:options
@@ -24,8 +24,22 @@
     overflow: hidden;
     max-height: 100%;
   }
-  :global(div.multiselect > ul.selected) {
-    max-height: 4em;
-    overflow-y: scroll;
+
+  .input_multiselect_box {
+    font-size: medium;
+    margin: auto;
+    vertical-align: middle;
+    align-items: center;
+    flex-wrap: wrap;
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    margin: 0;
+  }
+
+  .input_multiselect_box {
+    color: var(--tg-theme-text-color);
+    padding-right: 10px;
+    height: auto;
   }
 </style>
