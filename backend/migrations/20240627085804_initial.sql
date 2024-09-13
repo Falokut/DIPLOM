@@ -6,8 +6,16 @@ CREATE TABLE users (
     admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+INSERT INTO
+    users (id, username, name)
+VALUES (
+        '00000000-0000-0000-0000-000000000000',
+        'DELETED',
+        'DELETED'
+    );
+
 CREATE TABLE users_telegrams (
-    id uuid REFERENCES users (id),
+    id uuid REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
     chat_id BIGINT NOT NULL UNIQUE,
     telegram_id BIGINT NOT NULL UNIQUE
 );
@@ -16,6 +24,8 @@ CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL
 );
+
+ALTER TABLE categories ADD CONSTRAINT unique_name UNIQUE (name);
 
 INSERT INTO
     categories (name)
@@ -37,23 +47,23 @@ CREATE TABLE dish (
 );
 
 CREATE TABLE dish_categories (
-    dish_id INT REFERENCES dish (id),
-    category_id INT REFERENCES categories (id),
+    dish_id INT REFERENCES dish (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    category_id INT REFERENCES categories (id) ON DELETE CASCADE ON UPDATE CASCADE,
     PRIMARY KEY (dish_id, category_id)
 );
 
 CREATE TABLE orders (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
     payment_method TEXT NOT NULL,
-    user_id uuid NOT NULL REFERENCES users (id),
+    user_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES users (id) ON DELETE SET DEFAULT ON UPDATE CASCADE,
     total BIGINT NOT NULL CHECK (total > 0),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now (),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     wishes TEXT
 );
 
 CREATE TABLE order_items (
-    order_id uuid NOT NULL REFERENCES orders (id),
-    dish_id INT NOT NULL REFERENCES dish (id),
+    order_id uuid NOT NULL REFERENCES orders (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    dish_id INT NOT NULL REFERENCES dish (id) ON DELETE CASCADE ON UPDATE CASCADE,
     status TEXT NOT NULL,
     count INT NOT NULL CHECK (count > 0),
     price INT NOT NULL CHECK (price > 0),
