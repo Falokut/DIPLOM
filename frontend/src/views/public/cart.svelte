@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { GetCart, ProcessOrder } from "../../client/cart";
+  import { GetCart, ProcessOrder, SetDishCount } from "../../client/cart";
   import { GetDishes } from "../../client/dish";
   import CartItem from "./cart_item.svelte";
   import {
@@ -32,6 +32,16 @@
     });
 
     dishes = await GetDishes(dishesIds);
+    let exists = [];
+    dishesIds.forEach((id) => {
+      let found = dishesIds.findIndex((dish) => dish.id == id) == -1;
+      if (!found) {
+        SetDishCount(id, 0);
+        return;
+      }
+      exists.push(id);
+    });
+
     dishes.forEach((dish) => {
       let count = cartItems.get(dish.id.toString());
       if (count == 0) {
