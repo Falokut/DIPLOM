@@ -18,24 +18,13 @@
   const { initData } = retrieveLaunchParams();
   const notAllowed = initData === undefined || initData.user === undefined;
 
-  class Dish {
-    name: string;
-    categories: number[];
-    description: string;
-    url: string;
-    price: number;
-
-    clear() {
-      this.name = "";
-      this.categories = [];
-      this.description = "";
-      this.url = "";
-      this.price = 0;
-    }
-  }
-
-  let dish = new Dish();
-  dish.clear();
+  let dish = {
+    name: "",
+    categories: [],
+    description: "",
+    url: "",
+    price: 0,
+  };
 
   var selectedCategories = [];
   var image: File = null;
@@ -51,7 +40,6 @@
   var removeBackButtonListFn;
   onMount(() => {
     if (notAllowed) {
-      window.close();
       return;
     }
     mainButton.setParams({
@@ -71,6 +59,10 @@
     removeMainButtonListFn();
     removeBackButtonListFn();
   });
+
+  function reload() {
+    window.location.reload();
+  }
 
   async function loadDishesCategories() {
     let categories = await GetDishesCategories();
@@ -101,9 +93,8 @@
 
     let ok = await AddDish(req, userId);
     if (ok) {
-      dish.clear();
-      selectedCategories = [];
-      image = null;
+      reload();
+      return;
     }
     mainButton.enable();
   }

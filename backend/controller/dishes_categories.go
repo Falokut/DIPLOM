@@ -34,11 +34,7 @@ func NewDishesCategories(service DishesCategoriesService) DishesCategories {
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories [GET]
 func (c DishesCategories) GetCategories(ctx context.Context) ([]domain.DishCategory, error) {
-	categories, err := c.service.GetCategories(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return categories, nil
+	return c.service.GetCategories(ctx)
 }
 
 // Get category
@@ -60,7 +56,11 @@ func (c DishesCategories) GetCategory(ctx context.Context, req domain.GetDishesC
 	category, err := c.service.GetCategory(ctx, req.Id)
 	switch {
 	case errors.Is(err, domain.ErrDishCategoryNotFound):
-		return nil, apierrors.New(http.StatusNotFound, domain.ErrCodeDishCategoryNotFound, domain.ErrDishCategoryNotFound.Error(), err)
+		return nil, apierrors.New(http.StatusNotFound,
+			domain.ErrCodeDishCategoryNotFound,
+			domain.ErrDishCategoryNotFound.Error(),
+			err,
+		)
 	case err != nil:
 		return nil, err
 	default:
@@ -113,9 +113,13 @@ func (c DishesCategories) AddCategory(ctx context.Context, req domain.AddCategor
 func (c DishesCategories) RenameCategory(ctx context.Context, req domain.RenameCategoryRequest) error {
 	err := c.service.RenameCategory(ctx, req)
 	switch {
-	case errors.Is(err, domain.ErrDishCategoryNotFoundOrConflict):
-		return apierrors.NewBusinessError(domain.ErrCodeDishCategoryNotFoundOrConflict,
-			domain.ErrDishCategoryNotFoundOrConflict.Error(), err)
+	case errors.Is(err, domain.ErrDishCategoryConflict):
+		return apierrors.New(
+			http.StatusConflict,
+			domain.ErrCodeDishCategoryConflict,
+			domain.ErrDishCategoryConflict.Error(),
+			err,
+		)
 	case err != nil:
 		return err
 	default:
@@ -138,9 +142,5 @@ func (c DishesCategories) RenameCategory(ctx context.Context, req domain.RenameC
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories/:id [DELETE]
 func (c DishesCategories) DeleteCategory(ctx context.Context, req domain.DeleteCategoryRequest) error {
-	err := c.service.DeleteCategory(ctx, req.Id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.service.DeleteCategory(ctx, req.Id)
 }

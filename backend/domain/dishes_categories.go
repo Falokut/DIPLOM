@@ -6,7 +6,7 @@ type DishCategory struct {
 }
 
 type AddCategoryRequest struct {
-	Name string
+	Name string `validate:"required,min=1"`
 }
 
 type AddCategoryResponse struct {
@@ -15,7 +15,7 @@ type AddCategoryResponse struct {
 
 type RenameCategoryRequest struct {
 	Id   int32
-	Name string
+	Name string `validate:"required"`
 }
 
 type DeleteCategoryRequest struct {

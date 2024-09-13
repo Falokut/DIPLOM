@@ -10,6 +10,10 @@
       url: "/dishes",
       text: "заказать",
     },
+    {
+      url: "/admin/dishes/categories",
+      text: "категории",
+    },
   ];
 </script>
 

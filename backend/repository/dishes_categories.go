@@ -7,6 +7,7 @@ import (
 	"dish_as_a_service/entity"
 
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +44,7 @@ func (r DishesCategories) GetCategory(ctx context.Context, id int32) (entity.Dis
 func (r DishesCategories) AddCategory(ctx context.Context, category string) (int32, error) {
 	query := `WITH e AS(
     INSERT INTO categories (name) 
-           VALUES ($1, $2, $3)
+           VALUES ($1) 
     ON CONFLICT DO NOTHING
     RETURNING id
 	)
@@ -58,16 +59,13 @@ func (r DishesCategories) AddCategory(ctx context.Context, category string) (int
 }
 
 func (r DishesCategories) RenameCategory(ctx context.Context, id int32, newName string) error {
-	query := `UPDATE categories
-	SET name=$1
-	WHERE id=$2
-	ON CONFLICT DO NOTHING
-    RETURNING id`
+	query := `UPDATE categories SET name = $1 WHERE id = $2`
 
-	err := r.cli.GetContext(ctx, &id, query, id, newName)
+	_, err := r.cli.ExecContext(ctx, query, newName, id)
+	var pgErr pgx.PgError
 	switch {
-	case errors.Is(err, sql.ErrNoRows):
-		return domain.ErrDishCategoryNotFoundOrConflict
+	case errors.As(err, &pgErr) && pgErr.Code == "23505":
+		return domain.ErrDishCategoryConflict
 	case err != nil:
 		return errors.WithMessage(err, "execute query")
 	default:

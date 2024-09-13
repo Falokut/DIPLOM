@@ -75,7 +75,7 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			Method:  http.MethodDelete,
 			Path:    "/dishes/categories/:id",
 			IsAdmin: true,
-			Handler: r.DishesCategories.RenameCategory,
+			Handler: r.DishesCategories.DeleteCategory,
 		},
 		{
 			Method:  http.MethodPost,
