@@ -3,7 +3,7 @@ module dish_as_a_service
 go 1.23
 
 require (
-	github.com/Falokut/go-kit v0.0.0-20240912115233-58e1a7825bff
+	github.com/Falokut/go-kit v0.0.0-20240914173025-804dc859252d
 	github.com/google/uuid v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	tgbotapi "dish_as_a_service/bot/api"
 	"dish_as_a_service/entity"
+
+	"github.com/Falokut/go-kit/client/telegram_bot"
 )
 
 type OrderService interface {
@@ -30,7 +31,7 @@ func NewOrder(service OrderService, userService OrderUserService) Order {
 	}
 }
 
-func (c Order) HandlePayment(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable {
+func (c Order) HandlePayment(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
 	var payload entity.PaymentPayload
 	err := json.Unmarshal([]byte(msg.SuccessfulPayment.InvoicePayload), &payload)
 	if err != nil {
@@ -53,11 +54,11 @@ func (c Order) HandlePayment(ctx context.Context, msg *tgbotapi.Message) tgbotap
 	return nil
 }
 
-func (c Order) HandlePreCheckout(ctx context.Context, query *tgbotapi.PreCheckoutQuery) tgbotapi.Chattable {
+func (c Order) HandlePreCheckout(ctx context.Context, query *telegram_bot.PreCheckoutQuery) telegram_bot.Chattable {
 	var payload entity.PaymentPayload
 	err := json.Unmarshal([]byte(query.InvoicePayload), &payload)
 	if err != nil {
-		return tgbotapi.PreCheckoutConfig{
+		return telegram_bot.PreCheckoutConfig{
 			PreCheckoutQueryID: query.ID,
 			OK:                 false,
 			ErrorMessage:       "invalid payload",
@@ -66,21 +67,21 @@ func (c Order) HandlePreCheckout(ctx context.Context, query *tgbotapi.PreCheckou
 
 	canceled, err := c.orderService.IsOrderCanceled(ctx, payload.OrderId)
 	if err != nil {
-		return tgbotapi.PreCheckoutConfig{
+		return telegram_bot.PreCheckoutConfig{
 			PreCheckoutQueryID: query.ID,
 			OK:                 false,
 			ErrorMessage:       "internal error",
 		}
 	}
 	if canceled {
-		return tgbotapi.PreCheckoutConfig{
+		return telegram_bot.PreCheckoutConfig{
 			PreCheckoutQueryID: query.ID,
 			OK:                 false,
 			ErrorMessage:       "order canceled",
 		}
 	}
 
-	return tgbotapi.PreCheckoutConfig{
+	return telegram_bot.PreCheckoutConfig{
 		PreCheckoutQueryID: query.ID,
 		OK:                 true,
 	}

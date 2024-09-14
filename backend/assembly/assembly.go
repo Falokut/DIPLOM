@@ -7,11 +7,11 @@ import (
 	"github.com/Falokut/go-kit/http"
 
 	"dish_as_a_service/bot"
-	tgbotapi "dish_as_a_service/bot/api"
 	"dish_as_a_service/conf"
 
 	"github.com/Falokut/go-kit/app"
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/Falokut/go-kit/config"
 	"github.com/Falokut/go-kit/healthcheck"
 	"github.com/Falokut/go-kit/log"
@@ -42,9 +42,9 @@ func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
 	}
 	bgjobDb := bgjob.NewPgStore(dbCli.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
-	var tgbotApi *tgbotapi.BotAPI
+	var tgbotApi *telegram_bot.BotAPI
 	if !localCfg.Bot.Disable {
-		tgbotApi, err = bot.NewTgBot(ctx, localCfg.Bot.Token, localCfg.Bot.Debug, logger)
+		tgbotApi, err = bot.NewTgBot(ctx, localCfg.Bot.Token, logger)
 		if err != nil {
 			return nil, errors.WithMessage(err, "init bot")
 		}
@@ -99,7 +99,7 @@ func (a *Assembly) Closers() []app.CloserFunc {
 		},
 		func(ctx context.Context) error {
 			if a.tgBot != nil {
-				return a.tgBot.Close(ctx)
+				a.tgBot.BotAPI.StopReceivingUpdates()
 			}
 			return nil
 		},

@@ -5,6 +5,8 @@ github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/Falokut/go-kit v0.0.0-20240912115233-58e1a7825bff h1:y7TCX2lHVgjqI0PEKWaE9DdVKpRbQ60dta/tFJwOWzc=
 github.com/Falokut/go-kit v0.0.0-20240912115233-58e1a7825bff/go.mod h1:plq/ND8dJYPRp58n8jxB0KuhwaQyPvXbFsPhSvz2hBM=
+github.com/Falokut/go-kit v0.0.0-20240914173025-804dc859252d h1:4tzNqhvyRlYwoJJ3EYILcAQ79kYIok28jF1jPf35Ce0=
+github.com/Falokut/go-kit v0.0.0-20240914173025-804dc859252d/go.mod h1:zM4aw1ZBIfDtPIEmY2xYYZb6nAL8f1NywdU9cZG5bDw=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

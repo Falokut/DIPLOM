@@ -2,20 +2,19 @@ package bot
 
 import (
 	"context"
-	tgbotapi "dish_as_a_service/bot/api"
-	"fmt"
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/Falokut/go-kit/log"
 	"github.com/pkg/errors"
 )
 
 type BotMux interface {
-	HandleMessage(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable
-	HandlePayment(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable
-	HandlePreCheckout(ctx context.Context, msg *tgbotapi.PreCheckoutQuery) tgbotapi.Chattable
+	HandleMessage(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable
+	HandlePayment(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable
+	HandlePreCheckout(ctx context.Context, msg *telegram_bot.PreCheckoutQuery) telegram_bot.Chattable
 }
 
 type TgBot struct {
-	*tgbotapi.BotAPI
+	*telegram_bot.BotAPI
 	timeout int
 	mux     BotMux
 	logger  log.Logger
@@ -30,18 +29,16 @@ type Config struct {
 	Timeout int `yaml:"timeout" env:"TG_BOT_TIMEOUT"`
 }
 
-func NewTgBot(ctx context.Context, token string, debug bool, logger log.Logger) (*tgbotapi.BotAPI, error) {
-	bot, err := tgbotapi.NewBotAPI(token)
-
+func NewTgBot(ctx context.Context, token string, logger log.Logger) (*telegram_bot.BotAPI, error) {
+	bot, err := telegram_bot.NewBotAPI(ctx, token, logger)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to create bot")
 	}
-	bot.Debug = debug
-	logger.Info(ctx, fmt.Sprint("Authorized on account ", bot.Self.UserName))
+	logger.Debug(ctx, "bot authorized on account", log.Any("accountName", bot.Self.UserName))
 	return bot, nil
 }
 
-func NewBot(bot *tgbotapi.BotAPI, mux BotMux, timeout int, logger log.Logger) TgBot {
+func NewBot(bot *telegram_bot.BotAPI, mux BotMux, timeout int, logger log.Logger) TgBot {
 	return TgBot{
 		BotAPI:  bot,
 		timeout: timeout,
@@ -52,18 +49,11 @@ func NewBot(bot *tgbotapi.BotAPI, mux BotMux, timeout int, logger log.Logger) Tg
 
 func (b TgBot) Run(ctx context.Context) error {
 	go func() {
-		u := tgbotapi.NewUpdate(0)
+		u := telegram_bot.NewUpdate(0)
 		u.Timeout = b.timeout
 		updates := b.GetUpdatesChan(u)
 		for msg := range updates {
-			select {
-			case <-ctx.Done():
-				b.StopReceivingUpdates()
-				return
-			default:
-			}
-
-			var resp tgbotapi.Chattable
+			var resp telegram_bot.Chattable
 			switch {
 			case msg.Message != nil:
 				switch {
@@ -77,22 +67,16 @@ func (b TgBot) Run(ctx context.Context) error {
 			default:
 				continue
 			}
-
+			// nothing to send
 			if resp == nil {
-				b.logger.Debug(ctx, "handle return nil resp")
 				continue
 			}
 
 			err := b.Send(resp)
 			if err != nil {
-				b.logger.Error(ctx, fmt.Sprint("failed to send response: ", err.Error()))
+				b.logger.Error(ctx, "failed to send response", log.Any("error", err))
 			}
 		}
 	}()
-	return nil
-}
-
-func (b TgBot) Close(_ context.Context) error {
-	b.StopReceivingUpdates()
 	return nil
 }

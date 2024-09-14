@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	tgbotapi "dish_as_a_service/bot/api"
 	"dish_as_a_service/bot/controller"
+
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/Falokut/go-kit/log"
 )
 
@@ -15,7 +16,7 @@ type Router struct {
 	order  controller.Order
 }
 
-type handlerFunction func(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable
+type handlerFunction func(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable
 
 type Endpoint struct {
 	Handler handlerFunction
@@ -30,12 +31,12 @@ func NewRouter(logger log.Logger, user controller.User, order controller.Order) 
 	}
 }
 
-func (r Router) HandleMessage(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable {
+func (r Router) HandleMessage(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
 	endpoints := r.MessageEndpoints()
 
 	endpoint, ok := endpoints[msg.Command()]
 	if !ok {
-		return tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("команда %s не найдена", msg.Command()))
+		return telegram_bot.NewMessage(msg.Chat.ID, fmt.Sprintf("команда %s не найдена", msg.Command()))
 	}
 
 	if endpoint.Admin {
@@ -48,11 +49,11 @@ func (r Router) HandleMessage(ctx context.Context, msg *tgbotapi.Message) tgbota
 	return endpoint.Handler(ctx, msg)
 }
 
-func (r Router) HandlePayment(ctx context.Context, msg *tgbotapi.Message) tgbotapi.Chattable {
+func (r Router) HandlePayment(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
 	return r.order.HandlePayment(ctx, msg)
 }
 
-func (r Router) HandlePreCheckout(ctx context.Context, msg *tgbotapi.PreCheckoutQuery) tgbotapi.Chattable {
+func (r Router) HandlePreCheckout(ctx context.Context, msg *telegram_bot.PreCheckoutQuery) telegram_bot.Chattable {
 	return r.order.HandlePreCheckout(ctx, msg)
 }
 

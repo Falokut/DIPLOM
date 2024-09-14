@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	tgbotapi "dish_as_a_service/bot/api"
 	"dish_as_a_service/entity"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/pkg/errors"
 )
 
@@ -17,11 +17,11 @@ type UserRepo interface {
 }
 
 type UserOrder struct {
-	bot  *tgbotapi.BotAPI
+	bot  *telegram_bot.BotAPI
 	repo UserRepo
 }
 
-func NewOrderUserService(bot *tgbotapi.BotAPI, repo UserRepo) UserOrder {
+func NewOrderUserService(bot *telegram_bot.BotAPI, repo UserRepo) UserOrder {
 	return UserOrder{
 		bot:  bot,
 		repo: repo,
@@ -40,7 +40,7 @@ func (s UserOrder) NotifySuccessPayment(ctx context.Context, order *entity.Order
 
 	orderInfoString := s.getOrderInfoString(order, &user)
 	for _, chatId := range adminIds {
-		err = s.bot.Send(tgbotapi.NewMessage(chatId, orderInfoString))
+		err = s.bot.Send(telegram_bot.NewMessage(chatId, orderInfoString))
 		if err != nil {
 			return errors.WithMessagef(err, "send notification to chat: %d", chatId)
 		}
@@ -60,7 +60,7 @@ func (s UserOrder) getOrderInfoString(order *entity.Order, user *entity.User) st
 	`
 	items := make([]string, len(order.Items))
 	for i, item := range order.Items {
-		items[i] = fmt.Sprintf("%d dish_id=%d %s x %d", i+1, item.DishId, item.Name, item.Count)
+		items[i] = fmt.Sprintf("[%d] dish_id=%d %s x %d", i+1, item.DishId, item.Name, item.Count)
 	}
 	return fmt.Sprintf(template,
 		order.Id, strings.Join(items, "\n"),

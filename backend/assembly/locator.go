@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"dish_as_a_service/bot"
-	tgbotapi "dish_as_a_service/bot/api"
 	bcontroller "dish_as_a_service/bot/controller"
 	broutes "dish_as_a_service/bot/routes"
 	bot_service "dish_as_a_service/bot/service"
@@ -20,6 +19,7 @@ import (
 	telegram_payment "dish_as_a_service/service/payment/telegram"
 
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/Falokut/go-kit/http/endpoint"
 	"github.com/Falokut/go-kit/http/router"
 	"github.com/Falokut/go-kit/log"
@@ -35,7 +35,7 @@ type Config struct {
 func Locator(
 	logger log.Logger,
 	dbCli *db.Client,
-	tgbot *tgbotapi.BotAPI,
+	tgbot *telegram_bot.BotAPI,
 	bgJobCli *bgjob.Client,
 	cfg conf.LocalConfig,
 ) Config {

@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	tgbotapi "dish_as_a_service/bot/api"
 	"dish_as_a_service/entity"
+
+	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/pkg/errors"
 )
 
 type PaymentBot struct {
-	bot          *tgbotapi.BotAPI
+	bot          *telegram_bot.BotAPI
 	invoiceToken string
 }
 
-func NewPaymentBot(token string, bot *tgbotapi.BotAPI) PaymentBot {
+func NewPaymentBot(token string, bot *telegram_bot.BotAPI) PaymentBot {
 	return PaymentBot{
 		invoiceToken: token,
 		bot:          bot,
@@ -35,16 +36,16 @@ func (b PaymentBot) ProcessPayment(_ context.Context, order *entity.Order, chatI
 		return errors.WithMessage(err, "marhal payload")
 	}
 
-	prices := make([]tgbotapi.LabeledPrice, len(order.Items))
+	prices := make([]telegram_bot.LabeledPrice, len(order.Items))
 	for i := range order.Items {
 		label := fmt.Sprintf("%s x %d", order.Items[i].Name, order.Items[i].Count)
-		prices[i] = tgbotapi.LabeledPrice{
+		prices[i] = telegram_bot.LabeledPrice{
 			Label:  label,
 			Amount: order.Items[i].Price,
 		}
 	}
 
-	invoice := tgbotapi.NewInvoice(
+	invoice := telegram_bot.NewInvoice(
 		chatId,
 		fmt.Sprintf("Заказ № %s", order.Id),
 		"оплата заказа",

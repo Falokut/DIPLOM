@@ -1,12 +1,10 @@
 package controller
 
-import (
-	tgbotapi "dish_as_a_service/bot/api"
-)
+import "github.com/Falokut/go-kit/client/telegram_bot"
 
-func HandleError(msg *tgbotapi.Message, err error, debug bool) tgbotapi.Chattable {
+func HandleError(msg *telegram_bot.Message, err error, debug bool) telegram_bot.Chattable {
 	if debug {
-		return tgbotapi.NewMessage(msg.Chat.ID, "произошла ошибка текст ошибки: "+err.Error())
+		return telegram_bot.NewMessage(msg.Chat.ID, "произошла ошибка текст ошибки: "+err.Error())
 	}
 	return nil
 }
