@@ -85,8 +85,6 @@ func (r User) IsAdmin(ctx context.Context, id string) (bool, error) {
 	default:
 		return isAdmin, nil
 	}
-
-	return isAdmin, nil
 }
 
 func (r User) GetUsers(ctx context.Context) ([]entity.User, error) {

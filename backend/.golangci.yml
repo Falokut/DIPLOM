@@ -14,8 +14,9 @@ issues:
     - path: bot
       linters:
         - ireturn
-  exclude-dirs:
-    - bot/api
+    - path: tests
+      linters:
+        - gosec
 linters:
   enable-all: true
   disable:
