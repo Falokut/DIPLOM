@@ -77,8 +77,13 @@ func (r User) IsAdmin(ctx context.Context, id string) (bool, error) {
 
 	var isAdmin bool
 	err := r.cli.GetContext(ctx, &isAdmin, query, id)
-	if err != nil {
-		return false, errors.WithMessage(err, "get data from db")
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return false, domain.ErrUserNotExist
+	case err != nil:
+		return false, errors.WithMessage(err, "select users")
+	default:
+		return isAdmin, nil
 	}
 
 	return isAdmin, nil
@@ -99,24 +104,28 @@ func (r User) GetUserChatId(ctx context.Context, userId string) (int64, error) {
 	query := "SELECT chat_id FROM users_telegrams WHERE id=$1"
 	var chatId int64
 	err := r.cli.GetContext(ctx, &chatId, query, userId)
-	if err != nil {
-		return int64(0), errors.WithMessage(err, "select users")
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return 0, domain.ErrUserNotExist
+	case err != nil:
+		return 0, errors.WithMessage(err, "select users_telegrams")
+	default:
+		return chatId, nil
 	}
-
-	return chatId, nil
 }
 
 func (r User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (string, error) {
 	query := "SELECT id FROM users_telegrams WHERE telegram_id=$1"
 	var userId string
 	err := r.cli.GetContext(ctx, &userId, query, telegramId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", domain.ErrUserNotExist
-		}
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return "", domain.ErrUserNotExist
+	case err != nil:
 		return "", errors.WithMessage(err, "select users_telegrams")
+	default:
+		return userId, nil
 	}
-	return userId, nil
 }
 
 func (r User) AddAdmin(ctx context.Context, username string) error {

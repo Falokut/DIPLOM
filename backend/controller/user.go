@@ -35,6 +35,7 @@ func NewUser(service UserService) User {
 //	@Param		telegramId	path		int	true	"Идентификатор категории"
 //
 //	@Success	200			{object}	domain.GetUserIdByTelegramIdResponse
+//	@Failure	404			{object}	apierrors.Error
 //	@Failure	500			{object}	apierrors.Error
 //	@Router		/users/get_by_telegram_id/:telegramId [GET]
 func (c User) GetUserIdByTelegramId(
@@ -42,14 +43,19 @@ func (c User) GetUserIdByTelegramId(
 	req domain.GetUserIdByTelegramIdRequest,
 ) (*domain.GetUserIdByTelegramIdResponse, error) {
 	userId, err := c.service.GetUserIdByTelegramId(ctx, req.TelegramId)
-	if err != nil {
-		if errors.Is(err, domain.ErrUserNotExist) {
-			return nil, apierrors.New(http.StatusNotFound, domain.ErrCodeUserNotFound, domain.ErrUserNotExist.Error(), err)
-		}
+	switch {
+	case errors.Is(err, domain.ErrUserNotExist):
+		return nil, apierrors.New(
+			http.StatusNotFound,
+			domain.ErrCodeUserNotFound,
+			domain.ErrUserNotExist.Error(),
+			err,
+		)
+	case err != nil:
 		return nil, err
+	default:
+		return &domain.GetUserIdByTelegramIdResponse{UserId: userId}, nil
 	}
-
-	return &domain.GetUserIdByTelegramIdResponse{UserId: userId}, nil
 }
 
 // Is Admin
@@ -60,14 +66,22 @@ func (c User) GetUserIdByTelegramId(
 //	@Produce	json
 //	@Param		body	body		domain.IsUserAdminRequest	true	"request body"
 //	@Success	200		{object}	domain.IsUserAdminResponse
+//	@Failure	404		{object}	apierrors.Error
 //	@Failure	500		{string}	string
 //	@Router		/users/is_admin [GET]
 func (c User) IsAdmin(ctx context.Context, req domain.IsUserAdminRequest) (*domain.IsUserAdminResponse, error) {
 	isAdmin, err := c.service.IsAdmin(ctx, req.UserId)
-	if err != nil {
+	switch {
+	case errors.Is(err, domain.ErrUserNotExist):
+		return nil, apierrors.New(
+			http.StatusNotFound,
+			domain.ErrCodeUserNotFound,
+			domain.ErrUserNotExist.Error(),
+			err,
+		)
+	case err != nil:
 		return nil, err
+	default:
+		return &domain.IsUserAdminResponse{IsAdmin: isAdmin}, nil
 	}
-	return &domain.IsUserAdminResponse{
-		IsAdmin: isAdmin,
-	}, nil
 }
