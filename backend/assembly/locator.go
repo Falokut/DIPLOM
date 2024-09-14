@@ -61,7 +61,7 @@ func Locator(
 	}
 	authMiddleware := routes.NewAuthMiddleware(userRepo)
 
-	if cfg.Bot.Disable || tgbot == nil {
+	if tgbot == nil {
 		return Config{
 			HttpRouter: hrouter.InitRoutes(authMiddleware, endpoint.DefaultWrapper(logger)),
 		}

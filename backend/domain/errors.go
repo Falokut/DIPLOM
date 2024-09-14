@@ -18,6 +18,8 @@ var (
 )
 
 const (
+	ErrCodeInvalidArgument = 400
+
 	ErrCodeInvalidDishCount     = 600
 	ErrCodeDishNotFound         = 601
 	ErrCodeDishCategoryNotFound = 602

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"dish_as_a_service/domain"
+
+	"github.com/Falokut/go-kit/http/apierrors"
 	_ "github.com/Falokut/go-kit/http/apierrors"
 )
 
@@ -34,12 +36,16 @@ func NewDish(service DishService) Dish {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{array}		domain.Dish
+//	@Failure		400	{object}	apierrors.Error
 //	@Failure		500	{object}	apierrors.Error
 //	@Router			/dishes [GET]
 func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.Dish, error) {
-	ids, _ := stringToIntSlice(req.Ids)
+	ids, err := stringToIntSlice(req.Ids)
+	if err != nil {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid ids", err)
+	}
+
 	var dishes []domain.Dish
-	var err error
 	if len(ids) > 0 {
 		dishes, err = c.service.GetByIds(ctx, ids)
 	} else {
