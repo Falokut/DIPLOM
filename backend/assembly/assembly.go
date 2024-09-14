@@ -51,7 +51,7 @@ func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
 	}
 	server := http.NewServer(logger)
 
-	locatorCfg := Locator(ctx, logger, dbCli, tgbotApi, bgjobCli, localCfg)
+	locatorCfg := Locator(logger, dbCli, tgbotApi, bgjobCli, localCfg)
 	var tgBot *bot.TgBot
 	if locatorCfg.BotRouter != nil {
 		bot := bot.NewBot(tgbotApi, locatorCfg.BotRouter, localCfg.Bot.Timeout, logger)

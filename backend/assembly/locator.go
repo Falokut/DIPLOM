@@ -1,7 +1,6 @@
 package assembly
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -33,7 +32,7 @@ type Config struct {
 	Workers    []*bgjob.Worker
 }
 
-func Locator(_ context.Context,
+func Locator(
 	logger log.Logger,
 	dbCli *db.Client,
 	tgbot *tgbotapi.BotAPI,
