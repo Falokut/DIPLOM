@@ -74,6 +74,7 @@ func (a *Assembly) Runners() []app.RunnerFunc {
 		func(ctx context.Context) error {
 			return a.tgBot.Serve(ctx, telegram_bot.UpdatesConfig{
 				Timeout: a.localCfg.Bot.Timeout,
+				Limit:   a.localCfg.Bot.Limit,
 			})
 		},
 		func(_ context.Context) error {

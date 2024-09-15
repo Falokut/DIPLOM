@@ -14,5 +14,6 @@ db:
   database: postgres
 tg_bot:
   timeout: 100
+  limit: 10
 payment:
   expiration_delay: 30m

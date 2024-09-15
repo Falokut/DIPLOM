@@ -27,6 +27,8 @@ github.com/Falokut/go-kit v0.0.0-20240915091049-e533bb3a5291 h1:qhOLMuABjw+5XIKS
 github.com/Falokut/go-kit v0.0.0-20240915091049-e533bb3a5291/go.mod h1:K0gbcSiS1zShtG+8eyDvlFKqj/+B97GiuRzCCynSNrA=
 github.com/Falokut/go-kit v0.0.0-20240915092115-c0c2de5e4ec0 h1:YdmtCP7ECbDJUbgn8z5H4vfVkkPe5UZRgGHPRuRqhzQ=
 github.com/Falokut/go-kit v0.0.0-20240915092115-c0c2de5e4ec0/go.mod h1:K0gbcSiS1zShtG+8eyDvlFKqj/+B97GiuRzCCynSNrA=
+github.com/Falokut/go-kit v0.0.0-20240915103430-00cd4dfd9a53 h1:+ZAfeGetpMS2d9AFALTFYp33a65muiUeSbeKH9KNjzQ=
+github.com/Falokut/go-kit v0.0.0-20240915103430-00cd4dfd9a53/go.mod h1:K0gbcSiS1zShtG+8eyDvlFKqj/+B97GiuRzCCynSNrA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

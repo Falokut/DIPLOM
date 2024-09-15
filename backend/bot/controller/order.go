@@ -35,9 +35,6 @@ func NewOrder(service OrderService, userService OrderUserService) Order {
 
 func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	msg := update.Message
-	if msg.SuccessfulPayment == nil {
-		return nil, nil //nolint:nilnil
-	}
 	var payload entity.PaymentPayload
 	err := json.Unmarshal([]byte(msg.SuccessfulPayment.InvoicePayload), &payload)
 	if err != nil {

@@ -137,7 +137,7 @@ func endpointsDescriptors(c Controllers) []Endpoint {
 		},
 		{
 			Handler:    c.Order.HandlePayment,
-			UpdateType: telegram_bot.MessageUpdateType,
+			UpdateType: telegram_bot.SuccessfulPaymentMessageUpdateType,
 			Hide:       true,
 		},
 	}
