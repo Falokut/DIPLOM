@@ -7,6 +7,8 @@ import (
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
+
+	"github.com/Falokut/go-kit/telegram_bot/apierrors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -61,12 +63,12 @@ func (s Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, err
 
 func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (string, error) {
 	if !s.paymentService.IsPaymentMethodValid(req.PaymentMethod) {
-		return "", errors.New("invalid payment method")
+		return "", apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid payment method", errors.New("invalid payment method"))
 	}
 
 	items, err := convertMapStringToInt(req.Items)
 	if err != nil {
-		return "", errors.WithMessage(err, "convert map string")
+		return "", apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid order items", err)
 	}
 	for _, count := range items {
 		if count <= 0 {
@@ -132,7 +134,7 @@ func (s Order) IsOrderCanceled(ctx context.Context, orderId string) (bool, error
 func convertMapStringToInt(m map[string]int32) (map[int32]int32, error) {
 	res := make(map[int32]int32)
 	for k, v := range m {
-		intK, err := strconv.ParseInt(k, 32, 10)
+		intK, err := strconv.ParseInt(k, 10, 32)
 		if err != nil {
 			return nil, errors.WithMessage(err, "invalid value")
 		}
