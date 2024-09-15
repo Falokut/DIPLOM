@@ -2,7 +2,7 @@ package bot
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/Falokut/go-kit/json"
 	"fmt"
 
 	"dish_as_a_service/entity"

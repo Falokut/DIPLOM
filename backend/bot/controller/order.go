@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/Falokut/go-kit/json"
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
