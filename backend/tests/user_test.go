@@ -1,18 +1,20 @@
-//nolint:noctx
+//nolint:noctx,funlen
 package tests_test
 
 import (
 	"context"
 	"dish_as_a_service/assembly"
 	"dish_as_a_service/domain"
+	"dish_as_a_service/entity"
+
 	"dish_as_a_service/repository"
-	"dish_as_a_service/service"
 	"fmt"
-	"github.com/Falokut/go-kit/test/fake"
-	"github.com/Falokut/go-kit/test/telegramt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Falokut/go-kit/test/fake"
+	"github.com/Falokut/go-kit/test/telegramt"
 
 	"github.com/Falokut/go-kit/client/db"
 	"github.com/Falokut/go-kit/json"
@@ -27,11 +29,10 @@ type UserSuite struct {
 	suite.Suite
 	test *test.Test
 
-	db          *dbt.TestDb
-	userRepo    repository.User
-	cli         *http.Client
-	serverAddr  string
-	userService service.User
+	db         *dbt.TestDb
+	userRepo   repository.User
+	cli        *http.Client
+	serverAddr string
 }
 
 func TestUser(t *testing.T) {
@@ -39,12 +40,12 @@ func TestUser(t *testing.T) {
 	suite.Run(t, &UserSuite{})
 }
 
+// nolint:dupl
 func (t *UserSuite) SetupTest() {
 	test, _ := test.New(t.T())
 	t.test = test
 	t.db = dbt.New(test, db.WithMigrationRunner("../migrations", test.Logger()))
 	t.userRepo = repository.NewUser(t.db.Client)
-	t.userService = service.NewUser(t.userRepo, nil, nil)
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
@@ -120,10 +121,11 @@ func (t *UserSuite) Test_IsAdmin_NotFound() {
 
 func (t *UserSuite) Test_GetUserIdByTelegramId_HappyPath() {
 	var telegramId = fake.It[int64]()
-	err := t.userService.Register(context.Background(), domain.RegisterUser{
+	err := t.userRepo.Register(context.Background(), entity.RegisterUser{
+		Id:       uuid.NewString(),
 		Username: fake.It[string](),
 		Name:     fake.It[string](),
-		Telegram: &domain.Telegram{
+		Telegram: &entity.Telegram{
 			ChatId: fake.It[int64](),
 			UserId: telegramId,
 		},

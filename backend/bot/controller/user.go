@@ -35,9 +35,13 @@ func NewUser(service UserService) User {
 
 func (c User) Register(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	msg := update.Message
+	name := msg.From.FirstName
+	if msg.From.LastName != "" {
+		name += " " + msg.From.LastName
+	}
 	user := domain.RegisterUser{
 		Username: msg.From.UserName,
-		Name:     msg.From.FirstName + " " + msg.From.LastName,
+		Name:     name,
 		Telegram: &domain.Telegram{
 			ChatId: msg.Chat.Id,
 			UserId: msg.From.Id,
@@ -87,6 +91,7 @@ func (c User) AddAdmin(ctx context.Context, update telegram_bot.Update) (telegra
 		),
 		nil
 }
+
 func (c User) RemoveAdminByUsername(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	msg := update.Message
 	err := c.service.RemoveAdmin(ctx, msg.CommandArguments())

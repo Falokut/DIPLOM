@@ -3,7 +3,7 @@ module dish_as_a_service
 go 1.23
 
 require (
-	github.com/Falokut/go-kit v0.0.0-20240915125225-3b1571373de5
+	github.com/Falokut/go-kit v0.0.0-20240915164507-5515a5188f6a
 	github.com/google/uuid v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
@@ -11,7 +11,12 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 )
 
-require github.com/go-faker/faker/v4 v4.5.0 // indirect
+require (
+	github.com/cockroachdb/apd v1.1.0 // indirect
+	github.com/go-faker/faker/v4 v4.5.0 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
+)
 
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect

@@ -1,4 +1,4 @@
-//nolint:noctx
+// //nolint:noctx
 package tests_test
 
 import (
@@ -39,6 +39,7 @@ func TestDish(t *testing.T) {
 	suite.Run(t, &DishSuite{})
 }
 
+// nolint:dupl
 func (t *DishSuite) SetupTest() {
 	test, _ := test.New(t.T())
 	t.test = test
@@ -220,6 +221,9 @@ func getConfig() conf.LocalConfig {
 	return conf.LocalConfig{
 		Images: conf.Images{
 			BaseImagePath: "my_image_path",
+		},
+		App: conf.App{
+			AdminSecret: "secret",
 		},
 	}
 }
