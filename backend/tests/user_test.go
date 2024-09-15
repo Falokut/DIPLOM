@@ -1,4 +1,4 @@
-//nolint:noctx,gosec
+//nolint:noctx
 package tests_test
 
 import (
@@ -8,7 +8,8 @@ import (
 	"dish_as_a_service/repository"
 	"dish_as_a_service/service"
 	"fmt"
-	"math/rand/v2"
+	"github.com/Falokut/go-kit/test/fake"
+	"github.com/Falokut/go-kit/test/telegramt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,8 +48,15 @@ func (t *UserSuite) SetupTest() {
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
-
-	locatorCfg, err := assembly.Locator(context.Background(), test.Logger(), t.db.Client, nil, bgjobCli, getConfig())
+	tgBot, _ := telegramt.TestBot(test)
+	locatorCfg, err := assembly.Locator(
+		context.Background(),
+		test.Logger(),
+		t.db.Client,
+		tgBot,
+		bgjobCli,
+		getConfig(),
+	)
 	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
 	t.serverAddr = server.Listener.Addr().String()
@@ -111,12 +119,12 @@ func (t *UserSuite) Test_IsAdmin_NotFound() {
 }
 
 func (t *UserSuite) Test_GetUserIdByTelegramId_HappyPath() {
-	var telegramId = rand.Int64()
+	var telegramId = fake.It[int64]()
 	err := t.userService.Register(context.Background(), domain.RegisterUser{
-		Username: "user_with_tg",
-		Name:     "some_name",
+		Username: fake.It[string](),
+		Name:     fake.It[string](),
 		Telegram: &domain.Telegram{
-			ChatId: rand.Int64(),
+			ChatId: fake.It[int64](),
 			UserId: telegramId,
 		},
 	})
@@ -139,7 +147,7 @@ func (t *UserSuite) Test_GetUserIdByTelegramId_HappyPath() {
 }
 
 func (t *UserSuite) Test_GetUserIdByTelegramId_NotFound() {
-	var telegramId = rand.Int64()
+	var telegramId = fake.It[int64]()
 	resp, err := t.cli.Get(t.getServerUrl(
 		fmt.Sprintf("users/get_by_telegram_id/%d", telegramId)),
 	)

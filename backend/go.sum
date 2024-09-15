@@ -29,6 +29,8 @@ github.com/Falokut/go-kit v0.0.0-20240915092115-c0c2de5e4ec0 h1:YdmtCP7ECbDJUbgn
 github.com/Falokut/go-kit v0.0.0-20240915092115-c0c2de5e4ec0/go.mod h1:K0gbcSiS1zShtG+8eyDvlFKqj/+B97GiuRzCCynSNrA=
 github.com/Falokut/go-kit v0.0.0-20240915103430-00cd4dfd9a53 h1:+ZAfeGetpMS2d9AFALTFYp33a65muiUeSbeKH9KNjzQ=
 github.com/Falokut/go-kit v0.0.0-20240915103430-00cd4dfd9a53/go.mod h1:K0gbcSiS1zShtG+8eyDvlFKqj/+B97GiuRzCCynSNrA=
+github.com/Falokut/go-kit v0.0.0-20240915125225-3b1571373de5 h1:UBEQ8zvNfELnNOsEz3d3JTmf2gQ+yaSpnqWbbgrfDE0=
+github.com/Falokut/go-kit v0.0.0-20240915125225-3b1571373de5/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
@@ -37,6 +39,8 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/gabriel-vasile/mimetype v1.4.5 h1:J7wGKdGu33ocBOhGy0z653k/lFKLFDPJMG8Gql0kxn4=
 github.com/gabriel-vasile/mimetype v1.4.5/go.mod h1:ibHel+/kbxn9x2407k1izTA1S81ku1z/DlgOW2QE0M4=
+github.com/go-faker/faker/v4 v4.5.0 h1:ARzAY2XoOL9tOUK+KSecUQzyXQsUaZHefjyF8x6YFHc=
+github.com/go-faker/faker/v4 v4.5.0/go.mod h1:p3oq1GRjG2PZ7yqeFFfQI20Xm61DoBDlCA8RiSyZ48M=
 github.com/go-playground/assert/v2 v2.2.0 h1:JvknZsQTYeFEAhQwI4qEt9cyV5ONwRHC+lYKSsYSR8s=
 github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
 github.com/go-playground/locales v0.14.1 h1:EWaQ/wswjilfKLTECiXz7Rh+3BjFhfDFKv/oXslEjJA=

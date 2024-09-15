@@ -18,6 +18,8 @@ import (
 	"github.com/Falokut/go-kit/json"
 	"github.com/Falokut/go-kit/test"
 	"github.com/Falokut/go-kit/test/dbt"
+	"github.com/Falokut/go-kit/test/fake"
+	"github.com/Falokut/go-kit/test/telegramt"
 	"github.com/stretchr/testify/suite"
 	"github.com/txix-open/bgjob"
 )
@@ -45,8 +47,15 @@ func (t *DishSuite) SetupTest() {
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
-
-	locatorCfg, err := assembly.Locator(context.Background(), test.Logger(), t.db.Client, nil, bgjobCli, getConfig())
+	tgBot, _ := telegramt.TestBot(test)
+	locatorCfg, err := assembly.Locator(
+		context.Background(),
+		test.Logger(),
+		t.db.Client,
+		tgBot,
+		bgjobCli,
+		getConfig(),
+	)
 	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
 	t.serverAddr = server.Listener.Addr().String()
@@ -62,10 +71,10 @@ func (t *DishSuite) getServerUrl(endpoint string) string {
 
 func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 	var addDish = entity.AddDishRequest{
-		Name:        "dish_name",
-		Description: "dish_desc",
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
 		Price:       350,
-		ImageId:     "some_id",
+		ImageId:     fake.It[string](),
 		Categories:  []int32{1, 2},
 	}
 	err := t.dishRepo.AddDish(context.Background(), &addDish)
@@ -89,20 +98,20 @@ func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 
 func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	var addDish = entity.AddDishRequest{
-		Name:        "dish_name",
-		Description: "dish_desc",
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
 		Price:       350,
-		ImageId:     "some_id",
+		ImageId:     fake.It[string](),
 		Categories:  []int32{1, 2},
 	}
 	err := t.dishRepo.AddDish(context.Background(), &addDish)
 	t.Require().NoError(err)
 
 	addDish = entity.AddDishRequest{
-		Name:        "dish_name_2",
-		Description: "dish_desc_2",
-		Price:       350,
-		ImageId:     "some_id_2",
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       544,
+		ImageId:     fake.It[string](),
 		Categories:  []int32{3, 2},
 	}
 	err = t.dishRepo.AddDish(context.Background(), &addDish)
@@ -138,8 +147,8 @@ func (t *DishSuite) Test_AddDish_HappyPath() {
 	t.Require().NoError(err)
 
 	addDishReq := domain.AddDishRequest{
-		Name:        "dish",
-		Description: "test_desc",
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
 		Price:       344,
 		Categories:  []int32{5, 6},
 	}
@@ -181,8 +190,8 @@ func (t *DishSuite) Test_AddDish_Forbidden() {
 	t.Require().NoError(err)
 
 	addDishReq := domain.AddDishRequest{
-		Name:        "dish",
-		Description: "test_desc",
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
 		Price:       344,
 		Categories:  []int32{5, 6},
 	}
