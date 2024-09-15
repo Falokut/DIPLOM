@@ -76,6 +76,20 @@ func EndpointsDescriptors(c Controllers) []Endpoint {
 			Admin:       true,
 		},
 		{
+			Command:     "allow_ordering",
+			Description: "Разрешить заказывать",
+			Handler:     c.Order.AllowOrdering,
+			UpdateType:  telegram_bot.MessageUpdateType,
+			Admin:       true,
+		},
+		{
+			Command:     "forbid_ordering",
+			Description: "Запретить заказывать",
+			Handler:     c.Order.ForbidOrdering,
+			UpdateType:  telegram_bot.MessageUpdateType,
+			Admin:       true,
+		},
+		{
 			Handler:    c.Order.HandlePreCheckout,
 			UpdateType: telegram_bot.PreCheckoutQueryUpdateType,
 		},

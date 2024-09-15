@@ -8,7 +8,7 @@ import (
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
 
-	"github.com/Falokut/go-kit/telegram_bot/apierrors"
+	"github.com/Falokut/go-kit/http/apierrors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -28,6 +28,8 @@ type OrderRepo interface {
 	ProcessOrder(ctx context.Context, order *entity.Order) error
 	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
 	IsOrderCanceled(ctx context.Context, orderId string) (bool, error)
+	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
+	IsOrderingAllowed(ctx context.Context) (bool, error)
 }
 
 type Order struct {
@@ -61,7 +63,34 @@ func (s Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, err
 	return order, nil
 }
 
+func (s Order) SetOrderingAllowed(ctx context.Context, isAllowed bool) error {
+	err := s.orderRepo.SetOrderingAllowed(ctx, isAllowed)
+	if err != nil {
+		return errors.WithMessage(err, "set ordering allowed")
+	}
+	return nil
+}
+
+func (s Order) IsOrderingAllowed(ctx context.Context) (bool, error) {
+	allowed, err := s.orderRepo.IsOrderingAllowed(ctx)
+	if err != nil {
+		return false, errors.WithMessage(err, "get ordering allowed")
+	}
+	return allowed, nil
+}
+
 func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (string, error) {
+	allowed, err := s.orderRepo.IsOrderingAllowed(ctx)
+	if err != nil {
+		return "", errors.WithMessage(err, "is ordering allowed")
+	}
+	if !allowed {
+		return "", apierrors.NewBusinessError(
+			domain.ErrCodeOrderingForbidden,
+			domain.ErrOrderingForbidden.Error(),
+			domain.ErrOrderingForbidden,
+		)
+	}
 	if !s.paymentService.IsPaymentMethodValid(req.PaymentMethod) {
 		return "", apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid payment method", errors.New("invalid payment method"))
 	}

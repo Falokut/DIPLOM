@@ -15,6 +15,7 @@ var (
 	ErrDishCategoryNotFound   = errors.New("категория не найдена")
 	ErrDishCategoryConflict   = errors.New("категория с таким именем уже существует")
 	ErrUnauthorized           = errors.New("заголовок для авторизации не передан")
+	ErrOrderingForbidden      = errors.New("оформление заказов приостановлено")
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 	ErrCodeUserNotFound         = 604
 	ErrCodeUserAlreadyExists    = 605
 	ErrCodeWrongSecret          = 606
+	ErrCodeOrderingForbidden    = 607
 
 	ErrCodeEmptyUserIdHeader = 700
 	ErrCodeUserNotAdmin      = 701

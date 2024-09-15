@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"dish_as_a_service/entity"
+
 	"github.com/Falokut/go-kit/client/db"
 	"github.com/pkg/errors"
 )
@@ -155,4 +157,52 @@ func (r Order) SetOrderStatus(ctx context.Context, orderId, oldStatus, newStatus
 		return errors.WithMessage(err, "exec update query")
 	}
 	return nil
+}
+
+func (r Order) SetOrderingAllowed(ctx context.Context, isAllowed bool) error {
+	tx, err := r.cli.BeginTxx(ctx, &sql.TxOptions{Isolation: sql.LevelDefault})
+	if err != nil {
+		return errors.WithMessage(err, "begin tx")
+	}
+	defer tx.Rollback() //nolint:errcheck
+	query := "SELECT EXISTS(SELECT id FROM allow_ordering_audit WHERE end_period IS NULL)"
+	current := false
+	err = tx.GetContext(ctx, &current, query)
+	if err != nil {
+		return errors.WithMessage(err, "execute query")
+	}
+	if isAllowed == current {
+		return nil
+	}
+
+	if isAllowed {
+		_, err := tx.ExecContext(ctx, "INSERT INTO allow_ordering_audit DEFAULT VALUES")
+		if err != nil {
+			return errors.WithMessage(err, "execute query")
+		}
+	} else {
+		_, err := tx.ExecContext(ctx,
+			"UPDATE allow_ordering_audit SET end_period=$1 WHERE end_period IS NULL",
+			time.Now(),
+		)
+		if err != nil {
+			return errors.WithMessage(err, "execute query")
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return errors.WithMessage(err, "commit tx")
+	}
+
+	return nil
+}
+
+func (r Order) IsOrderingAllowed(ctx context.Context) (bool, error) {
+	query := "SELECT EXISTS(SELECT id FROM allow_ordering_audit WHERE end_period IS NULL)"
+	isAllowed := false
+	err := r.cli.GetContext(ctx, &isAllowed, query)
+	if err != nil {
+		return false, errors.WithMessage(err, "execute query")
+	}
+	return isAllowed, nil
 }

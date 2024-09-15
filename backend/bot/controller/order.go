@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+
 	"github.com/Falokut/go-kit/json"
+	"github.com/pkg/errors"
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
@@ -15,6 +17,8 @@ type OrderService interface {
 	GetOrder(ctx context.Context, orderId string) (*entity.Order, error)
 	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
 	IsOrderCanceled(ctx context.Context, orderId string) (bool, error)
+	IsOrderingAllowed(cxt context.Context) (bool, error)
+	SetOrderingAllowed(cxt context.Context, isAllowed bool) error
 }
 
 type OrderUserService interface {
@@ -81,9 +85,36 @@ func (c Order) HandlePreCheckout(ctx context.Context, update telegram_bot.Update
 			ErrorMessage:       "order canceled",
 		}, nil
 	}
+	allowed, err := c.orderService.IsOrderingAllowed(ctx)
+	if err != nil {
+		return nil, errors.WithMessage(err, "is ordering allowed")
+	}
+	if !allowed {
+		return telegram_bot.PreCheckoutConfig{
+			PreCheckoutQueryID: query.Id,
+			OK:                 false,
+			ErrorMessage:       domain.ErrOrderingForbidden.Error(),
+		}, nil
+	}
 
 	return telegram_bot.PreCheckoutConfig{
 		PreCheckoutQueryID: query.Id,
 		OK:                 true,
 	}, nil
+}
+
+func (c Order) ForbidOrdering(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	err := c.orderService.SetOrderingAllowed(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return telegram_bot.NewMessage(update.Message.Chat.Id, "оформление заказов запрещено"), nil
+}
+
+func (c Order) AllowOrdering(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	err := c.orderService.SetOrderingAllowed(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return telegram_bot.NewMessage(update.Message.Chat.Id, "оформление заказов разрешено"), nil
 }

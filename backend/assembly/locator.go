@@ -68,7 +68,7 @@ func Locator(
 	}
 	authMiddleware := routes.NewAuthMiddleware(userRepo)
 	orderRepo := repository.NewOrder(dbCli)
-	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgBot)
+	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgBot, orderRepo)
 	telegramWorkerService := telegram_payment.NewWorker(paymentBot)
 	telegramController := telegram_payment.NewWorkerController(telegramWorkerService)
 

@@ -3,6 +3,8 @@ package bot
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/Falokut/go-kit/json"
 
 	"dish_as_a_service/entity"
@@ -11,21 +13,34 @@ import (
 	"github.com/pkg/errors"
 )
 
+type OrderService interface {
+	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
+	IsOrderingAllowed(ctx context.Context) (bool, error)
+}
 type PaymentBot struct {
 	bot          *telegram_bot.BotAPI
 	invoiceToken string
+	service      OrderService
 }
 
-func NewPaymentBot(token string, bot *telegram_bot.BotAPI) PaymentBot {
+func NewPaymentBot(token string, bot *telegram_bot.BotAPI, service OrderService) PaymentBot {
 	return PaymentBot{
 		invoiceToken: token,
 		bot:          bot,
+		service:      service,
 	}
 }
 
 const rubCurrency = "RUB"
 
-func (b PaymentBot) ProcessPayment(_ context.Context, order *entity.Order, chatId int64) error {
+func (b PaymentBot) ProcessPayment(ctx context.Context, order *entity.Order, chatId int64) error {
+	isOrderingAllowed, err := b.service.IsOrderingAllowed(ctx)
+	if err != nil {
+		return errors.WithMessage(err, "get is ordering allowed")
+	}
+	if !isOrderingAllowed {
+		return b.cancelOrder(ctx, order.Id)
+	}
 	payload := entity.PaymentPayload{
 		ChatId:  chatId,
 		OrderId: order.Id,
@@ -55,10 +70,23 @@ func (b PaymentBot) ProcessPayment(_ context.Context, order *entity.Order, chatI
 		rubCurrency,
 		prices,
 	)
-	err = b.bot.Send(invoice)
+	resp, err := b.bot.Request(invoice)
 	if err != nil {
 		return errors.WithMessage(err, "send invoice")
 	}
+	switch {
+	case resp.ErrorCode == http.StatusBadRequest:
+		return b.cancelOrder(ctx, order.Id)
+	case !resp.Ok:
+		return errors.New("send invoice failed")
+	}
+	return nil
+}
 
+func (b PaymentBot) cancelOrder(ctx context.Context, orderId string) error {
+	err := b.service.UpdateOrderStatus(ctx, orderId, entity.OrderItemStatusCanceled)
+	if err != nil {
+		return errors.WithMessage(err, "cancel order")
+	}
 	return nil
 }
