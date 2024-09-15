@@ -1,15 +1,5 @@
 basePath: /api/dish_as_a_service
 definitions:
-  apierrors.Error:
-    properties:
-      details:
-        additionalProperties: {}
-        type: object
-      errorCode:
-        type: integer
-      errorMessage:
-        type: string
-    type: object
   domain.AddCategoryRequest:
     properties:
       name:
@@ -122,7 +112,18 @@ definitions:
       name:
         type: string
     required:
+    - id
     - name
+    type: object
+  github_com_Falokut_go-kit_http_apierrors.Error:
+    properties:
+      details:
+        additionalProperties: {}
+        type: object
+      errorCode:
+        type: integer
+      errorMessage:
+        type: string
     type: object
 info:
   contact: {}
@@ -160,11 +161,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: dish
       tags:
       - dishes
@@ -193,11 +194,11 @@ paths:
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Add Dish
       tags:
       - dishes
@@ -217,7 +218,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Получить категории
       tags:
       - dishes_categories
@@ -250,11 +251,11 @@ paths:
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Создать категорию
       tags:
       - dishes_categories
@@ -284,11 +285,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Удалить категорию
       tags:
       - dishes_categories
@@ -315,15 +316,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Получить категорию
       tags:
       - dishes_categories
@@ -363,15 +364,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Переименовать категорию
       tags:
       - dishes_categories
@@ -396,15 +397,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Заказать
       tags:
       - order
@@ -428,11 +429,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Получить id пользователя по telegram id
       tags:
       - users
@@ -457,7 +458,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apierrors.Error'
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "500":
           description: Internal Server Error
           schema:
