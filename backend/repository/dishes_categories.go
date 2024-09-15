@@ -30,7 +30,7 @@ func (r DishesCategories) GetCategories(ctx context.Context) ([]entity.DishCateg
 
 func (r DishesCategories) GetCategory(ctx context.Context, id int32) (entity.DishCategory, error) {
 	var category entity.DishCategory
-	err := r.cli.GetContext(ctx, category, "SELECT id, name FROM categories WHERE id=$1", id)
+	err := r.cli.GetContext(ctx, &category, "SELECT id, name FROM categories WHERE id=$1", id)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return entity.DishCategory{}, domain.ErrDishCategoryNotFound
@@ -59,9 +59,7 @@ func (r DishesCategories) AddCategory(ctx context.Context, category string) (int
 }
 
 func (r DishesCategories) RenameCategory(ctx context.Context, id int32, newName string) error {
-	query := `UPDATE categories SET name = $1 WHERE id = $2`
-
-	_, err := r.cli.ExecContext(ctx, query, newName, id)
+	_, err := r.cli.ExecContext(ctx, "UPDATE categories SET name = $1 WHERE id = $2", newName, id)
 	var pgErr pgx.PgError
 	switch {
 	case errors.As(err, &pgErr) && pgErr.Code == "23505":

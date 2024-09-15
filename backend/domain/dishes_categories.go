@@ -14,7 +14,7 @@ type AddCategoryResponse struct {
 }
 
 type RenameCategoryRequest struct {
-	Id   int32
+	Id   int32  `validate:"required" json:",omitempty"`
 	Name string `validate:"required"`
 }
 
