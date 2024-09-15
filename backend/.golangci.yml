@@ -2,10 +2,10 @@ run:
   allow-parallel-runners: true
 issues:
   exclude-rules:
-    - path: controller 
+    - path: controller
       linters:
         - wrapcheck
-    - path: routes 
+    - path: routes
       linters:
         - wrapcheck
     - path: bot/routes
@@ -14,29 +14,26 @@ issues:
     - path: bot
       linters:
         - ireturn
-    - path: tests
-      linters:
-        - gosec
 linters:
   enable-all: true
   disable:
-    - goimports 
-    - wsl 
-    - varnamelen 
-    - exhaustruct 
-    - contextcheck 
-    - gci 
-    - gofumpt 
-    - nolintlint 
-    - nlreturn 
-    - godot 
+    - goimports
+    - wsl
+    - varnamelen
+    - exhaustruct
+    - contextcheck
+    - gci
+    - gofumpt
+    - nolintlint
+    - nlreturn
+    - godot
     - godox
     - depguard
-    - dupword 
+    - dupword
     - tagalign
     - tagliatelle
     - musttag
-    - perfsprint 
+    - perfsprint
     - gomnd
 linters-settings:
   funlen:

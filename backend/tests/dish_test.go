@@ -46,7 +46,8 @@ func (t *DishSuite) SetupTest() {
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
 
-	locatorCfg := assembly.Locator(test.Logger(), t.db.Client, nil, bgjobCli, getConfig())
+	locatorCfg, err := assembly.Locator(context.Background(), test.Logger(), t.db.Client, nil, bgjobCli, getConfig())
+	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
 	t.serverAddr = server.Listener.Addr().String()
 	t.cli = server.Client()

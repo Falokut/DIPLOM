@@ -1,8 +1,6 @@
 log:
   level: DEBUG
   console_output: true
-app:
-  debug: true
 listen:
   port: 9999
 
@@ -15,7 +13,6 @@ db:
   port: 5432
   database: postgres
 tg_bot:
-  debug: true
   timeout: 100
 payment:
   expiration_delay: 30m

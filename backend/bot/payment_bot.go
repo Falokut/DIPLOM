@@ -7,7 +7,7 @@ import (
 
 	"dish_as_a_service/entity"
 
-	"github.com/Falokut/go-kit/client/telegram_bot"
+	"github.com/Falokut/go-kit/telegram_bot"
 	"github.com/pkg/errors"
 )
 

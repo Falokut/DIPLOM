@@ -44,11 +44,11 @@ func (c User) GetUserIdByTelegramId(
 ) (*domain.GetUserIdByTelegramIdResponse, error) {
 	userId, err := c.service.GetUserIdByTelegramId(ctx, req.TelegramId)
 	switch {
-	case errors.Is(err, domain.ErrUserNotExist):
+	case errors.Is(err, domain.ErrUserNotFound):
 		return nil, apierrors.New(
 			http.StatusNotFound,
 			domain.ErrCodeUserNotFound,
-			domain.ErrUserNotExist.Error(),
+			domain.ErrUserNotFound.Error(),
 			err,
 		)
 	case err != nil:
@@ -72,11 +72,11 @@ func (c User) GetUserIdByTelegramId(
 func (c User) IsAdmin(ctx context.Context, req domain.IsUserAdminRequest) (*domain.IsUserAdminResponse, error) {
 	isAdmin, err := c.service.IsAdmin(ctx, req.UserId)
 	switch {
-	case errors.Is(err, domain.ErrUserNotExist):
+	case errors.Is(err, domain.ErrUserNotFound):
 		return nil, apierrors.New(
 			http.StatusNotFound,
 			domain.ErrCodeUserNotFound,
-			domain.ErrUserNotExist.Error(),
+			domain.ErrUserNotFound.Error(),
 			err,
 		)
 	case err != nil:

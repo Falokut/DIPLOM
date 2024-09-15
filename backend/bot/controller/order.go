@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
+	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
 
-	"github.com/Falokut/go-kit/client/telegram_bot"
+	"github.com/Falokut/go-kit/telegram_bot"
+	"github.com/Falokut/go-kit/telegram_bot/apierrors"
 )
 
 type OrderService interface {
@@ -31,58 +33,60 @@ func NewOrder(service OrderService, userService OrderUserService) Order {
 	}
 }
 
-func (c Order) HandlePayment(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	msg := update.Message
+	if msg.SuccessfulPayment == nil {
+		return nil, nil //nolint:nilnil
+	}
 	var payload entity.PaymentPayload
 	err := json.Unmarshal([]byte(msg.SuccessfulPayment.InvoicePayload), &payload)
 	if err != nil {
-		return nil
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid payment payload", err)
 	}
 
 	err = c.orderService.UpdateOrderStatus(ctx, payload.OrderId, entity.OrderItemStatusSuccess)
 	if err != nil {
-		return HandleError(msg, err, false)
+		return nil, err
 	}
 
 	order, err := c.orderService.GetOrder(ctx, payload.OrderId)
 	if err != nil {
-		return HandleError(msg, err, false)
+		return nil, err
 	}
 	err = c.userService.NotifySuccessPayment(ctx, order)
 	if err != nil {
-		return HandleError(msg, err, false)
+		return nil, err
 	}
-	return nil
+	return nil, nil // nolint:nilnil
 }
 
-func (c Order) HandlePreCheckout(ctx context.Context, query *telegram_bot.PreCheckoutQuery) telegram_bot.Chattable {
+// nolint:nilerr
+func (c Order) HandlePreCheckout(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	query := update.PreCheckoutQuery
 	var payload entity.PaymentPayload
 	err := json.Unmarshal([]byte(query.InvoicePayload), &payload)
 	if err != nil {
 		return telegram_bot.PreCheckoutConfig{
-			PreCheckoutQueryID: query.ID,
+			PreCheckoutQueryID: query.Id,
 			OK:                 false,
 			ErrorMessage:       "invalid payload",
-		}
+		}, nil
 	}
 
 	canceled, err := c.orderService.IsOrderCanceled(ctx, payload.OrderId)
 	if err != nil {
-		return telegram_bot.PreCheckoutConfig{
-			PreCheckoutQueryID: query.ID,
-			OK:                 false,
-			ErrorMessage:       "internal error",
-		}
+		return nil, apierrors.NewInternalServiceError(err)
 	}
 	if canceled {
 		return telegram_bot.PreCheckoutConfig{
-			PreCheckoutQueryID: query.ID,
+			PreCheckoutQueryID: query.Id,
 			OK:                 false,
 			ErrorMessage:       "order canceled",
-		}
+		}, nil
 	}
 
 	return telegram_bot.PreCheckoutConfig{
-		PreCheckoutQueryID: query.ID,
+		PreCheckoutQueryID: query.Id,
 		OK:                 true,
-	}
+	}, nil
 }

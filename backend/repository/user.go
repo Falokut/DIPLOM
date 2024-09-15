@@ -6,6 +6,7 @@ import (
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
+
 	"github.com/Falokut/go-kit/client/db"
 	"github.com/pkg/errors"
 )
@@ -27,14 +28,18 @@ func (r User) Register(ctx context.Context, user entity.RegisterUser) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
-	query := `INSERT INTO users (id, username, name) VALUES($1,$2,$3)`
-	_, err = tx.ExecContext(ctx, query, user.Id, user.Username, user.Name)
-	if err != nil {
+	query := `INSERT INTO users (id, username, name) VALUES($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id`
+	var userId string
+	err = tx.GetContext(ctx, &userId, query, user.Id, user.Username, user.Name)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return domain.ErrUserAlreadyExists
+	case err != nil:
 		return errors.WithMessage(err, "insert users")
 	}
 
 	if user.Telegram != nil {
-		query = `INSERT INTO users_telegrams (id,chat_id,telegram_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`
+		query = `INSERT INTO users_telegrams (id, chat_id, telegram_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`
 		_, err = tx.ExecContext(ctx, query, user.Id, user.Telegram.ChatId, user.Telegram.UserId)
 		if err != nil {
 			return errors.WithMessage(err, "insert telegram users")
@@ -54,7 +59,7 @@ func (r User) GetUserInfo(ctx context.Context, userId string) (entity.User, erro
 	err := r.cli.GetContext(ctx, &user, query, userId)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return entity.User{}, domain.ErrUserNotExist
+		return entity.User{}, domain.ErrUserNotFound
 	case err != nil:
 		return entity.User{}, errors.WithMessage(err, "get user info")
 	default:
@@ -79,7 +84,7 @@ func (r User) IsAdmin(ctx context.Context, id string) (bool, error) {
 	err := r.cli.GetContext(ctx, &isAdmin, query, id)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return false, domain.ErrUserNotExist
+		return false, domain.ErrUserNotFound
 	case err != nil:
 		return false, errors.WithMessage(err, "select users")
 	default:
@@ -104,7 +109,7 @@ func (r User) GetUserChatId(ctx context.Context, userId string) (int64, error) {
 	err := r.cli.GetContext(ctx, &chatId, query, userId)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return 0, domain.ErrUserNotExist
+		return 0, domain.ErrUserNotFound
 	case err != nil:
 		return 0, errors.WithMessage(err, "select users_telegrams")
 	default:
@@ -118,7 +123,7 @@ func (r User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (stri
 	err := r.cli.GetContext(ctx, &userId, query, telegramId)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return "", domain.ErrUserNotExist
+		return "", domain.ErrUserNotFound
 	case err != nil:
 		return "", errors.WithMessage(err, "select users_telegrams")
 	default:
@@ -133,7 +138,7 @@ func (r User) AddAdmin(ctx context.Context, username string) error {
 		return errors.WithMessage(err, "select users")
 	}
 	if affected, _ := res.RowsAffected(); affected == 0 {
-		return domain.ErrUserNotExist
+		return domain.ErrUserNotFound
 	}
 	return nil
 }
@@ -149,7 +154,25 @@ func (r User) AddAdminChatId(ctx context.Context, chatId int64) error {
 		return errors.WithMessage(err, "select users")
 	}
 	if affected, _ := res.RowsAffected(); affected == 0 {
-		return domain.ErrUserNotExist
+		return domain.ErrUserNotFound
 	}
 	return nil
+}
+
+func (r User) GetAdminsIds(ctx context.Context) ([]string, error) {
+	var ids []string
+	err := r.cli.SelectContext(ctx, &ids, "SELECT id FROM users WHERE admin='true'")
+	if err != nil {
+		return nil, errors.WithMessage(err, "select admins ids")
+	}
+	return ids, nil
+}
+func (r User) GetUsersTelegrams(ctx context.Context, ids []string) ([]entity.Telegram, error) {
+	query := "SELECT chat_id, telegram_id AS user_id FROM users_telegrams WHERE id=ANY($1)"
+	var telegrams []entity.Telegram
+	err := r.cli.SelectContext(ctx, &telegrams, query, ids)
+	if err != nil {
+		return nil, errors.WithMessage(err, "select users telegrams")
+	}
+	return telegrams, nil
 }

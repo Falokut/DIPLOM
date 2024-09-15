@@ -8,7 +8,8 @@ import (
 
 	"dish_as_a_service/domain"
 
-	"github.com/Falokut/go-kit/client/telegram_bot"
+	"github.com/Falokut/go-kit/telegram_bot"
+	"github.com/Falokut/go-kit/telegram_bot/apierrors"
 )
 
 type UserService interface {
@@ -22,55 +23,42 @@ type UserService interface {
 }
 
 type User struct {
-	service UserService
-	debug   bool
+	service               UserService
 }
 
-func NewUser(service UserService, debug bool) User {
+func NewUser(service UserService) User {
 	return User{
-		service: service,
-		debug:   debug,
+		service:               service,
 	}
 }
 
-func (c User) Register(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c User) Register(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	msg := update.Message
 	user := domain.RegisterUser{
 		Username: msg.From.UserName,
 		Name:     msg.From.FirstName + " " + msg.From.LastName,
 		Telegram: &domain.Telegram{
-			ChatId: msg.Chat.ID,
-			UserId: msg.From.ID,
+			ChatId: msg.Chat.Id,
+			UserId: msg.From.Id,
 		},
 	}
 	err := c.service.Register(ctx, user)
 	switch {
 	case errors.Is(err, domain.ErrUserAlreadyExists):
-		return telegram_bot.NewMessage(msg.Chat.ID, "вы уже зарегистрированы")
+		return nil, apierrors.NewBusinessError(domain.ErrCodeUserAlreadyExists, domain.ErrUserAlreadyExists.Error(), err)
 	case err != nil:
-		return HandleError(msg, err, c.debug)
+		return nil, err
 	}
-	return telegram_bot.NewMessage(msg.Chat.ID, "вы зарегистрированы")
-}
-
-func (c User) IsAdmin(ctx context.Context, msg *telegram_bot.Message) (bool, telegram_bot.Chattable) {
-	userId, err := c.service.GetUserIdByTelegramId(ctx, msg.From.ID)
-	if err != nil {
-		return false, HandleError(msg, err, c.debug)
-	}
-	isAdmin, err := c.service.IsAdmin(ctx, userId)
-	if err != nil {
-		return false, HandleError(msg, err, c.debug)
-	}
-	return isAdmin, telegram_bot.NewMessage(msg.Chat.ID, "эта команда предназначена только для администраторов")
+	return telegram_bot.NewMessage(msg.Chat.Id, "вы зарегистрированы"), nil
 }
 
 const userUnderline = "___________________________________________"
 
 //nolint:mnd
-func (c User) List(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c User) List(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	users, err := c.service.List(ctx)
 	if err != nil {
-		return HandleError(msg, err, c.debug)
+		return nil, err
 	}
 	text := make([]string, 0, len(users)*2+3)
 	text = append(text, userUnderline, "|  #  |  [NAME]  |  [USERNAME]  |  [ADMIN]  |")
@@ -78,41 +66,52 @@ func (c User) List(ctx context.Context, msg *telegram_bot.Message) telegram_bot.
 		text = append(text, userUnderline, fmt.Sprintf("|  %d  |%s|%s|%t|",
 			i+1, user.Name, user.Username, user.Admin))
 	}
-	return telegram_bot.NewMessage(msg.Chat.ID, strings.Join(text, "\n"))
+	return telegram_bot.NewMessage(update.Message.Chat.Id, strings.Join(text, "\n")), nil
 }
 
-func (c User) AddAdmin(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c User) AddAdmin(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	msg := update.Message
 	err := c.service.AddAdmin(ctx, msg.CommandArguments())
 	switch {
+	case errors.Is(err, domain.ErrUserNotFound):
+		return nil, apierrors.NewBusinessError(
+			domain.ErrCodeUserNotFound,
+			fmt.Sprintf("пользователь с ником '%s' не найден", msg.CommandArguments()),
+			err)
 	case err != nil:
-		return HandleError(msg, err, c.debug)
-	case errors.Is(err, domain.ErrUserNotExist):
-		return telegram_bot.NewMessage(msg.Chat.ID, "пользователь не найден")
+		return nil, err
 	}
-	return telegram_bot.NewMessage(msg.Chat.ID, fmt.Sprintf("администратор с username=%s добавлен", msg.CommandArguments()))
+	return telegram_bot.NewMessage(msg.Chat.Id,
+			fmt.Sprintf("администратор с username=%s добавлен", msg.CommandArguments()),
+		),
+		nil
 }
 
-func (c User) AddAdminSecret(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c User) AddAdminSecret(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	msg := update.Message
 	req := domain.AddAdminSecretRequest{
-		ChatId: msg.Chat.ID,
+		ChatId: msg.Chat.Id,
 		Secret: msg.CommandArguments(),
 	}
 	err := c.service.AddAdminSecret(ctx, req)
 	switch {
 	case err != nil:
-		return HandleError(msg, err, c.debug)
+		return nil, err
 	case errors.Is(err, domain.ErrWrongSecret):
-		return telegram_bot.NewMessage(msg.Chat.ID, "вы ввели неправильный пароль")
-	case errors.Is(err, domain.ErrUserNotExist):
-		return telegram_bot.NewMessage(msg.Chat.ID, "пользователь не найден")
+		return nil, apierrors.NewBusinessError(domain.ErrCodeWrongSecret, domain.ErrWrongSecret.Error(), err)
+	case errors.Is(err, domain.ErrUserNotFound):
+		return nil, apierrors.NewBusinessError(domain.ErrCodeUserNotFound,
+			fmt.Sprintf("пользователь с ником '%s' не найден", msg.From.UserName),
+			err,
+		)
 	}
-	return telegram_bot.NewMessage(msg.Chat.ID, "вы стали администратором")
+	return telegram_bot.NewMessage(msg.Chat.Id, "вы стали администратором"), nil
 }
 
-func (c User) GetAdminSecret(ctx context.Context, msg *telegram_bot.Message) telegram_bot.Chattable {
+func (c User) GetAdminSecret(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	secret, err := c.service.GetAdminSecret(ctx)
 	if err != nil {
-		return HandleError(msg, err, c.debug)
+		return nil, err
 	}
-	return telegram_bot.NewMessage(msg.Chat.ID, "пароль для администратора: "+secret)
+	return telegram_bot.NewMessage(update.Message.Chat.Id, "пароль для администратора: "+secret), nil
 }

@@ -1,6 +1,7 @@
 package assembly
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -19,31 +20,38 @@ import (
 	telegram_payment "dish_as_a_service/service/payment/telegram"
 
 	"github.com/Falokut/go-kit/client/db"
-	"github.com/Falokut/go-kit/client/telegram_bot"
 	"github.com/Falokut/go-kit/http/endpoint"
 	"github.com/Falokut/go-kit/http/router"
 	"github.com/Falokut/go-kit/log"
+	"github.com/Falokut/go-kit/telegram_bot"
+	brouter "github.com/Falokut/go-kit/telegram_bot/router"
+	"github.com/pkg/errors"
 	"github.com/txix-open/bgjob"
 )
 
 type Config struct {
-	BotRouter  *broutes.Router
+	BotRouter  *brouter.Router
 	HttpRouter *router.Router
 	Workers    []*bgjob.Worker
 }
 
+// nolint:funlen
 func Locator(
+	ctx context.Context,
 	logger log.Logger,
 	dbCli *db.Client,
-	tgbot *telegram_bot.BotAPI,
+	tgBot *telegram_bot.BotAPI,
 	bgJobCli *bgjob.Client,
 	cfg conf.LocalConfig,
-) Config {
+) (Config, error) {
 	userRepo := repository.NewUser(dbCli)
 	secret := repository.NewSecret(cfg.App.AdminSecret)
 	userService := service.NewUser(userRepo, secret)
+	userService.SetRefreshAdminCommands(func(ctx context.Context) error {
+		return broutes.RegisterRoutes(ctx, tgBot, userService)
+	})
 	userContr := controller.NewUser(userService)
-	userBotContr := bcontroller.NewUser(userService, cfg.App.Debug)
+	userBotContr := bcontroller.NewUser(userService)
 
 	imagesRepo := repository.NewImage(http.DefaultClient, cfg.Images.BaseServiceUrl, cfg.Images.BaseImagePath)
 	dishRepo := repository.NewDish(dbCli)
@@ -60,14 +68,8 @@ func Locator(
 		User:             userContr,
 	}
 	authMiddleware := routes.NewAuthMiddleware(userRepo)
-
-	if tgbot == nil {
-		return Config{
-			HttpRouter: hrouter.InitRoutes(authMiddleware, endpoint.DefaultWrapper(logger)),
-		}
-	}
 	orderRepo := repository.NewOrder(dbCli)
-	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgbot)
+	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgBot)
 	telegramWorkerService := telegram_payment.NewWorker(paymentBot)
 	telegramController := telegram_payment.NewWorkerController(telegramWorkerService)
 
@@ -90,9 +92,18 @@ func Locator(
 	orderService := service.NewOrder(paymentService, orderRepo, dishRepo)
 	hrouter.Order = controller.NewOrder(orderService)
 
-	orderUserService := bot_service.NewOrderUserService(tgbot, userRepo)
+	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo)
 	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService)
-	brouter := broutes.NewRouter(logger, userBotContr, orderBotContrl)
+	botControllers := broutes.Controllers{
+		User:  userBotContr,
+		Order: orderBotContrl,
+	}
+	botAdminAuth := broutes.NewAdminAuth(userRepo)
+	brouter := broutes.InitRoutes(
+		botControllers,
+		brouter.DefaultMiddlewares(logger),
+		botAdminAuth.AdminAuth,
+	)
 
 	expirationWorker := bgjob.NewWorker(bgJobCli,
 		expiration.WorkerQueue,
@@ -100,13 +111,16 @@ func Locator(
 		bgjob.WithPollInterval(5*time.Second), // nolint:mnd
 		bgjob.WithObserver(observer),
 	)
-
+	err := broutes.RegisterRoutes(ctx, tgBot, userService)
+	if err != nil {
+		return Config{}, errors.WithMessage(err, "register bot routes")
+	}
 	return Config{
-		BotRouter:  &brouter,
+		BotRouter:  brouter,
 		HttpRouter: hrouter.InitRoutes(authMiddleware, endpoint.DefaultWrapper(logger)),
 		Workers: []*bgjob.Worker{
 			telegramWorker,
 			expirationWorker,
 		},
-	}
+	}, nil
 }
