@@ -67,16 +67,6 @@ func (r User) GetUserInfo(ctx context.Context, userId string) (entity.User, erro
 	}
 }
 
-func (r User) GetAdminsChatsIds(ctx context.Context) ([]int64, error) {
-	query := "SELECT chat_id FROM users_telegrams t JOIN users u ON t.id=u.id WHERE u.admin"
-	var chatIds []int64
-	err := r.cli.SelectContext(ctx, &chatIds, query)
-	if err != nil {
-		return nil, errors.WithMessage(err, "execute query")
-	}
-	return chatIds, nil
-}
-
 func (r User) IsAdmin(ctx context.Context, id string) (bool, error) {
 	query := `SELECT admin FROM users WHERE id=$1`
 
@@ -131,9 +121,9 @@ func (r User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (stri
 	}
 }
 
-func (r User) AddAdmin(ctx context.Context, username string) error {
-	query := "UPDATE users SET admin='true' WHERE username=$1"
-	res, err := r.cli.ExecContext(ctx, query, username)
+func (r User) SetUserAdminStatus(ctx context.Context, username string, isAdmin bool) error {
+	query := "UPDATE users SET admin=$1 WHERE username=$2"
+	res, err := r.cli.ExecContext(ctx, query, isAdmin, username)
 	if err != nil {
 		return errors.WithMessage(err, "select users")
 	}
@@ -167,12 +157,45 @@ func (r User) GetAdminsIds(ctx context.Context) ([]string, error) {
 	}
 	return ids, nil
 }
-func (r User) GetUsersTelegrams(ctx context.Context, ids []string) ([]entity.Telegram, error) {
-	query := "SELECT chat_id, telegram_id AS user_id FROM users_telegrams WHERE id=ANY($1)"
-	var telegrams []entity.Telegram
-	err := r.cli.SelectContext(ctx, &telegrams, query, ids)
+
+func (r User) GetAdminsChatsIds(ctx context.Context) ([]int64, error) {
+	query := "SELECT chat_id FROM users_telegrams t JOIN users u ON t.id=u.id WHERE u.admin"
+	var chatIds []int64
+	err := r.cli.SelectContext(ctx, &chatIds, query)
+	if err != nil {
+		return nil, errors.WithMessage(err, "execute query")
+	}
+	return chatIds, nil
+}
+
+func (r User) GetTelegramUsersInfo(ctx context.Context) ([]entity.TelegramUser, error) {
+	query := `SELECT chat_id, admin 
+	FROM users_telegrams t
+	JOIN users u
+	ON t.id=u.id;`
+	var telegrams []entity.TelegramUser
+	err := r.cli.SelectContext(ctx, &telegrams, query)
 	if err != nil {
 		return nil, errors.WithMessage(err, "select users telegrams")
 	}
 	return telegrams, nil
+}
+
+func (r User) GetUserChatIdByUsername(ctx context.Context, username string) (int64, error) {
+	query := `
+	SELECT chat_id 
+	FROM users_telegrams t
+	JOIN users u
+	ON t.id=u.id
+	WHERE u.username=$1;
+	`
+	var chatId int64
+	err := r.cli.GetContext(ctx, &chatId, query, username)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return 0, domain.ErrUserNotFound
+	case err != nil:
+		return 0, errors.WithMessage(err, "get user chat id by username")
+	}
+	return chatId, nil
 }

@@ -18,17 +18,18 @@ type UserService interface {
 	GetUserIdByTelegramId(ctx context.Context, telegramId int64) (string, error)
 	List(ctx context.Context) ([]domain.User, error)
 	AddAdmin(ctx context.Context, username string) error
+	RemoveAdmin(ctx context.Context, username string) error
 	AddAdminSecret(ctx context.Context, req domain.AddAdminSecretRequest) error
 	GetAdminSecret(ctx context.Context) (string, error)
 }
 
 type User struct {
-	service               UserService
+	service UserService
 }
 
 func NewUser(service UserService) User {
 	return User{
-		service:               service,
+		service: service,
 	}
 }
 
@@ -82,7 +83,24 @@ func (c User) AddAdmin(ctx context.Context, update telegram_bot.Update) (telegra
 		return nil, err
 	}
 	return telegram_bot.NewMessage(msg.Chat.Id,
-			fmt.Sprintf("администратор с username=%s добавлен", msg.CommandArguments()),
+			fmt.Sprintf("администратор с username '%s' добавлен", msg.CommandArguments()),
+		),
+		nil
+}
+func (c User) RemoveAdminByUsername(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	msg := update.Message
+	err := c.service.RemoveAdmin(ctx, msg.CommandArguments())
+	switch {
+	case errors.Is(err, domain.ErrUserNotFound):
+		return nil, apierrors.NewBusinessError(
+			domain.ErrCodeUserNotFound,
+			fmt.Sprintf("пользователь с username '%s' не найден", msg.CommandArguments()),
+			err)
+	case err != nil:
+		return nil, err
+	}
+	return telegram_bot.NewMessage(msg.Chat.Id,
+			fmt.Sprintf("администратор с username '%s' удалён", msg.CommandArguments()),
 		),
 		nil
 }
@@ -101,7 +119,7 @@ func (c User) AddAdminSecret(ctx context.Context, update telegram_bot.Update) (t
 		return nil, apierrors.NewBusinessError(domain.ErrCodeWrongSecret, domain.ErrWrongSecret.Error(), err)
 	case errors.Is(err, domain.ErrUserNotFound):
 		return nil, apierrors.NewBusinessError(domain.ErrCodeUserNotFound,
-			fmt.Sprintf("пользователь с ником '%s' не найден", msg.From.UserName),
+			fmt.Sprintf("пользователь с username '%s' не найден", msg.From.UserName),
 			err,
 		)
 	}

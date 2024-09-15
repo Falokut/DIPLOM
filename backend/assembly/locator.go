@@ -14,6 +14,7 @@ import (
 	"dish_as_a_service/repository"
 	"dish_as_a_service/routes"
 	"dish_as_a_service/service"
+	"dish_as_a_service/service/events"
 	"dish_as_a_service/service/payment"
 	"dish_as_a_service/service/payment/expiration"
 
@@ -46,10 +47,8 @@ func Locator(
 ) (Config, error) {
 	userRepo := repository.NewUser(dbCli)
 	secret := repository.NewSecret(cfg.App.AdminSecret)
-	userService := service.NewUser(userRepo, secret)
-	userService.SetRefreshAdminCommands(func(ctx context.Context) error {
-		return broutes.RegisterRoutes(ctx, tgBot, userService)
-	})
+	adminEvents := events.NewAdminEvents(tgBot)
+	userService := service.NewUser(userRepo, secret, adminEvents)
 	userContr := controller.NewUser(userService)
 	userBotContr := bcontroller.NewUser(userService)
 
@@ -111,7 +110,7 @@ func Locator(
 		bgjob.WithPollInterval(5*time.Second), // nolint:mnd
 		bgjob.WithObserver(observer),
 	)
-	err := broutes.RegisterRoutes(ctx, tgBot, userService)
+	err := broutes.RegisterRoutes(ctx, tgBot, userRepo)
 	if err != nil {
 		return Config{}, errors.WithMessage(err, "register bot routes")
 	}

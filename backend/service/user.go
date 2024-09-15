@@ -16,10 +16,10 @@ type UserRepo interface {
 	GetUsers(ctx context.Context) ([]entity.User, error)
 	GetUserChatId(ctx context.Context, userId string) (int64, error)
 	GetUserIdByTelegramId(ctx context.Context, chatId int64) (string, error)
-	AddAdmin(ctx context.Context, username string) error
+	SetUserAdminStatus(ctx context.Context, username string, isAdmin bool) error
 	AddAdminChatId(ctx context.Context, chatId int64) error
 	GetAdminsIds(ctx context.Context) ([]string, error)
-	GetUsersTelegrams(ctx context.Context, ids []string) ([]entity.Telegram, error)
+	GetUserChatIdByUsername(ctx context.Context, username string) (int64, error)
 }
 
 type Secret interface {
@@ -27,20 +27,22 @@ type Secret interface {
 }
 
 type User struct {
-	repo                 UserRepo
-	secret               Secret
-	refreshAdminCommands func(ctx context.Context) error
+	repo        UserRepo
+	secret      Secret
+	adminEvents AdminEvents
 }
 
-func NewUser(repo UserRepo, secret Secret) User {
-	return User{
-		repo:                 repo,
-		secret:               secret,
-		refreshAdminCommands: func(ctx context.Context) error { return nil },
-	}
+type AdminEvents interface {
+	AdminAdded(ctx context.Context, chatId int64) error
+	AdminRemoved(ctx context.Context, chatId int64) error
 }
-func (s *User) SetRefreshAdminCommands(refreshAdminCommands func(ctx context.Context) error) {
-	s.refreshAdminCommands = refreshAdminCommands
+
+func NewUser(repo UserRepo, secret Secret, adminEvents AdminEvents) User {
+	return User{
+		repo:        repo,
+		secret:      secret,
+		adminEvents: adminEvents,
+	}
 }
 
 func (s User) Register(ctx context.Context, user domain.RegisterUser) error {
@@ -88,14 +90,19 @@ func (s User) List(ctx context.Context) ([]domain.User, error) {
 	}
 	return converted, nil
 }
+
 func (s User) AddAdmin(ctx context.Context, username string) error {
-	err := s.repo.AddAdmin(ctx, username)
+	err := s.repo.SetUserAdminStatus(ctx, username, true)
 	if err != nil {
 		return errors.WithMessage(err, "add admin")
 	}
-	err = s.refreshAdminCommands(ctx)
+	chatId, err := s.repo.GetUserChatIdByUsername(ctx, username)
 	if err != nil {
-		return errors.WithMessage(err, "refresh admin commands")
+		return errors.WithMessage(err, "get chat id by username")
+	}
+	err = s.adminEvents.AdminAdded(ctx, chatId)
+	if err != nil {
+		return errors.WithMessage(err, "admin added event")
 	}
 	return nil
 }
@@ -116,18 +123,6 @@ func (s User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (stri
 	return userId, nil
 }
 
-func (s User) GetAdminsTelegramInfo(ctx context.Context) ([]entity.Telegram, error) {
-	ids, err := s.repo.GetAdminsIds(ctx)
-	if err != nil {
-		return nil, errors.WithMessage(err, "get admins ids")
-	}
-	telegrams, err := s.repo.GetUsersTelegrams(ctx, ids)
-	if err != nil {
-		return nil, errors.WithMessage(err, "get users telegrams")
-	}
-	return telegrams, nil
-}
-
 func (s User) AddAdminSecret(ctx context.Context, req domain.AddAdminSecretRequest) error {
 	if s.secret.GetSecret() != req.Secret {
 		return domain.ErrWrongSecret
@@ -137,13 +132,31 @@ func (s User) AddAdminSecret(ctx context.Context, req domain.AddAdminSecretReque
 	if err != nil {
 		return errors.WithMessage(err, "add admin")
 	}
-	err = s.refreshAdminCommands(ctx)
+	err = s.adminEvents.AdminAdded(ctx, req.ChatId)
 	if err != nil {
-		return errors.WithMessage(err, "refresh admin commands")
+		return errors.WithMessage(err, "admin added event")
 	}
 	return nil
 }
 
 func (s User) GetAdminSecret(_ context.Context) (string, error) {
 	return s.secret.GetSecret(), nil
+}
+
+func (s User) RemoveAdmin(ctx context.Context, username string) error {
+	err := s.repo.SetUserAdminStatus(ctx, username, false)
+	if err != nil {
+		return errors.WithMessage(err, "remove admin")
+	}
+
+	chatId, err := s.repo.GetUserChatIdByUsername(ctx, username)
+	if err != nil {
+		return errors.WithMessage(err, "get user chat id by username")
+	}
+
+	err = s.adminEvents.AdminRemoved(ctx, chatId)
+	if err != nil {
+		return errors.WithMessage(err, "admin removed")
+	}
+	return nil
 }

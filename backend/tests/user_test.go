@@ -43,7 +43,7 @@ func (t *UserSuite) SetupTest() {
 	t.test = test
 	t.db = dbt.New(test, db.WithMigrationRunner("../migrations", test.Logger()))
 	t.userRepo = repository.NewUser(t.db.Client)
-	t.userService = service.NewUser(t.userRepo, nil)
+	t.userService = service.NewUser(t.userRepo, nil, nil)
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)

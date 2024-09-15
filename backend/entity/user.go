@@ -17,3 +17,8 @@ type Telegram struct {
 	ChatId int64
 	UserId int64
 }
+
+type TelegramUser struct {
+	ChatId int64
+	Admin  bool
+}
