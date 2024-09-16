@@ -16,6 +16,7 @@ var (
 	ErrDishCategoryConflict   = errors.New("категория с таким именем уже существует")
 	ErrUnauthorized           = errors.New("заголовок для авторизации не передан")
 	ErrOrderingForbidden      = errors.New("оформление заказов приостановлено")
+	ErrOrderNotFound          = errors.New("заказ не найден")
 )
 
 const (

@@ -44,3 +44,14 @@ func (m UserAuth) UserAdminAuth(next http2.HandlerFunc) http2.HandlerFunc {
 		return next(ctx, w, r)
 	}
 }
+
+func (m UserAuth) UserAuth(next http2.HandlerFunc) http2.HandlerFunc {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		userId := r.Header.Get(userIdHeader)
+		if userId == "" {
+			return apierrors.New(http.StatusUnauthorized, domain.ErrCodeEmptyUserIdHeader,
+				fmt.Sprintf("заголовок %s не предоставлен", userIdHeader), domain.ErrUnauthorized)
+		}
+		return next(ctx, w, r)
+	}
+}

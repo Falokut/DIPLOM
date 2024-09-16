@@ -18,22 +18,25 @@ type Router struct {
 func (r Router) InitRoutes(authMiddleware UserAuth, wrapper endpoint.Wrapper) *router.Router {
 	mux := router.New()
 	for _, desc := range endpointDescriptors(r) {
-		if desc.IsAdmin {
-			withAuthWrapper := wrapper.WithMiddlewares(authMiddleware.UserAdminAuth)
-			mux.Handler(desc.Method, desc.Path, withAuthWrapper.Endpoint(desc.Handler))
-		} else {
-			mux.Handler(desc.Method, desc.Path, wrapper.Endpoint(desc.Handler))
+		endpointWrapper := wrapper
+		switch {
+		case desc.IsAdmin:
+			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.UserAdminAuth)
+		case desc.NeedUserAuth:
+			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.UserAuth)
 		}
+		mux.Handler(desc.Method, desc.Path, endpointWrapper.Endpoint(desc.Handler))
 	}
 
 	return mux
 }
 
 type EndpointDescriptor struct {
-	Method  string
-	Path    string
-	IsAdmin bool
-	Handler any
+	Method       string
+	Path         string
+	IsAdmin      bool
+	NeedUserAuth bool
+	Handler      any
 }
 
 func endpointDescriptors(r Router) []EndpointDescriptor {
@@ -81,6 +84,12 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			Method:  http.MethodPost,
 			Path:    "/orders",
 			Handler: r.Order.ProcessOrder,
+		},
+		{
+			Method:       http.MethodGet,
+			Path:         "/orders/my",
+			Handler:      r.Order.GetUserOrders,
+			NeedUserAuth: true,
 		},
 		{
 			Method:  http.MethodGet,

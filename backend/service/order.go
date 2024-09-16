@@ -30,7 +30,12 @@ type OrderRepo interface {
 	IsOrderCanceled(ctx context.Context, orderId string) (bool, error)
 	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
 	IsOrderingAllowed(ctx context.Context) (bool, error)
+	GetUserOrders(ctx context.Context, userId string, limit int32, offset int32) ([]entity.Order, error)
 }
+
+const (
+	defaultUserOrdersLimit = 30
+)
 
 type Order struct {
 	paymentService PaymentService
@@ -158,6 +163,39 @@ func (s Order) IsOrderCanceled(ctx context.Context, orderId string) (bool, error
 		return false, errors.WithMessage(err, "is order canceled")
 	}
 	return canceled, nil
+}
+
+func (s Order) GetUserOrders(ctx context.Context, userId string, req domain.GetMyOrdersRequest) ([]domain.UserOrder, error) {
+	limit := req.Limit
+	if limit == 0 {
+		limit = defaultUserOrdersLimit
+	}
+	orders, err := s.orderRepo.GetUserOrders(ctx, userId, limit, req.Offset)
+	if err != nil {
+		return nil, errors.WithMessage(err, "get user orders")
+	}
+	var userOrders = make([]domain.UserOrder, len(orders))
+	for i, order := range orders {
+		items := make([]domain.OrderItem, len(order.Items))
+		for j, item := range order.Items {
+			items[j] = domain.OrderItem{
+				DishId:     item.DishId,
+				Name:       item.Name,
+				Price:      item.Price,
+				Count:      item.Count,
+				Status:     item.Status,
+				TotalPrice: item.Count * item.Price,
+			}
+		}
+		userOrders[i] = domain.UserOrder{
+			Items:         items,
+			PaymentMethod: order.PaymentMethod,
+			Total:         order.Total,
+			Wishes:        order.Wishes,
+			CreatedAt:     order.CreatedAt,
+		}
+	}
+	return userOrders, nil
 }
 
 func convertMapStringToInt(m map[string]int32) (map[int32]int32, error) {

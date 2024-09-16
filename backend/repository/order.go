@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
 
 	"github.com/Falokut/go-kit/client/db"
@@ -73,69 +74,36 @@ func (r Order) UpdateOrderStatus(ctx context.Context, orderId, newStatus string)
 }
 
 func (r Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, error) {
-	orderCh := make(chan *entity.Order)
-	errorCh := make(chan error)
-	itemsCh := make(chan []entity.OrderItem)
-
-	go func() {
-		query := "SELECT id, user_id, total, created_at, wishes FROM orders WHERE id=$1"
-		var order entity.Order
-		err := r.cli.GetContext(ctx, &order, query, orderId)
-		if err != nil {
-			errorCh <- errors.WithMessage(err, "get order")
-			return
-		}
-		orderCh <- &order
-		close(orderCh)
-	}()
-	go func() {
-		query := `
-		 SELECT dish_id, count, i.price AS price, status, d.name AS name
-		 FROM order_items i JOIN dish d ON i.dish_id=d.id 
-		 WHERE order_id=$1
-		`
-		var items []entity.OrderItem
-		err := r.cli.SelectContext(ctx, &items, query, orderId)
-		if err != nil {
-			errorCh <- errors.WithMessage(err, "get order items")
-			return
-		}
-		itemsCh <- items
-		close(itemsCh)
-	}()
-
-	var order *entity.Order
-	var items []entity.OrderItem
-	itemsDone := false
-	orderDone := false
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, errors.WithMessage(ctx.Err(), "context done")
-		case err := <-errorCh:
-			return nil, errors.WithMessage(err, "get order error")
-		case orderChItem := <-orderCh:
-			if orderDone {
-				continue
-			}
-			if itemsDone {
-				order = orderChItem
-				order.Items = items
-				return order, nil
-			}
-			orderDone = true
-			order = orderChItem
-		case orderChItems := <-itemsCh:
-			if itemsDone {
-				continue
-			}
-			if orderDone {
-				order.Items = orderChItems
-				return order, nil
-			}
-			itemsDone = true
-			items = orderChItems
-		}
+	query := `
+	SELECT
+		o.id,
+		o.payment_method,
+		o.user_id,
+		o.total, 
+		o.created_at,
+		o.wishes,
+		json_agg(
+			json_build_object(
+			'dishId', oi.dish_id,
+			'count', oi.count,
+			'price', oi.price,
+			'status', oi.status,
+			'name', d.name
+			)
+		) AS items
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+	JOIN dish d ON oi.dish_id = d.id
+    WHERE o.id = $1;`
+	var order entity.Order
+	err := r.cli.GetContext(ctx, &order, query, orderId)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return nil, domain.ErrOrderNotFound
+	case err != nil:
+		return nil, errors.WithMessage(err, "query context")
+	default:
+		return &order, nil
 	}
 }
 
@@ -205,4 +173,40 @@ func (r Order) IsOrderingAllowed(ctx context.Context) (bool, error) {
 		return false, errors.WithMessage(err, "execute query")
 	}
 	return isAllowed, nil
+}
+
+func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, offset int32) ([]entity.Order, error) {
+	query := `
+	SELECT
+		o.id,
+		o.payment_method,
+		o.user_id,
+		o.total, 
+		o.created_at,
+		o.wishes,
+		json_agg(
+			json_build_object(
+			'dishId', oi.dish_id,
+			'count', oi.count,
+			'price', oi.price,
+			'status', oi.status,
+			'name', d.name
+			)
+		) AS items
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+	JOIN dish d ON oi.dish_id = d.id
+    WHERE o.user_id = $1
+	 GROUP BY 
+        o.id
+    ORDER BY 
+        o.created_at DESC
+	LIMIT $2
+	OFFSET $3`
+	var orders []entity.Order
+	err := r.cli.SelectContext(ctx, &orders, query, userId, limit, offset)
+	if err != nil {
+		return nil, errors.WithMessage(err, "query context")
+	}
+	return orders, nil
 }

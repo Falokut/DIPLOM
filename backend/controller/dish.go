@@ -33,7 +33,6 @@ func NewDish(service DishService) Dish {
 //	@Param			ids		query	string	false	"список идентификаторов блюд через запятую"
 //	@Param			limit	query	int		false	"максимальное количество блюд"
 //	@Param			offset	query	int		false	"смещение"
-//	@Accept			json
 //	@Produce		json
 //	@Success		200	{array}		domain.Dish
 //	@Failure		400	{object}	apierrors.Error
@@ -67,7 +66,6 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 //	@Param		X-USER-ID	header	string					true	"id пользователя"
 //
 //	@Accept		json
-//	@Produce	json
 //	@Success	200	{object}	domain.Empty
 //	@Failure	403	{object}	apierrors.Error
 //	@Failure	500	{object}	apierrors.Error

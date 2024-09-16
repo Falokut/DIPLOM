@@ -10,8 +10,13 @@ import (
 	"dish_as_a_service/domain"
 )
 
+const (
+	userIdHeader = "X-User-Id"
+)
+
 type OrderService interface {
 	ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (string, error)
+	GetUserOrders(ctx context.Context, userId string, req domain.GetMyOrdersRequest) ([]domain.UserOrder, error)
 }
 
 type Order struct {
@@ -48,4 +53,25 @@ func (c Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest)
 	default:
 		return &domain.ProcessOrderResponse{PaymentUrl: url}, nil
 	}
+}
+
+// Get my orders
+//
+//	@Tags		order
+//	@Summary	Получить заказы
+//	@Produce	json
+//	@Param		limit		query		int		false	"максимальное количество блюд"
+//	@Param		offset		query		int		false	"смещение"
+//	@Param		X-USER-ID	header		string	true	"id пользователя"
+//	@Success	200			{object}	domain.UserOrder
+//	@Failure	400			{object}	apierrors.Error
+//	@Failure	403			{object}	apierrors.Error
+//	@Failure	404			{object}	apierrors.Error
+//	@Failure	500			{object}	apierrors.Error
+//	@Router		/orders/my [GET]
+func (c Order) GetUserOrders(ctx context.Context,
+	req domain.GetMyOrdersRequest,
+	r *http.Request,
+) ([]domain.UserOrder, error) {
+	return c.service.GetUserOrders(ctx, r.Header.Get(userIdHeader), req)
 }

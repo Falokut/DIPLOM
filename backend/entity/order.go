@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"github.com/Falokut/go-kit/json"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -32,9 +34,19 @@ type OrderItem struct {
 type Order struct {
 	Id            string
 	PaymentMethod string
-	Items         []OrderItem
+	Items         OrderItems
 	UserId        string
 	Total         int32
 	CreatedAt     time.Time
 	Wishes        string
+}
+
+type OrderItems []OrderItem
+
+func (o *OrderItems) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.Errorf("failed to scan OrderItems: %v", value)
+	}
+	return json.Unmarshal(bytes, o)
 }

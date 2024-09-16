@@ -61,11 +61,6 @@ func Locator(
 	dishesCategoriesService := service.NewDishesCategories(dishesCategoriesRepo)
 	dishesCategoriesContrl := controller.NewDishesCategories(dishesCategoriesService)
 
-	hrouter := routes.Router{
-		Dish:             dishContrl,
-		DishesCategories: dishesCategoriesContrl,
-		User:             userContr,
-	}
 	authMiddleware := routes.NewAuthMiddleware(userRepo)
 	orderRepo := repository.NewOrder(dbCli)
 	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgBot, orderRepo)
@@ -89,8 +84,13 @@ func Locator(
 	paymentService := payment.NewPayment(logger, paymentMethods, expirationService)
 
 	orderService := service.NewOrder(paymentService, orderRepo, dishRepo)
-	hrouter.Order = controller.NewOrder(orderService)
-
+	orderControl := controller.NewOrder(orderService)
+	hrouter := routes.Router{
+		Dish:             dishContrl,
+		DishesCategories: dishesCategoriesContrl,
+		User:             userContr,
+		Order:            orderControl,
+	}
 	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo)
 	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService)
 	botControllers := broutes.Controllers{

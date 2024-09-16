@@ -81,6 +81,21 @@ definitions:
       isAdmin:
         type: boolean
     type: object
+  domain.OrderItem:
+    properties:
+      count:
+        type: integer
+      dishId:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      status:
+        type: string
+      totalPrice:
+        type: integer
+    type: object
   domain.ProcessOrderRequest:
     properties:
       items:
@@ -115,6 +130,21 @@ definitions:
     - id
     - name
     type: object
+  domain.UserOrder:
+    properties:
+      createdAt:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/domain.OrderItem'
+        type: array
+      paymentMethod:
+        type: string
+      total:
+        type: integer
+      wishes:
+        type: string
+    type: object
   github_com_Falokut_go-kit_http_apierrors.Error:
     properties:
       details:
@@ -133,8 +163,6 @@ info:
 paths:
   /dishes:
     get:
-      consumes:
-      - application/json
       description: возвращает список блюд
       parameters:
       - description: список идентификаторов блюд через запятую
@@ -184,8 +212,6 @@ paths:
         name: X-USER-ID
         required: true
         type: string
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
@@ -407,6 +433,48 @@ paths:
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
       summary: Заказать
+      tags:
+      - order
+  /orders/my:
+    get:
+      parameters:
+      - description: максимальное количество блюд
+        in: query
+        name: limit
+        type: integer
+      - description: смещение
+        in: query
+        name: offset
+        type: integer
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserOrder'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Получить заказы
       tags:
       - order
   /users/get_by_telegram_id/:telegramId:
