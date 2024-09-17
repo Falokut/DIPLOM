@@ -104,7 +104,12 @@
   <h3>Добавление блюда</h3>
   <div class="input_container">
     <TextInput bind:value={dish.name} label={"название:"} />
-    <NumInput bind:value={dish.price} label={"цена:"} min={0} max={1000000} />
+    <NumInput
+      bind:value={dish.price}
+      label={"цена:"}
+      min={8000}
+      max={1000000}
+    />
     <ImageInput
       bind:outputUrl={dish.url}
       label={"картинка:"}

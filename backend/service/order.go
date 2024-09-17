@@ -188,6 +188,7 @@ func (s Order) GetUserOrders(ctx context.Context, userId string, req domain.GetM
 			}
 		}
 		userOrders[i] = domain.UserOrder{
+			Id:            order.Id,
 			Items:         items,
 			PaymentMethod: order.PaymentMethod,
 			Total:         order.Total,

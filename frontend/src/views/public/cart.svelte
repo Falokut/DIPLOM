@@ -10,6 +10,7 @@
   } from "@telegram-apps/sdk";
   const { initData } = retrieveLaunchParams();
   import { navigate } from "svelte-routing";
+  import { FormatPriceDefault } from "../../utils/format_price";
 
   const mainButtonRes = initMainButton();
   let mainButton = mainButtonRes[0];
@@ -83,13 +84,14 @@
 <div class="line"></div>
 <div class="cart">
   {#each dishes as dish}
-    <CartItem bind:dishInst={dish} />
+    <CartItem bind:dish />
   {/each}
   <div class="line"></div>
 </div>
 <div class="total_block">
-  <div class="total_text_l">Итого:</div>
-  <div class="total_text_r">{(total / 100).toFixed(2) + "₽"}</div>
+  <div class="total_text">Итого:</div>
+  <div class="spacer"></div>
+  <div class="total_price">{FormatPriceDefault(total)}</div>
 </div>
 <div class="wishes">
   <textarea bind:value={wishes} class="wishes-input"></textarea>
@@ -126,17 +128,16 @@
   }
 
   .total_block {
-    display: flex;
+    display: inline-flex;
+    width: 100%;
   }
 
-  .total_text_l {
+  .total_text {
     text-align: left;
-    padding-left: 10px;
-    width: 50%;
+    padding-left: var(--container-padding-lr);
   }
-  .total_text_r {
+  .total_price {
     text-align: right;
-    padding-right: 10px;
-    width: 50%;
+    padding-right: var(--container-padding-lr);
   }
 </style>

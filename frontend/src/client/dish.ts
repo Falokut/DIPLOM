@@ -5,19 +5,7 @@ export class Dish {
     description: string
     categories: string
     url: string
-    price: string
-}
-
-export function DishFromObject(obj:
-    { id: number; name: string; description: string; categories: string; url: string; price: number }): Dish {
-    let dish = new Dish();
-    dish.id = obj.id;
-    dish.name = obj.name;
-    dish.description = obj.description;
-    dish.categories = obj.categories;
-    dish.url = obj.url;
-    dish.price = (obj.price / 100).toFixed(2) + '₽';
-    return dish;
+    price: number
 }
 
 const dishesUrl = 'https://falokut.ru/api/dish_as_a_service/dishes'

@@ -14,7 +14,7 @@
     dishes = await GetDishes(null);
 
     removeListFn = mainButton.on("click", () => {
-      navigate("/cart")
+      navigate("/cart");
       mainButton.hide();
     });
   });
@@ -26,7 +26,7 @@
 
 <div class="grid grid-cols-1 medium-grid-cols-3 grid-gap" id="dishes-grid">
   {#each dishes as dish}
-    <Dish bind:dishInst={dish} />
+    <Dish bind:dish />
   {/each}
 </div>
 

@@ -1,16 +1,22 @@
-import RootIndex from './views/public/root.svelte'
+import RootIndex from './views/root.svelte'
 // -----------------
 import AdminIndex from './views/admin/index.svelte'
 import AdminAddDishesIndex from './views/admin/add_dishes.svelte'
 import AdminDishesCategoriesIndex from './views/admin/dish_сategories.svelte'
 // ----------
+import PublicIndex from './views/public/index.svelte'
 import DishesIndex from './views/public/dishes.svelte'
 import CartIndex from './views/public/cart.svelte'
+import OrdersIndex from './views/public/orders.svelte'
 
 const routes = [
     {
         name: "/",
         component: RootIndex
+    },
+    {
+        name:"/public-index",
+        component: PublicIndex
     },
     {
         name: "/dishes",
@@ -19,6 +25,10 @@ const routes = [
     {
         name: '/cart',
         component: CartIndex,
+    },
+    {
+        name: '/orders',
+        component: OrdersIndex,
     },
     {
         name: '/admin',

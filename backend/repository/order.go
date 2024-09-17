@@ -197,10 +197,8 @@ func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, of
     JOIN order_items oi ON o.id = oi.order_id
 	JOIN dish d ON oi.dish_id = d.id
     WHERE o.user_id = $1
-	 GROUP BY 
-        o.id
-    ORDER BY 
-        o.created_at DESC
+	GROUP BY o.id
+    ORDER BY o.created_at ASC
 	LIMIT $2
 	OFFSET $3`
 	var orders []entity.Order

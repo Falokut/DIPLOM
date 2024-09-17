@@ -20,6 +20,7 @@ type GetMyOrdersRequest struct {
 }
 
 type UserOrder struct {
+	Id            string
 	Items         []OrderItem
 	PaymentMethod string
 	Total         int32

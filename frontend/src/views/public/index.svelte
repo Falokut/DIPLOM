@@ -3,20 +3,12 @@
 
   let buttons = [
     {
-      url: "/admin/dishes/add",
-      text: "Добавить блюдо",
+      url: "/orders",
+      text: "мои заказы",
     },
     {
       url: "/dishes",
       text: "заказать",
-    },
-    {
-      url: "/admin/dishes/categories",
-      text: "категории",
-    },
-    {
-      url: "/orders",
-      text: "мои заказы",
     },
   ];
 </script>

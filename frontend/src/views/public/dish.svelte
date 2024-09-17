@@ -1,23 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { SetDishCount, GetDishCount } from "../../client/cart";
-  import { DishFromObject } from "../../client/dish";
   import PreviewImage from "../components/preview_image.svelte";
-  export let dishInst = {
-    id: 0,
-    url: "",
-    name: "",
-    description: "",
-    categories: "",
-    price: 0,
-  };
+  import { Dish } from "../../client/dish";
+  import { FormatPriceDefault } from "../../utils/format_price";
 
-  let dish = {
-    id: 0,
-    url: "",
-    name: "",
-    price: "",
-  };
+  export let dish: Dish;
   let count = 0;
 
   function incrDishCount() {
@@ -35,7 +23,6 @@
   }
 
   onMount(() => {
-    dish = DishFromObject(dishInst);
     count = GetDishCount(dish.id);
     if (count > 0) {
       showIncrDecrButtons = true;
@@ -51,7 +38,7 @@
   <PreviewImage bind:url={dish.url} bind:size={previewSize} bind:alt={dish.name}
   ></PreviewImage>
   <div class="dish-caption">{dish.name}</div>
-  <div class="dish-caption">{dish.price}</div>
+  <div class="dish-caption">{FormatPriceDefault(dish.price)}</div>
   <div class="dish-count-buttons">
     {#if showIncrDecrButtons}
       <button

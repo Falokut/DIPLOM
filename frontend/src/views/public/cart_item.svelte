@@ -1,30 +1,21 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import { GetDishCount } from "../../client/cart";
-  import { DishFromObject } from "../../client/dish";
+  import { Dish } from "../../client/dish";
+  import { FormatPriceDefault } from "../../utils/format_price";
 
-  export let dishInst = {
-    id: 0,
-    url: "",
-    name: "",
-    description: "",
-    categories: "",
-    price: 0,
-  };
-
-  let dish = {};
+  export let dish: Dish;
   let count = 0;
   onMount(() => {
-    count = GetDishCount(dishInst.id);
-    dishInst.price = dishInst.price * count;
-
-    dish = DishFromObject(dishInst);
+    count = GetDishCount(dish.id);
+    dish.price = dish.price * count;
   });
 </script>
 
-<div class="dish">
-  <div class="dish-name">{dish.name} x {count}</div>
-  <div class="dish-price">{dish.price}</div>
+<div class="dish_container">
+  <div class="dish_name">{dish.name} x {count}</div>
+  <div class="spacer"></div>
+  <div class="dish_price">{FormatPriceDefault(dish.price)}</div>
 </div>
 
 <style>
@@ -32,19 +23,17 @@
     --cart-item-height: 32px;
   }
 
-  .dish {
+  .dish_container {
     width: 100vw;
     height: var(--cart-item-height);
-    display: grid;
-    grid-auto-flow: column;
+    display: inline-flex;
   }
-  .dish-name {
-    text-align: left;
-    padding-left: 10px;
+  .dish_name {
+    padding-left: var(--container-padding-lr);
   }
 
-  .dish-price {
+  .dish_price {
     text-align: right;
-    padding-right: 10px;
+    padding-right: var(--container-padding-lr);
   }
 </style>

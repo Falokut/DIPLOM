@@ -1,6 +1,6 @@
 <script>
   import { navigate } from "svelte-routing";
-  import { UserIsAdmin } from "../../client/user";
+  import { UserIsAdmin } from "../client/user";
   import { onMount } from "svelte";
 
   onMount(async () => {
@@ -8,7 +8,7 @@
     if (isAdmin) {
       navigate("/admin");
     } else {
-      navigate("/dishes");
+      navigate("/public-index");
     }
   });
 </script>
