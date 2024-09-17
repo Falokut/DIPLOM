@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { navigate } from "svelte-routing";
+  import { initBackButton } from "@telegram-apps/sdk";
 
   import Dish from "./dish.svelte";
   import { GetDishes } from "../../client/dish";
@@ -9,7 +10,9 @@
   let dishes = [];
   let mainButton = LoadCart();
   let removeListFn;
-
+  let removeBackButtonListFn;
+  const backButtonRes = initBackButton();
+  var backButton = backButtonRes[0];
   onMount(async () => {
     dishes = await GetDishes(null);
 
@@ -17,10 +20,14 @@
       navigate("/cart");
       mainButton.hide();
     });
+    removeBackButtonListFn = backButton.on("click", () => {
+      navigate("/", { replace: true });
+    });
   });
 
   onDestroy(() => {
     removeListFn();
+    removeBackButtonListFn();
   });
 </script>
 
