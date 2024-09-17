@@ -9,6 +9,7 @@ import (
 const (
 	OrderItemStatusProcess  = "PROCESS"
 	OrderItemStatusCanceled = "CANCELED"
+	OrderItemStatusPaid     = "PAID"
 	OrderItemStatusSuccess  = "SUCCESS"
 )
 
@@ -27,7 +28,6 @@ type OrderItem struct {
 	DishId int32
 	Count  int32
 	Price  int32
-	Status string
 	Name   string
 }
 
@@ -38,6 +38,7 @@ type Order struct {
 	UserId        string
 	Total         int32
 	CreatedAt     time.Time
+	Status        string
 	Wishes        string
 }
 

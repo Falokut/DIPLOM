@@ -27,7 +27,7 @@ type OrderRepo interface {
 	GetOrder(ctx context.Context, orderId string) (*entity.Order, error)
 	ProcessOrder(ctx context.Context, order *entity.Order) error
 	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
-	IsOrderCanceled(ctx context.Context, orderId string) (bool, error)
+	GetOrderStatus(ctx context.Context, orderId string) (string, error)
 	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
 	IsOrderingAllowed(ctx context.Context) (bool, error)
 	GetUserOrders(ctx context.Context, userId string, limit int32, offset int32) ([]entity.Order, error)
@@ -131,7 +131,6 @@ func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest)
 			Count:  count,
 			Name:   dishesMap[id].Name,
 			Price:  count * dishesMap[id].Price,
-			Status: entity.OrderItemStatusProcess,
 		})
 		total += dishesMap[id].Price * count
 	}
@@ -142,6 +141,7 @@ func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest)
 		UserId:        req.UserId,
 		Total:         total,
 		Wishes:        req.Wishes,
+		Status:        entity.OrderItemStatusProcess,
 		CreatedAt:     time.Now().UTC(),
 	}
 
@@ -157,12 +157,12 @@ func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest)
 	return url, nil
 }
 
-func (s Order) IsOrderCanceled(ctx context.Context, orderId string) (bool, error) {
-	canceled, err := s.orderRepo.IsOrderCanceled(ctx, orderId)
+func (s Order) GetOrderStatus(ctx context.Context, orderId string) (string, error) {
+	orderStatus, err := s.orderRepo.GetOrderStatus(ctx, orderId)
 	if err != nil {
-		return false, errors.WithMessage(err, "is order canceled")
+		return "", errors.WithMessage(err, "get order status")
 	}
-	return canceled, nil
+	return orderStatus, nil
 }
 
 func (s Order) GetUserOrders(ctx context.Context, userId string, req domain.GetMyOrdersRequest) ([]domain.UserOrder, error) {
@@ -183,7 +183,6 @@ func (s Order) GetUserOrders(ctx context.Context, userId string, req domain.GetM
 				Name:       item.Name,
 				Price:      item.Price,
 				Count:      item.Count,
-				Status:     item.Status,
 				TotalPrice: item.Count * item.Price,
 			}
 		}
@@ -194,6 +193,7 @@ func (s Order) GetUserOrders(ctx context.Context, userId string, req domain.GetM
 			Total:         order.Total,
 			Wishes:        order.Wishes,
 			CreatedAt:     order.CreatedAt,
+			Status:        order.Status,
 		}
 	}
 	return userOrders, nil

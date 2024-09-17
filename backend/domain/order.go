@@ -24,6 +24,7 @@ type UserOrder struct {
 	Items         []OrderItem
 	PaymentMethod string
 	Total         int32
+	Status        string
 	Wishes        string `json:",omitempty"`
 	CreatedAt     time.Time
 }

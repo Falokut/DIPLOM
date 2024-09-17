@@ -16,9 +16,9 @@ import (
 type OrderService interface {
 	GetOrder(ctx context.Context, orderId string) (*entity.Order, error)
 	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
-	IsOrderCanceled(ctx context.Context, orderId string) (bool, error)
-	IsOrderingAllowed(cxt context.Context) (bool, error)
-	SetOrderingAllowed(cxt context.Context, isAllowed bool) error
+	GetOrderStatus(ctx context.Context, orderId string) (string, error)
+	IsOrderingAllowed(ctx context.Context) (bool, error)
+	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
 }
 
 type OrderUserService interface {
@@ -45,7 +45,7 @@ func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (t
 		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid payment payload", err)
 	}
 
-	err = c.orderService.UpdateOrderStatus(ctx, payload.OrderId, entity.OrderItemStatusSuccess)
+	err = c.orderService.UpdateOrderStatus(ctx, payload.OrderId, entity.OrderItemStatusPaid)
 	if err != nil {
 		return nil, err
 	}
@@ -74,11 +74,18 @@ func (c Order) HandlePreCheckout(ctx context.Context, update telegram_bot.Update
 		}, nil
 	}
 
-	canceled, err := c.orderService.IsOrderCanceled(ctx, payload.OrderId)
+	orderStatus, err := c.orderService.GetOrderStatus(ctx, payload.OrderId)
 	if err != nil {
 		return nil, apierrors.NewInternalServiceError(err)
 	}
-	if canceled {
+	switch {
+	case orderStatus == entity.OrderItemStatusPaid:
+		return telegram_bot.PreCheckoutConfig{
+			PreCheckoutQueryID: query.Id,
+			OK:                 false,
+			ErrorMessage:       "order already paid",
+		}, nil
+	case orderStatus == entity.OrderItemStatusCanceled:
 		return telegram_bot.PreCheckoutConfig{
 			PreCheckoutQueryID: query.Id,
 			OK:                 false,

@@ -15,7 +15,7 @@ VALUES (
     );
 
 CREATE TABLE users_telegrams (
-    id uuid REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    id uuid REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE UNIQUE,
     chat_id BIGINT NOT NULL UNIQUE,
     telegram_id BIGINT NOT NULL UNIQUE
 );
@@ -58,13 +58,13 @@ CREATE TABLE orders (
     user_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000' REFERENCES users (id) ON DELETE SET DEFAULT ON UPDATE CASCADE,
     total BIGINT NOT NULL CHECK (total > 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    wishes TEXT
+    wishes TEXT,
+    status TEXT NOT NULL,
 );
 
 CREATE TABLE order_items (
     order_id uuid NOT NULL REFERENCES orders (id) ON DELETE CASCADE ON UPDATE CASCADE,
     dish_id INT NOT NULL REFERENCES dish (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    status TEXT NOT NULL,
     count INT NOT NULL CHECK (count > 0),
     price INT NOT NULL CHECK (price > 0),
     PRIMARY KEY (order_id, dish_id)

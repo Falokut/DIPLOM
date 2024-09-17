@@ -31,7 +31,7 @@
 
 <style>
   .orders_container {
-    height: calc(100vh - 50px);
+    height: 95vh;
     border-radius: 8px;
     width: 95vw;
     background-color: var(--tg-theme-secondary-bg-color);

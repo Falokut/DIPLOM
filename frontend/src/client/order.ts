@@ -8,6 +8,7 @@ export class UserOrder {
     total: number
     wishes: string
     createdAt: string
+    status :string
 }
 
 export class UserOrderItem {
@@ -16,7 +17,6 @@ export class UserOrderItem {
     price: number
     count: number
     totalPrice: number
-    status: string
 }
 
 const userOrdersUrl = "https://falokut.ru/api/dish_as_a_service/orders/my"

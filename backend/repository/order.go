@@ -32,26 +32,35 @@ func (r Order) ProcessOrder(ctx context.Context, order *entity.Order) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
-	query := "INSERT INTO orders(id, user_id, total, created_at, wishes, payment_method) VALUES($1, $2, $3, $4, $5, $6)"
-	_, err = tx.ExecContext(ctx, query, order.Id, order.UserId, order.Total, order.CreatedAt, order.Wishes, order.PaymentMethod)
+	query := `INSERT INTO 
+	orders(id, user_id, total, created_at, wishes, payment_method, status)
+	VALUES($1,$2,$3,$4,$5,$6,$7)`
+	_, err = tx.ExecContext(ctx, query,
+		order.Id,
+		order.UserId,
+		order.Total,
+		order.CreatedAt,
+		order.Wishes,
+		order.PaymentMethod,
+		order.Status,
+	)
 	if err != nil {
 		return errors.WithMessage(err, "insert orders")
 	}
 
-	args := make([]any, 0, len(order.Items)*4+1)
+	args := make([]any, 0, len(order.Items)*3+1)
 	args = append(args, order.Id)
 	placeholders := make([]string, len(order.Items))
 	for i, item := range order.Items {
-		placeholders[i] = fmt.Sprintf("($1,$%d,$%d,$%d,$%d)",
+		placeholders[i] = fmt.Sprintf("($1,$%d,$%d,$%d)",
 			len(args)+1,
 			len(args)+2,
 			len(args)+3,
-			len(args)+4,
 		)
-		args = append(args, item.DishId, item.Count, item.Price, item.Status)
+		args = append(args, item.DishId, item.Count, item.Price)
 	}
 
-	query = fmt.Sprintf(`INSERT INTO order_items(order_id,dish_id,count,price,status) VALUES %s`,
+	query = fmt.Sprintf(`INSERT INTO order_items(order_id,dish_id,count,price) VALUES %s`,
 		strings.Join(placeholders, ","))
 	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -65,7 +74,7 @@ func (r Order) ProcessOrder(ctx context.Context, order *entity.Order) error {
 }
 
 func (r Order) UpdateOrderStatus(ctx context.Context, orderId, newStatus string) error {
-	query := "UPDATE order_items SET status=$1 WHERE order_id=$2"
+	query := "UPDATE orders SET status=$1 WHERE id=$2"
 	_, err := r.cli.ExecContext(ctx, query, newStatus, orderId)
 	if err != nil {
 		return errors.WithMessage(err, "exec update query")
@@ -82,19 +91,20 @@ func (r Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, err
 		o.total, 
 		o.created_at,
 		o.wishes,
+		o.status,
 		json_agg(
 			json_build_object(
 			'dishId', oi.dish_id,
 			'count', oi.count,
 			'price', oi.price,
-			'status', oi.status,
 			'name', d.name
 			)
 		) AS items
     FROM orders o
     JOIN order_items oi ON o.id = oi.order_id
 	JOIN dish d ON oi.dish_id = d.id
-    WHERE o.id = $1;`
+    WHERE o.id = $1
+	GROUP BY o.id`
 	var order entity.Order
 	err := r.cli.GetContext(ctx, &order, query, orderId)
 	switch {
@@ -107,19 +117,18 @@ func (r Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, err
 	}
 }
 
-func (r Order) IsOrderCanceled(ctx context.Context, orderId string) (bool, error) {
-	query := "SELECT EXISTS(SELECT order_id FROM order_items WHERE order_id=$1 AND status=$2)"
-
-	var canceled bool
-	err := r.cli.GetContext(ctx, &canceled, query, orderId, entity.OrderItemStatusCanceled)
+func (r Order) GetOrderStatus(ctx context.Context, orderId string) (string, error) {
+	query := "SELECT status FROM orders WHERE id=$1"
+	var status string
+	err := r.cli.GetContext(ctx, &status, query, orderId)
 	if err != nil {
-		return false, errors.WithMessage(err, "exec update query")
+		return "", errors.WithMessage(err, "get order")
 	}
-	return canceled, nil
+	return status, nil
 }
 
 func (r Order) SetOrderStatus(ctx context.Context, orderId, oldStatus, newStatus string) error {
-	query := "UPDATE order_items SET status=$1 WHERE order_id=$2 AND status=$3"
+	query := "UPDATE orders SET status=$1 WHERE id=$2 AND status=$3"
 	_, err := r.cli.ExecContext(ctx, query, newStatus, orderId, oldStatus)
 	if err != nil {
 		return errors.WithMessage(err, "exec update query")
@@ -164,7 +173,6 @@ func (r Order) SetOrderingAllowed(ctx context.Context, isAllowed bool) error {
 
 	return nil
 }
-
 func (r Order) IsOrderingAllowed(ctx context.Context) (bool, error) {
 	query := "SELECT EXISTS(SELECT id FROM allow_ordering_audit WHERE end_period IS NULL)"
 	isAllowed := false
@@ -184,12 +192,12 @@ func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, of
 		o.total, 
 		o.created_at,
 		o.wishes,
+		o.status,
 		json_agg(
 			json_build_object(
 			'dishId', oi.dish_id,
 			'count', oi.count,
 			'price', oi.price,
-			'status', oi.status,
 			'name', d.name
 			)
 		) AS items
@@ -198,7 +206,7 @@ func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, of
 	JOIN dish d ON oi.dish_id = d.id
     WHERE o.user_id = $1
 	GROUP BY o.id
-    ORDER BY o.created_at ASC
+    ORDER BY o.created_at DESC
 	LIMIT $2
 	OFFSET $3`
 	var orders []entity.Order

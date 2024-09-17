@@ -13,13 +13,7 @@
     let createdAt = new Date(order.createdAt);
     orderDate = createdAt.toISOString().slice(0, 10);
     orderDate += " "+createdAt.getHours() + ":" + createdAt.getMinutes();
-    let statusesSet = new Set<string>();
-    order.items.forEach((v) => statusesSet.add(v.status));
-    const statuses = statusesSet.keys().toArray();
-    if (statuses.length != 1) {
-      return;
-    }
-    switch (statuses[0]) {
+    switch (order.status) {
       case "PROCESS":
         orderStatus = "в процессе";
         break;
