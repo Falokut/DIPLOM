@@ -23,6 +23,8 @@ type OrderService interface {
 
 type OrderUserService interface {
 	NotifySuccessPayment(ctx context.Context, req *entity.Order) error
+	NotifyOrderArrival(ctx context.Context, req entity.QueryCallbackPayload) error
+	CancelOrder(ctx context.Context, req entity.QueryCallbackPayload) error
 }
 
 type Order struct {
@@ -36,7 +38,6 @@ func NewOrder(service OrderService, userService OrderUserService) Order {
 		userService:  userService,
 	}
 }
-
 func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	msg := update.Message
 	var payload entity.PaymentPayload
@@ -109,7 +110,6 @@ func (c Order) HandlePreCheckout(ctx context.Context, update telegram_bot.Update
 		OK:                 true,
 	}, nil
 }
-
 func (c Order) ForbidOrdering(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	err := c.orderService.SetOrderingAllowed(ctx, false)
 	if err != nil {
@@ -117,11 +117,36 @@ func (c Order) ForbidOrdering(ctx context.Context, update telegram_bot.Update) (
 	}
 	return telegram_bot.NewMessage(update.Message.Chat.Id, "оформление заказов запрещено"), nil
 }
-
 func (c Order) AllowOrdering(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
 	err := c.orderService.SetOrderingAllowed(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 	return telegram_bot.NewMessage(update.Message.Chat.Id, "оформление заказов разрешено"), nil
+}
+
+func (c Order) HandleCallbackQuery(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	var req entity.QueryCallbackPayload
+	err := req.FromString(update.CallbackQuery.Data)
+	if err != nil {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid callback query payload", err)
+	}
+	switch {
+	case req.Command == entity.NotifyArrivalCommand:
+		err = c.userService.NotifyOrderArrival(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+	case req.Command == entity.SuccessOrderCommand:
+		err = c.orderService.UpdateOrderStatus(ctx, req.OrderId, entity.SuccessOrderCommand)
+		if err != nil {
+			return nil, err
+		}
+	case req.Command == entity.CancelOrderCommand:
+		err = c.userService.CancelOrder(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nil, nil //nolint:nilnil
 }

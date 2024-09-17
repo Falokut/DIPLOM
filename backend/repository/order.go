@@ -216,3 +216,17 @@ func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, of
 	}
 	return orders, nil
 }
+
+func (r Order) GetOrderedChatId(ctx context.Context, orderId string) (int64, error) {
+	query := `
+	SELECT chat_id 
+	FROM orders o
+	JOIN users_telegrams ut ON o.user_id=ut.id
+	WHERE o.id=$1`
+	var chatId int64
+	err := r.cli.GetContext(ctx, &chatId, query, orderId)
+	if err != nil {
+		return 0, errors.WithMessage(err, "get ordered chat id")
+	}
+	return chatId, nil
+}

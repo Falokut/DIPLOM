@@ -18,6 +18,10 @@ import (
 	"github.com/txix-open/bgjob"
 )
 
+const (
+	defaultBotMaxRetryCount = 10
+)
+
 type Assembly struct {
 	logger             log.Logger
 	db                 *db.Client
@@ -73,8 +77,9 @@ func (a *Assembly) Runners() []app.RunnerFunc {
 	return []app.RunnerFunc{
 		func(ctx context.Context) error {
 			return a.tgBot.Serve(ctx, telegram_bot.UpdatesConfig{
-				Timeout: a.localCfg.Bot.Timeout,
-				Limit:   a.localCfg.Bot.Limit,
+				Timeout:               a.localCfg.Bot.Timeout,
+				Limit:                 a.localCfg.Bot.Limit,
+				MaxMuxErrorRetryCount: defaultBotMaxRetryCount,
 			})
 		},
 		func(_ context.Context) error {

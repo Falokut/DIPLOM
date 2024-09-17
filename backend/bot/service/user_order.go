@@ -14,36 +14,106 @@ import (
 type UserRepo interface {
 	GetUserInfo(ctx context.Context, userId string) (entity.User, error)
 	GetAdminsChatsIds(ctx context.Context) ([]int64, error)
+	GetUserChatId(ctx context.Context, userId string) (int64, error)
+}
+
+type OrderRepo interface {
+	GetOrderedChatId(ctx context.Context, orderId string) (int64, error)
+	SetOrderStatus(ctx context.Context, orderId, oldStatus, newStatus string) error
 }
 
 type UserOrder struct {
-	bot  *telegram_bot.BotAPI
-	repo UserRepo
+	bot       *telegram_bot.BotAPI
+	userRepo  UserRepo
+	orderRepo OrderRepo
 }
 
-func NewOrderUserService(bot *telegram_bot.BotAPI, repo UserRepo) UserOrder {
+func NewOrderUserService(bot *telegram_bot.BotAPI, userRepo UserRepo, orderRepo OrderRepo) UserOrder {
 	return UserOrder{
-		bot:  bot,
-		repo: repo,
+		bot:       bot,
+		userRepo:  userRepo,
+		orderRepo: orderRepo,
 	}
 }
 
 func (s UserOrder) NotifySuccessPayment(ctx context.Context, order *entity.Order) error {
-	adminIds, err := s.repo.GetAdminsChatsIds(ctx)
+	adminIds, err := s.userRepo.GetAdminsChatsIds(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "get admins chats ids")
 	}
-	user, err := s.repo.GetUserInfo(ctx, order.UserId)
+	user, err := s.userRepo.GetUserInfo(ctx, order.UserId)
 	if err != nil {
 		return errors.WithMessage(err, "get user info")
 	}
 
 	orderInfoString := s.getOrderInfoString(order, &user)
+	markup := s.getMarkupForOrder(order)
 	for _, chatId := range adminIds {
-		err = s.bot.Send(telegram_bot.NewMessage(chatId, orderInfoString))
+		message := telegram_bot.NewMessage(chatId, orderInfoString)
+		message.ReplyMarkup = markup
+		err = s.bot.Send(message)
 		if err != nil {
 			return errors.WithMessagef(err, "send notification to chat: %d", chatId)
 		}
+	}
+	return nil
+}
+
+func (s UserOrder) getMarkupForOrder(order *entity.Order) telegram_bot.InlineKeyboardMarkup {
+	arrivalPayload := entity.QueryCallbackPayload{
+		Command: entity.NotifyArrivalCommand,
+		OrderId: order.Id,
+	}
+	notifyArrivalButton := telegram_bot.NewInlineKeyboardButtonData(
+		"оповестить о прибытии заказа",
+		arrivalPayload.String(),
+	)
+	cancelPayload := entity.QueryCallbackPayload{
+		Command: entity.CancelOrderCommand,
+		OrderId: order.Id,
+	}
+	cancelButton := telegram_bot.NewInlineKeyboardButtonData(
+		"отменить заказ",
+		cancelPayload.String(),
+	)
+
+	markup := telegram_bot.NewInlineKeyboardMarkup(
+		[]telegram_bot.InlineKeyboardButton{notifyArrivalButton},
+		[]telegram_bot.InlineKeyboardButton{cancelButton},
+	)
+	return markup
+}
+
+func (s UserOrder) NotifyOrderArrival(ctx context.Context, req entity.QueryCallbackPayload) error {
+	chatId, err := s.orderRepo.GetOrderedChatId(ctx, req.OrderId)
+	if err != nil {
+		return errors.WithMessage(err, "get user chat id")
+	}
+
+	button := telegram_bot.NewInlineKeyboardButtonData("подтвердить получение",
+		entity.QueryCallbackPayload{Command: entity.SuccessOrderCommand, OrderId: req.OrderId}.String(),
+	)
+	message := telegram_bot.NewMessage(chatId, fmt.Sprintf("Заказ №%s прибыл", req.OrderId))
+	message.ReplyMarkup = telegram_bot.NewInlineKeyboardMarkup([]telegram_bot.InlineKeyboardButton{button})
+	err = s.bot.Send(message)
+	if err != nil {
+		return errors.WithMessagef(err, "send notification to chat: %d", chatId)
+	}
+	return nil
+}
+
+func (s UserOrder) CancelOrder(ctx context.Context, req entity.QueryCallbackPayload) error {
+	err := s.orderRepo.SetOrderStatus(ctx, req.OrderId, entity.OrderItemStatusPaid, entity.CancelOrderCommand)
+	if err != nil {
+		return errors.WithMessage(err, "update order status")
+	}
+	chatId, err := s.orderRepo.GetOrderedChatId(ctx, req.OrderId)
+	if err != nil {
+		return errors.WithMessage(err, "get user chat id")
+	}
+	err = s.bot.Send(telegram_bot.NewMessage(chatId, fmt.Sprintf("Заказ №%s отменён", req.OrderId)))
+	if err != nil {
+		return errors.WithMessagef(err, "send notification to chat: %d", chatId)
 	}
 	return nil
 }

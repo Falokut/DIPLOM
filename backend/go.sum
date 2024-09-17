@@ -11,6 +11,8 @@ github.com/Falokut/go-kit v0.0.0-20240915163620-b4254fa8879d h1:T/X9G97BBkx4+HVq
 github.com/Falokut/go-kit v0.0.0-20240915163620-b4254fa8879d/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
 github.com/Falokut/go-kit v0.0.0-20240915164507-5515a5188f6a h1:7SYDtMEtniGX3v0Uh4cAjTBnFwnJF+6/u3jnuaFCF2g=
 github.com/Falokut/go-kit v0.0.0-20240915164507-5515a5188f6a/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
+github.com/Falokut/go-kit v0.0.0-20240917192651-e9e7f7caf3ed h1:2yN3Jni5i3grkWwvFtxihkBzErz/jLsCyzVrCrwF3nM=
+github.com/Falokut/go-kit v0.0.0-20240917192651-e9e7f7caf3ed/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

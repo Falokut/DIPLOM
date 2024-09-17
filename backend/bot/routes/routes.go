@@ -90,6 +90,10 @@ func EndpointsDescriptors(c Controllers) []Endpoint {
 			Admin:       true,
 		},
 		{
+			Handler:    c.Order.HandleCallbackQuery,
+			UpdateType: telegram_bot.CallbackQueryUpdateType,
+		},
+		{
 			Handler:    c.Order.HandlePreCheckout,
 			UpdateType: telegram_bot.PreCheckoutQueryUpdateType,
 		},

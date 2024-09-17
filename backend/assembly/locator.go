@@ -91,7 +91,7 @@ func Locator(
 		User:             userContr,
 		Order:            orderControl,
 	}
-	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo)
+	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo, orderRepo)
 	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService)
 	botControllers := broutes.Controllers{
 		User:  userBotContr,
