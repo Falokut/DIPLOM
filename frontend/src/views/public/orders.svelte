@@ -14,19 +14,17 @@
   const backButtonRes = initBackButton();
   var backButton = backButtonRes[0];
 
-  async function getMyOrders(
+  async function nextChunk(
     lastVal: UserOrder | undefined
   ): Promise<UserOrder[]> {
     let userId = await GetUserIdByTelegramId(initData.user.id);
     if (userId.length == 0) {
       return;
     }
-    orders = await GetUserOrders(userId, currentOffset, pageLimit);
+    let orders = await GetUserOrders(userId, currentOffset, pageLimit);
     currentOffset += orders.length;
     return orders;
   }
-  let orders: UserOrder[] = [];
-
   let removeBackButtonListFn = () => {};
   onMount(() => {
     removeBackButtonListFn = backButton.on("click", () => {
@@ -39,7 +37,7 @@
 </script>
 
 <div class="orders_container">
-  <DynamicScroll nextChunk={getMyOrders} let:value>
+  <DynamicScroll {nextChunk} let:value maxRetryCountOnPreLoad={0}>
     <OrderItem order={value} />
   </DynamicScroll>
 </div>
