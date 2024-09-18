@@ -4,7 +4,7 @@ services:
   
   dish_as_a_service_frontend:
     hostname: dish_as_a_service_frontend
-    image: falokut/dish_as_a_service_frontend-alpine:latest
+    image: falokut/dish_as_a_service_frontend:latest
     expose:
       - 8080
     networks:
