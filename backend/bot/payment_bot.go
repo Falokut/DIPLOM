@@ -17,13 +17,17 @@ type OrderService interface {
 	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
 	IsOrderingAllowed(ctx context.Context) (bool, error)
 }
+
+type BotAPI interface {
+	Request(c telegram_bot.Chattable) (*telegram_bot.APIResponse, error)
+}
 type PaymentBot struct {
-	bot          *telegram_bot.BotAPI
+	bot          BotAPI
 	invoiceToken string
 	service      OrderService
 }
 
-func NewPaymentBot(token string, bot *telegram_bot.BotAPI, service OrderService) PaymentBot {
+func NewPaymentBot(token string, bot BotAPI, service OrderService) PaymentBot {
 	return PaymentBot{
 		invoiceToken: token,
 		bot:          bot,

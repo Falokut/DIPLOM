@@ -21,14 +21,17 @@ type OrderRepo interface {
 	GetOrderedChatId(ctx context.Context, orderId string) (int64, error)
 	SetOrderStatus(ctx context.Context, orderId, oldStatus, newStatus string) error
 }
+type BotAPI interface {
+	Send(c telegram_bot.Chattable) error
+}
 
 type UserOrder struct {
-	bot       *telegram_bot.BotAPI
+	bot       BotAPI
 	userRepo  UserRepo
 	orderRepo OrderRepo
 }
 
-func NewOrderUserService(bot *telegram_bot.BotAPI, userRepo UserRepo, orderRepo OrderRepo) UserOrder {
+func NewOrderUserService(bot BotAPI, userRepo UserRepo, orderRepo OrderRepo) UserOrder {
 	return UserOrder{
 		bot:       bot,
 		userRepo:  userRepo,
