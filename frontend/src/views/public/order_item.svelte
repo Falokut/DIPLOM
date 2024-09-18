@@ -12,7 +12,7 @@
   onMount(() => {
     let createdAt = new Date(order.createdAt);
     orderDate = createdAt.toISOString().slice(0, 10);
-    orderDate += " "+createdAt.getHours() + ":" + createdAt.getMinutes();
+    orderDate += " " + createdAt.getHours() + ":" + createdAt.getMinutes();
     switch (order.status) {
       case "PROCESS":
         orderStatus = "в процессе";
@@ -68,11 +68,11 @@
         {/each}
         <div class="line"></div>
         <div class="order_total">
-          <div class="user_order_total">Итого:</div>
           {#if orderStatus != ""}
-            <div class="spacer"></div>
             <div class="order_text">{orderStatus}</div>
+            <div class="spacer"></div>
           {/if}
+          <div class="user_order_total">Итого:</div>
           <div class="spacer"></div>
           <div>{FormatPriceDefault(order.total)}</div>
         </div>
