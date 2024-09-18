@@ -15,7 +15,7 @@ import (
 
 type OrderService interface {
 	GetOrder(ctx context.Context, orderId string) (*entity.Order, error)
-	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
+	SetOrderStatus(ctx context.Context, orderId string, oldStatus string, newStatus string) error
 	GetOrderStatus(ctx context.Context, orderId string) (string, error)
 	IsOrderingAllowed(ctx context.Context) (bool, error)
 	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
@@ -46,7 +46,7 @@ func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (t
 		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid payment payload", err)
 	}
 
-	err = c.orderService.UpdateOrderStatus(ctx, payload.OrderId, entity.OrderItemStatusPaid)
+	err = c.orderService.SetOrderStatus(ctx, payload.OrderId, entity.OrderItemStatusProcess, entity.OrderItemStatusPaid)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (c Order) HandleCallbackQuery(ctx context.Context, update telegram_bot.Upda
 			return nil, err
 		}
 	case req.Command == entity.SuccessOrderCommand:
-		err = c.orderService.UpdateOrderStatus(ctx, req.OrderId, entity.SuccessOrderCommand)
+		err = c.orderService.SetOrderStatus(ctx, req.OrderId, entity.OrderItemStatusPaid, entity.OrderItemStatusSuccess)
 		if err != nil {
 			return nil, err
 		}

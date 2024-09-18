@@ -26,7 +26,7 @@ type PaymentService interface {
 type OrderRepo interface {
 	GetOrder(ctx context.Context, orderId string) (*entity.Order, error)
 	ProcessOrder(ctx context.Context, order *entity.Order) error
-	UpdateOrderStatus(ctx context.Context, orderId string, newStatus string) error
+	SetOrderStatus(ctx context.Context, orderId string, oldStatus string, newStatus string) error
 	GetOrderStatus(ctx context.Context, orderId string) (string, error)
 	SetOrderingAllowed(ctx context.Context, isAllowed bool) error
 	IsOrderingAllowed(ctx context.Context) (bool, error)
@@ -51,8 +51,8 @@ func NewOrder(paymentService PaymentService, orderRepo OrderRepo, dishesRepo Dis
 	}
 }
 
-func (s Order) UpdateOrderStatus(ctx context.Context, orderId, newStatus string) error {
-	err := s.orderRepo.UpdateOrderStatus(ctx, orderId, newStatus)
+func (s Order) SetOrderStatus(ctx context.Context, orderId string, oldStatus string, newStatus string) error {
+	err := s.orderRepo.SetOrderStatus(ctx, orderId, oldStatus, newStatus)
 	if err != nil {
 		return errors.WithMessage(err, "update order status")
 	}
