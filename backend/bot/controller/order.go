@@ -24,7 +24,7 @@ type OrderService interface {
 type OrderUserService interface {
 	NotifySuccessPayment(ctx context.Context, req *entity.Order) error
 	NotifyOrderArrival(ctx context.Context, req entity.QueryCallbackPayload) error
-	CancelOrder(ctx context.Context, req entity.QueryCallbackPayload) error
+	CancelPaidOrder(ctx context.Context, req entity.QueryCallbackPayload) error
 }
 
 type Order struct {
@@ -143,7 +143,7 @@ func (c Order) HandleCallbackQuery(ctx context.Context, update telegram_bot.Upda
 			return nil, err
 		}
 	case req.Command == entity.CancelOrderCommand:
-		err = c.userService.CancelOrder(ctx, req)
+		err = c.userService.CancelPaidOrder(ctx, req)
 		if err != nil {
 			return nil, err
 		}

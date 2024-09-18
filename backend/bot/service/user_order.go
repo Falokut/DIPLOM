@@ -102,8 +102,8 @@ func (s UserOrder) NotifyOrderArrival(ctx context.Context, req entity.QueryCallb
 	return nil
 }
 
-func (s UserOrder) CancelOrder(ctx context.Context, req entity.QueryCallbackPayload) error {
-	err := s.orderRepo.SetOrderStatus(ctx, req.OrderId, entity.OrderItemStatusPaid, entity.CancelOrderCommand)
+func (s UserOrder) CancelPaidOrder(ctx context.Context, req entity.QueryCallbackPayload) error {
+	err := s.orderRepo.SetOrderStatus(ctx, req.OrderId, entity.OrderItemStatusPaid, entity.OrderItemStatusCanceled)
 	if err != nil {
 		return errors.WithMessage(err, "update order status")
 	}
