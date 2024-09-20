@@ -212,7 +212,7 @@ func (r Order) GetUserOrders(ctx context.Context, userId string, limit int32, of
 	var orders []entity.Order
 	err := r.cli.SelectContext(ctx, &orders, query, userId, limit, offset)
 	if err != nil {
-		return nil, errors.WithMessage(err, "query context")
+		return nil, errors.WithMessage(err, "select context")
 	}
 	return orders, nil
 }
@@ -229,4 +229,36 @@ func (r Order) GetOrderedChatId(ctx context.Context, orderId string) (int64, err
 		return 0, errors.WithMessage(err, "get ordered chat id")
 	}
 	return chatId, nil
+}
+
+func (r Order) GetOrdersByPeriod(ctx context.Context, start time.Time, end time.Time) ([]entity.OrderToExport, error) {
+	query := `
+	SELECT
+		o.id,
+		o.payment_method,
+		u.username,
+		o.total, 
+		o.created_at,
+		o.status,
+		json_agg(
+			json_build_object(
+			'dishId', oi.dish_id,
+			'count', oi.count,
+			'price', oi.price,
+			'name', d.name
+			)
+		) AS items
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+	JOIN dish d ON oi.dish_id = d.id
+	JOIN users u ON o.user_id = u.id
+    WHERE o.created_at >= $1 AND o.created_at <= $2
+	GROUP BY o.id, u.username
+    ORDER BY o.created_at DESC`
+	var orders []entity.OrderToExport
+	err := r.cli.SelectContext(ctx, &orders, query, start, end)
+	if err != nil {
+		return nil, errors.WithMessage(err, "select context")
+	}
+	return orders, nil
 }

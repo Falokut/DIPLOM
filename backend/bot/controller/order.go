@@ -2,6 +2,9 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	"github.com/Falokut/go-kit/json"
 	"github.com/pkg/errors"
@@ -27,15 +30,25 @@ type OrderUserService interface {
 	CancelPaidOrder(ctx context.Context, req entity.QueryCallbackPayload) error
 }
 
+type CsvExporter interface {
+	GetOrdersCsv(ctx context.Context, start time.Time, end time.Time) ([]byte, error)
+}
+
 type Order struct {
 	orderService OrderService
 	userService  OrderUserService
+	cvsExporter  CsvExporter
 }
 
-func NewOrder(service OrderService, userService OrderUserService) Order {
+func NewOrder(
+	service OrderService,
+	userService OrderUserService,
+	cvsExporter CsvExporter,
+) Order {
 	return Order{
 		orderService: service,
 		userService:  userService,
+		cvsExporter:  cvsExporter,
 	}
 }
 func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
@@ -60,6 +73,42 @@ func (c Order) HandlePayment(ctx context.Context, update telegram_bot.Update) (t
 		return nil, err
 	}
 	return nil, nil // nolint:nilnil
+}
+
+func (c Order) CsvOrdersInfo(ctx context.Context, update telegram_bot.Update) (telegram_bot.Chattable, error) {
+	arguments := update.Message.CommandArguments()
+	dates := strings.Split(arguments, "-")
+	// nolint:mnd
+	if len(dates) != 2 {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument,
+			"неправильный формат периода, должен быть: гггг.мм.дд-гггг.мм.дд",
+			errors.New("invalid date format"),
+		)
+	}
+	start, err := time.Parse(entity.DataFormat, dates[0])
+	if err != nil {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument,
+			"неправильный формат начала периода, должен быть: гггг.мм.дд",
+			err,
+		)
+	}
+	end, err := time.Parse(entity.DataFormat, dates[1])
+	if err != nil {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument,
+			"неправильный формат конца периода, должен быть: гггг.мм.дд",
+			err,
+		)
+	}
+	csvBody, err := c.cvsExporter.GetOrdersCsv(ctx, start, end)
+	if err != nil {
+		return nil, err
+	}
+	document := telegram_bot.NewDocument(update.FromChat().Id, telegram_bot.FileBytes{
+		Name:  arguments + "_orders.csv",
+		Bytes: csvBody,
+	})
+	document.Caption = fmt.Sprintf("отчёт по заказам с %s по %s", dates[0], dates[1])
+	return document, nil
 }
 
 // nolint:nilerr

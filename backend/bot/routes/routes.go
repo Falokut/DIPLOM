@@ -90,6 +90,13 @@ func EndpointsDescriptors(c Controllers) []Endpoint {
 			Admin:       true,
 		},
 		{
+			Handler:     c.Order.CsvOrdersInfo,
+			UpdateType:  telegram_bot.MessageUpdateType,
+			Command:     "order_csv",
+			Description: "получить csv файл с информацией о заказах в указанный период гггг.мм.дд-гггг.мм.дд",
+			Admin:       true,
+		},
+		{
 			Handler:    c.Order.HandleCallbackQuery,
 			UpdateType: telegram_bot.CallbackQueryUpdateType,
 		},

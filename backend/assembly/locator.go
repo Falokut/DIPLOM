@@ -92,7 +92,8 @@ func Locator(
 		Order:            orderControl,
 	}
 	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo, orderRepo)
-	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService)
+	orderCsvExporter := service.NewCvsOrderExporter(orderRepo)
+	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService, orderCsvExporter)
 	botControllers := broutes.Controllers{
 		User:  userBotContr,
 		Order: orderBotContrl,

@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+const DataFormat = "2006.01.02"
 const (
 	OrderItemStatusProcess  = "PROCESS"
 	OrderItemStatusCanceled = "CANCELED"
@@ -49,6 +50,15 @@ type Order struct {
 	CreatedAt     time.Time
 	Status        string
 	Wishes        string
+}
+type OrderToExport struct {
+	Id            string
+	PaymentMethod string
+	Items         OrderItems
+	Username      string
+	Total         int32
+	CreatedAt     time.Time
+	Status        string
 }
 
 type OrderItems []OrderItem
