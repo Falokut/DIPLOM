@@ -12,8 +12,13 @@ import (
 type DishService interface {
 	List(ctx context.Context, limit, offset int32) ([]domain.Dish, error)
 	GetByIds(ctx context.Context, ids []int32) ([]domain.Dish, error)
+	GetByCategories(ctx context.Context, limit, offset int32, ids []int32) ([]domain.Dish, error)
 	AddDish(ctx context.Context, req domain.AddDishRequest) error
 }
+
+const (
+	maxGetDishesCount = 30
+)
 
 type Dish struct {
 	service DishService
@@ -31,6 +36,7 @@ func NewDish(service DishService) Dish {
 //	@Summary		dish
 //	@Description	возвращает список блюд
 //	@Param			ids		query	string	false	"список идентификаторов блюд через запятую"
+//	@Param			сategories		query	string	false	"список идентификаторов категорий через запятую"
 //	@Param			limit	query	int		false	"максимальное количество блюд"
 //	@Param			offset	query	int		false	"смещение"
 //	@Produce		json
@@ -43,11 +49,20 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 	if err != nil {
 		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid ids", err)
 	}
-
+	if len(ids) > maxGetDishesCount {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid ids count", err)
+	}
+	categoriesIds, err := stringToIntSlice(req.CategoriesIds)
+	if err != nil {
+		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid categories ids", err)
+	}
 	var dishes []domain.Dish
-	if len(ids) > 0 {
+	switch {
+	case len(ids) > 0:
 		dishes, err = c.service.GetByIds(ctx, ids)
-	} else {
+	case len(categoriesIds) > 0:
+		dishes, err = c.service.GetByCategories(ctx, req.Limit, req.Offset, categoriesIds)
+	default:
 		dishes, err = c.service.List(ctx, req.Limit, req.Offset)
 	}
 

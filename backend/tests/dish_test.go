@@ -135,6 +135,44 @@ func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	t.Require().ElementsMatch([]string{"Напиток", "Холодное"}, dish.Categories)
 }
 
+func (t *DishSuite) Test_List_ByCategories_HappyPath() {
+	var addDish = entity.AddDishRequest{
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       350,
+		ImageId:     fake.It[string](),
+		Categories:  []int32{4, 5},
+	}
+	err := t.dishRepo.AddDish(context.Background(), &addDish)
+	t.Require().NoError(err)
+
+	addDish = entity.AddDishRequest{
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       544,
+		ImageId:     fake.It[string](),
+		Categories:  []int32{4, 2},
+	}
+	err = t.dishRepo.AddDish(context.Background(), &addDish)
+	t.Require().NoError(err)
+
+	resp, err := t.cli.Get(t.getServerUrl("dishes?categoriesIds=6,2&limit=2"))
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+
+	dishes := []domain.Dish{}
+	err = json.NewDecoder(resp.Body).Decode(&dishes)
+	t.Require().NoError(err)
+	t.Require().Len(dishes, 1)
+
+	dish := dishes[0]
+	t.Require().EqualValues(2, dish.Id)
+	t.Require().Equal(addDish.Name, dish.Name)
+	t.Require().Equal(addDish.Description, dish.Description)
+	t.Require().Equal("my_image_path/dish/"+addDish.ImageId, dish.Url)
+	t.Require().ElementsMatch([]string{"Острое", "Холодное"}, dish.Categories)
+}
+
 func (t *DishSuite) Test_AddDish_HappyPath() {
 	var userId string
 	err := t.db.Get(&userId,

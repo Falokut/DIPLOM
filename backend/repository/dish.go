@@ -80,14 +80,43 @@ func (r Dish) AddDish(ctx context.Context, req *entity.AddDishRequest) error {
 
 func (r Dish) GetDishesByIds(ctx context.Context, ids []int32) ([]entity.Dish, error) {
 	query := `
-	SELECT d.id, d.name, d.description, d.price, COALESCE(d.image_id,'') AS image_id,
-	array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
+	SELECT 
+		d.id,
+		d.name,
+		d.description,
+		d.price,
+		COALESCE(d.image_id,'') AS image_id,
+		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
 	FROM dish AS d
 	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
 	LEFT JOIN categories AS c ON f_c.category_id=c.id
 	WHERE d.id=ANY($1)
 	GROUP BY d.id,d.name,d.description,d.price,d.image_id
-	ORDER BY d.id`
+	ORDER BY d.id;`
+
+	var res []entity.Dish
+	err := r.cli.SelectContext(ctx, &res, query, ids)
+	if err != nil {
+		return nil, errors.WithMessage(err, "get dish list")
+	}
+	return res, nil
+}
+
+func (r Dish) GetDishesByCategories(ctx context.Context, limit int32, offset int32, ids []int32) ([]entity.Dish, error) {
+	query := `
+		SELECT 
+		d.id,
+		d.name,
+		d.description,
+		d.price,
+		COALESCE(d.image_id,'') AS image_id,
+		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
+	FROM dish AS d
+	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
+	LEFT JOIN categories AS c ON f_c.category_id=c.id
+	GROUP BY d.id,d.name,d.description,d.price,d.image_id
+	HAVING d.id=ANY($1)
+	ORDER BY d.id;`
 
 	var res []entity.Dish
 	err := r.cli.SelectContext(ctx, &res, query, ids)

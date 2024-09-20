@@ -15,6 +15,7 @@ import (
 type DishRepo interface {
 	List(ctx context.Context, limit, offset int32) ([]entity.Dish, error)
 	GetDishesByIds(ctx context.Context, ids []int32) ([]entity.Dish, error)
+	GetDishesByCategories(ctx context.Context, limit int32, offset int32, ids []int32) ([]entity.Dish, error)
 	AddDish(ctx context.Context, dish *entity.AddDishRequest) error
 }
 
@@ -57,6 +58,18 @@ func (s Dish) List(ctx context.Context, limit, offset int32) ([]domain.Dish, err
 
 func (s Dish) GetByIds(ctx context.Context, ids []int32) ([]domain.Dish, error) {
 	dish, err := s.repo.GetDishesByIds(ctx, ids)
+	if err != nil {
+		return nil, errors.WithMessage(err, "dish list by ids")
+	}
+	converted := make([]domain.Dish, len(dish))
+	for i, f := range dish {
+		converted[i] = s.dishFromEntity(f)
+	}
+	return converted, nil
+}
+
+func (s Dish) GetByCategories(ctx context.Context, limit, offset int32, ids []int32) ([]domain.Dish, error) {
+	dish, err := s.repo.GetDishesByCategories(ctx, limit, offset, ids)
 	if err != nil {
 		return nil, errors.WithMessage(err, "dish list by ids")
 	}

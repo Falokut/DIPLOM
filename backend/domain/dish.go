@@ -10,9 +10,10 @@ type Dish struct {
 }
 
 type GetDishesRequest struct {
-	Ids    string `query:"ids"`
-	Limit  int32  `query:"limit"`
-	Offset int32  `query:"offset"`
+	Ids           string `query:"ids"`
+	CategoriesIds string `query:"categoriesIds"`
+	Limit         int32  `query:"limit" validate:"max=30"`
+	Offset        int32  `query:"offset"`
 }
 
 type AddDishRequest struct {
