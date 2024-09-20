@@ -34,23 +34,26 @@
   }
 </script>
 
-<div class="dish_category_div">
-  {#each categories as category}
-    <DishCategory
-      bind:category
-      remove={() => {
-        remove(category.id);
-      }}
-    ></DishCategory>
-  {/each}
-</div>
+{#key categories}
+  <div class="dish_category_div">
+    {#each categories as category}
+      <DishCategory
+        {category}
+        remove={() => {
+          remove(category.id);
+        }}
+      ></DishCategory>
+    {/each}
+  </div>
+{/key}
 
 <div class="add_dish_category_container">
   <AddDishCategory
-    OnAdd={() => {
-      window.location.reload();
+    OnAdd={(category) => {
+      categories.push(category);
+      categories=categories;
     }}
-  ></AddDishCategory>
+  />
 </div>
 
 <style>

@@ -1,11 +1,14 @@
-<script>
+<script lang="ts">
   import { GetUserIdByTelegramId } from "../../client/user";
-  import { AddDishCategory } from "../../client/dishes_categories";
+  import {
+    AddDishCategory,
+    DishCategory,
+  } from "../../client/dishes_categories";
   import { retrieveLaunchParams } from "@telegram-apps/sdk";
   const { initData } = retrieveLaunchParams();
 
   export let categoryName = "";
-  export let OnAdd = (category = { id: 0, name: "" }) => {};
+  export let OnAdd = (category: DishCategory) => {};
 
   async function addDishCategory() {
     if (categoryName == "") {
@@ -17,12 +20,12 @@
     }
 
     let dishCategory = await AddDishCategory(userId, categoryName);
-    if (dishCategory.errorCode == undefined) {
+    if (dishCategory.id != undefined) {
+      dishCategory.name = categoryName;
       OnAdd(dishCategory);
       categoryName = "";
       return;
     }
-    console.log(dishCategory);
   }
 </script>
 
@@ -47,6 +50,7 @@
     align-items: center;
     margin: auto;
     padding: 5px;
+    width: 100vw;
   }
   .category_input {
     border-radius: 3px;
