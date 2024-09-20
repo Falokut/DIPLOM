@@ -1,16 +1,18 @@
 import { GetUserIdHeader } from './user'
+import { GetBackendBasePath } from '../main'
+
 export class DishCategory {
     id: number
     name: string
 }
 
-const dishesCategoriesUrl = 'https://falokut.ru/api/dish_as_a_service/dishes/categories'
+const dishesCategoriesEndpoint = '/dishes/categories'
 export async function GetDishesCategories(): Promise<DishCategory[]> {
-    return await fetch(dishesCategoriesUrl).then(response => response.json())
+    return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint).then(response => response.json())
 }
 
 export async function GetDishCategoriesById(categoryId: number): Promise<DishCategory[]> {
-    return await fetch(dishesCategoriesUrl + '/' + categoryId).then(response => response.json()).catch(reason => alert(reason))
+    return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint + '/' + categoryId).then(response => response.json()).catch(reason => alert(reason))
 }
 
 export async function AddDishCategory(userId: string, name: string): Promise<DishCategory> {
@@ -19,7 +21,7 @@ export async function AddDishCategory(userId: string, name: string): Promise<Dis
     }
     let headers = GetUserIdHeader(userId);
     headers.set("content-type", "application/json; charset=utf8")
-    return await fetch(dishesCategoriesUrl, {
+    return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(req)
@@ -32,7 +34,7 @@ export async function RenameDishesCategory(userId: string, newName: string, cate
     }
     let headers = GetUserIdHeader(userId);
     headers.set("content-type", "application/json; charset=utf8")
-    return await fetch(dishesCategoriesUrl + '/' + categoryId, {
+    return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint + '/' + categoryId, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(req)
@@ -40,7 +42,7 @@ export async function RenameDishesCategory(userId: string, newName: string, cate
 }
 
 export async function DeleteDishesCategory(userId: string, categoryId: number) {
-    return await fetch(dishesCategoriesUrl + '/' + categoryId, {
+    return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint + '/' + categoryId, {
         method: "DELETE",
         headers: GetUserIdHeader(userId),
     }).catch(reason => alert(reason))

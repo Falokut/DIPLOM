@@ -9,5 +9,8 @@ backButton.show();
 const app = new App({
   target: document.getElementById('app'),
 })
+export function GetBackendBasePath() {
+  return "https://falokut.ru/api/dish_as_a_service"
+}
 
 export default app

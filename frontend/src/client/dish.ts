@@ -1,4 +1,6 @@
 import { GetUserIdHeader } from './user'
+import { GetBackendBasePath } from '../main'
+
 export class Dish {
     id: number
     name: string
@@ -8,15 +10,18 @@ export class Dish {
     price: number
 }
 
-const dishesUrl = 'https://falokut.ru/api/dish_as_a_service/dishes'
-export async function GetDishes(ids: string[] | null) {
-    let url = dishesUrl
+const dishesEndpoint = '/dishes'
+export async function GetDishes(ids: undefined | string[], limit, offset, categoryId) {
+    let url = GetBackendBasePath() + dishesEndpoint
     if (ids && ids.length > 0) {
-        url += "?" + new URLSearchParams({
-            ids: ids.join(',')
-        })
+        url += "?ids=" + ids.join(',')
+    } else {
+        url += "?limit=" + limit + "&offset=" + offset
+        if (categoryId) {
+            url += "&categoriesIds=" + categoryId
+        }
     }
-    return await fetch(url).then(response => response.json())
+    return await fetch(url).then(response => response.json()).catch(reason => console.log(reason))
 }
 
 export class AddDishObj {
@@ -30,7 +35,7 @@ export class AddDishObj {
 export async function AddDish(dish: AddDishObj, userId: string): Promise<boolean | void> {
     let headers = GetUserIdHeader(userId);
     headers.set("content-type", "application/json; charset=utf8")
-    return await fetch(dishesUrl, {
+    return await fetch(GetBackendBasePath() + dishesEndpoint, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(dish)

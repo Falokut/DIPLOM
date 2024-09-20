@@ -1,5 +1,5 @@
 import { GetUserIdHeader } from './user'
-import { toDates } from 'ts-transformer-dates';
+import { GetBackendBasePath } from '../main'
 
 export class UserOrder {
     id: string
@@ -8,7 +8,7 @@ export class UserOrder {
     total: number
     wishes: string
     createdAt: string
-    status :string
+    status: string
 }
 
 export class UserOrderItem {
@@ -19,9 +19,9 @@ export class UserOrderItem {
     totalPrice: number
 }
 
-const userOrdersUrl = "https://falokut.ru/api/dish_as_a_service/orders/my"
+const userOrdersEndpoint = "/orders/my"
 export async function GetUserOrders(userId: string, offset: number, limit: number): Promise<UserOrder[]> {
-    let url = userOrdersUrl + "?limit=" + limit + "&offset=" + offset
+    let url = GetBackendBasePath() + userOrdersEndpoint + "?limit=" + limit + "&offset=" + offset
     return await fetch(url,
         { headers: GetUserIdHeader(userId) }
     ).then(response => response.json()).catch(reason => alert(reason))

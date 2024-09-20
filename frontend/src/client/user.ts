@@ -1,4 +1,5 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
+import { GetBackendBasePath } from '../main'
 
 export async function UserIsAdmin(): Promise<boolean> {
     const { initData } = retrieveLaunchParams();
@@ -14,10 +15,10 @@ export async function UserIsAdmin(): Promise<boolean> {
     return userAdmin;
 }
 
-const getUserIdByTelegramIdEndpoint = 'https://falokut.ru/api/dish_as_a_service/users/get_by_telegram_id/'
+const getUserIdByTelegramIdEndpoint = '/users/get_by_telegram_id/'
 
 export async function GetUserIdByTelegramId(telegramId: number): Promise<string> {
-    let resp = await fetch(getUserIdByTelegramIdEndpoint + telegramId)
+    let resp = await fetch(GetBackendBasePath() + getUserIdByTelegramIdEndpoint + telegramId)
     if (!resp.ok) {
         console.error(resp)
         return ''
@@ -26,9 +27,9 @@ export async function GetUserIdByTelegramId(telegramId: number): Promise<string>
     return userIdResp.userId
 }
 
-const isUserAdminUrl = 'https://falokut.ru/api/dish_as_a_service/users/'
+const isUserAdminEndpoint = '/users/'
 export async function IsUserAdmin(userId: string): Promise<boolean> {
-    let resp = await fetch(isUserAdminUrl + '/is_admin?userId=' + userId)
+    let resp = await fetch(GetBackendBasePath() + isUserAdminEndpoint + '/is_admin?userId=' + userId)
     if (!resp.ok) {
         console.error(resp)
         return false

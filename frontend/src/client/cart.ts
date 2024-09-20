@@ -1,5 +1,6 @@
 const cartKey = "cart"
 import { initMainButton, MainButton } from '@telegram-apps/sdk';
+import { GetBackendBasePath } from '../main'
 import { GetUserIdByTelegramId } from './user'
 const mainButtonRes = initMainButton();
 let mainButton = mainButtonRes[0]
@@ -31,7 +32,7 @@ export function LoadCart(): MainButton {
     return mainButton;
 }
 
-const processOrderUrl = 'https://falokut.ru/api/dish_as_a_service/orders'
+const processOrderEndpoint = '/orders'
 export async function ProcessOrder(telegramId: number, wishes: string): Promise<boolean> {
     let userId = await GetUserIdByTelegramId(telegramId)
     if (userId.length == 0) {
@@ -53,7 +54,7 @@ export async function ProcessOrder(telegramId: number, wishes: string): Promise<
         body: JSON.stringify(req),
     }
 
-    let resp = await fetch(processOrderUrl, processOrderOptions)
+    let resp = await fetch(GetBackendBasePath() + processOrderEndpoint, processOrderOptions)
     if (resp.ok) {
         localStorage.removeItem(cartKey);
         return true
