@@ -22,10 +22,8 @@ CREATE TABLE users_telegrams (
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL UNIQUE
 );
-
-ALTER TABLE categories ADD CONSTRAINT unique_name UNIQUE (name);
 
 INSERT INTO
     categories (name)
@@ -59,7 +57,7 @@ CREATE TABLE orders (
     total BIGINT NOT NULL CHECK (total > 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     wishes TEXT,
-    status TEXT NOT NULL,
+    status TEXT NOT NULL
 );
 
 CREATE TABLE order_items (
