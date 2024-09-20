@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"dish_as_a_service/domain"
 
@@ -14,6 +16,8 @@ type DishService interface {
 	GetByIds(ctx context.Context, ids []int32) ([]domain.Dish, error)
 	GetByCategories(ctx context.Context, limit, offset int32, ids []int32) ([]domain.Dish, error)
 	AddDish(ctx context.Context, req domain.AddDishRequest) error
+	EditDish(ctx context.Context, req domain.EditDishRequest) error
+	DeleteDish(ctx context.Context, id int32) error
 }
 
 const (
@@ -35,10 +39,10 @@ func NewDish(service DishService) Dish {
 //	@Tags			dishes
 //	@Summary		dish
 //	@Description	возвращает список блюд
-//	@Param			ids		query	string	false	"список идентификаторов блюд через запятую"
-//	@Param			сategories		query	string	false	"список идентификаторов категорий через запятую"
-//	@Param			limit	query	int		false	"максимальное количество блюд"
-//	@Param			offset	query	int		false	"смещение"
+//	@Param			ids			query	string	false	"список идентификаторов блюд через запятую"
+//	@Param			сategories	query	string	false	"список идентификаторов категорий через запятую"
+//	@Param			limit		query	int		false	"максимальное количество блюд"
+//	@Param			offset		query	int		false	"смещение"
 //	@Produce		json
 //	@Success		200	{array}		domain.Dish
 //	@Failure		400	{object}	apierrors.Error
@@ -91,4 +95,56 @@ func (c Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 		return err
 	}
 	return nil
+}
+
+// Edit dish
+//
+//	@Tags		dishes
+//	@Summary	Edit Dish
+//	@Param		body		body	domain.EditDishRequest	true	"request body"
+//
+//	@Param		X-USER-ID	header	string					true	"id пользователя"
+//
+//	@Param		id			query	int32					false	"идентификатор блюда"
+
+// @Accept		json
+// @Success	200	{object}	domain.Empty
+// @Failure	400	{object}	apierrors.Error
+// @Failure	403	{object}	apierrors.Error
+// @Failure	404	{object}	apierrors.Error
+// @Failure	500	{object}	apierrors.Error
+// @Router		/dishes/edit/:id [POST]
+func (c Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
+	err := c.service.EditDish(ctx, req)
+	switch {
+	case errors.Is(err, domain.ErrDishNotFound):
+		return apierrors.New(http.StatusNotFound, domain.ErrCodeDishNotFound, domain.ErrDishNotFound.Error(), err)
+	default:
+		return err
+	}
+}
+
+// Delete dish
+//
+//	@Tags		dishes
+//	@Summary	Delete Dish
+//
+//	@Param		X-USER-ID	header	string	true	"id пользователя"
+//
+//	@Param		id			query	int32	false	"идентификатор блюда"
+//	@Accept		json
+//	@Success	200	{object}	domain.Empty
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure	403	{object}	apierrors.Error
+//	@Failure	404	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
+//	@Router		/dishes/delete/:id [DELETE]
+func (c Dish) DeleteDish(ctx context.Context, req domain.DeleteDishRequest) error {
+	err := c.service.DeleteDish(ctx, req.Id)
+	switch {
+	case errors.Is(err, domain.ErrDishNotFound):
+		return apierrors.New(http.StatusNotFound, domain.ErrCodeDishNotFound, domain.ErrDishNotFound.Error(), err)
+	default:
+		return err
+	}
 }

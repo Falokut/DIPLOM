@@ -18,6 +18,8 @@ linters:
   enable-all: true
   disable:
     - goimports
+    - execinquery
+    - exportloopref
     - wsl
     - varnamelen
     - exhaustruct

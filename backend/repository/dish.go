@@ -49,28 +49,18 @@ func (r Dish) AddDish(ctx context.Context, req *entity.AddDishRequest) error {
 	defer tx.Rollback() //nolint:errcheck
 
 	query := `INSERT INTO dish(name, description, price, image_id) VALUES($1,$2,$3,$4) RETURNING id;`
-	var id int64
+	var id int32
 	err = tx.GetContext(ctx, &id, query, req.Name, req.Description, req.Price, req.ImageId)
 	if err != nil {
 		return errors.WithMessage(err, "insert dish")
 	}
-
-	if len(req.Categories) > 0 {
-		var valuesPlaceholders = make([]string, len(req.Categories))
-		var args = make([]any, 0, len(req.Categories)+1)
-		args = append(args, id)
-		for i, catId := range req.Categories {
-			valuesPlaceholders[i] = fmt.Sprintf("($1,$%d)", len(args)+1)
-			args = append(args, catId)
-		}
-		query = fmt.Sprintf(`INSERT INTO dish_categories(dish_id,category_id) VALUES %s ON CONFLICT DO NOTHING`,
-			strings.Join(valuesPlaceholders, ","))
+	query, args := getInsertDishCategoriesQuery(id, req.Categories)
+	if len(args) > 0 {
 		_, err := tx.ExecContext(ctx, query, args...)
 		if err != nil {
 			return errors.WithMessage(err, "insert dish_categories")
 		}
 	}
-
 	err = tx.Commit()
 	if err != nil {
 		return errors.WithMessage(err, "commit tx")
@@ -124,4 +114,59 @@ func (r Dish) GetDishesByCategories(ctx context.Context, limit int32, offset int
 		return nil, errors.WithMessage(err, "get dish list")
 	}
 	return res, nil
+}
+
+func (r Dish) EditDish(ctx context.Context, req *entity.EditDishRequest) error {
+	tx, err := r.cli.BeginTxx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelDefault,
+	})
+	if err != nil {
+		return errors.WithMessage(err, "begin tx")
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	query := `UPDATE dish SET name=$1, description=$2, price=$3, image_id=$4 WHERE id=$5`
+	_, err = tx.ExecContext(ctx, query, req.Name, req.Description, req.Price, req.ImageId, req.Id)
+	if err != nil {
+		return errors.WithMessage(err, "update dish")
+	}
+	_, err = tx.ExecContext(ctx, "DELETE FROM dish_categories WHERE dish_id=$1", req.Id)
+	if err != nil {
+		return errors.WithMessage(err, "delete dish categories")
+	}
+	query, args := getInsertDishCategoriesQuery(req.Id, req.Categories)
+	if len(args) > 0 {
+		_, err := tx.ExecContext(ctx, query, args...)
+		if err != nil {
+			return errors.WithMessage(err, "insert dish_categories")
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return errors.WithMessage(err, "commit tx")
+	}
+	return nil
+}
+
+func (r Dish) DeleteDish(ctx context.Context, id int32) error {
+	_, err := r.cli.ExecContext(ctx, "DELETE FROM dish WHERE id=$1", id)
+	if err != nil {
+		return errors.WithMessage(err, "delete dishes")
+	}
+	return nil
+}
+
+func getInsertDishCategoriesQuery(id int32, categories []int32) (string, []any) {
+	if len(categories) == 0 {
+		return "", nil
+	}
+	var valuesPlaceholders = make([]string, len(categories))
+	var args = make([]any, 0, len(categories)+1)
+	args = append(args, id)
+	for i, catId := range categories {
+		valuesPlaceholders[i] = fmt.Sprintf("($1,$%d)", len(args)+1)
+		args = append(args, catId)
+	}
+	return fmt.Sprintf(`INSERT INTO dish_categories(dish_id,category_id) VALUES %s ON CONFLICT DO NOTHING`,
+		strings.Join(valuesPlaceholders, ",")), args
 }

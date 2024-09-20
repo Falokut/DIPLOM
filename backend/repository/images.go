@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Falokut/go-kit/json"
 	"net/http"
+
+	"github.com/Falokut/go-kit/json"
 
 	"dish_as_a_service/entity"
 
@@ -27,16 +28,18 @@ func NewImage(cli *http.Client, baseServiceUrl, baseImageUrl string) Image {
 }
 
 const (
-	uploadImageEndpoint = "%s/image/%s"
-	deleteImageEndpoint = "%s/image/%s/%s"
+	uploadImageEndpoint  = "%s/image/%s"
+	deleteImageEndpoint  = "%s/image/%s/%s"
+	replaceImageEndpoint = "%s/image/%s/%s"
 )
 
 func (r Image) UploadImage(ctx context.Context, category string, image []byte) (string, error) {
 	url := fmt.Sprintf(uploadImageEndpoint, r.serviceAddr, category)
 
-	req, err := makeRequest(ctx, http.MethodPost, url, entity.UploadImageRequest{
-		Image: image,
-	})
+	req, err := makeRequest(ctx, http.MethodPost, url,
+		entity.UploadImageRequest{
+			Image: image,
+		})
 	req.Header.Add("Content-Type", "application/json")
 	if err != nil {
 		return "", errors.WithMessage(err, "make request")

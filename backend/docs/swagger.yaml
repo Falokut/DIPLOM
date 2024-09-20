@@ -15,6 +15,7 @@ definitions:
           type: integer
         type: array
       description:
+        maxLength: 256
         type: string
       image:
         items:
@@ -24,6 +25,7 @@ definitions:
         minLength: 1
         type: string
       price:
+        minimum: 800
         type: integer
     required:
     - name
@@ -134,11 +136,15 @@ definitions:
     properties:
       createdAt:
         type: string
+      id:
+        type: string
       items:
         items:
           $ref: '#/definitions/domain.OrderItem'
         type: array
       paymentMethod:
+        type: string
+      status:
         type: string
       total:
         type: integer
@@ -168,6 +174,10 @@ paths:
       - description: список идентификаторов блюд через запятую
         in: query
         name: ids
+        type: string
+      - description: список идентификаторов категорий через запятую
+        in: query
+        name: сategories
         type: string
       - description: максимальное количество блюд
         in: query
@@ -402,6 +412,69 @@ paths:
       summary: Переименовать категорию
       tags:
       - dishes_categories
+  /dishes/delete/:id:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: id пользователя
+        in: header
+        name: X-USER-ID
+        required: true
+        type: string
+      - description: идентификатор блюда
+        in: query
+        name: id
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Empty'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Delete Dish
+      tags:
+      - dishes
+  /dishes/edit/:id:
+    post:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Empty'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
   /orders:
     post:
       consumes:

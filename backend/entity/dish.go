@@ -16,3 +16,11 @@ type AddDishRequest struct {
 	Price       int32
 	Categories  []int32
 }
+type EditDishRequest struct {
+	Id          int32
+	Name        string
+	Description string
+	ImageId     string
+	Price       int32
+	Categories  []int32
+}

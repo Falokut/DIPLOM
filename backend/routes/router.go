@@ -53,6 +53,18 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			Handler: r.Dish.AddDish,
 		},
 		{
+			Method:  http.MethodPost,
+			Path:    "/dishes/edit/:id",
+			IsAdmin: true,
+			Handler: r.Dish.EditDish,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/dishes/delete/:id",
+			IsAdmin: true,
+			Handler: r.Dish.DeleteDish,
+		},
+		{
 			Method:  http.MethodGet,
 			Path:    "/dishes/categories",
 			Handler: r.DishesCategories.GetCategories,

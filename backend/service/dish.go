@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/Falokut/go-kit/log"
@@ -17,6 +16,8 @@ type DishRepo interface {
 	GetDishesByIds(ctx context.Context, ids []int32) ([]entity.Dish, error)
 	GetDishesByCategories(ctx context.Context, limit int32, offset int32, ids []int32) ([]entity.Dish, error)
 	AddDish(ctx context.Context, dish *entity.AddDishRequest) error
+	EditDish(ctx context.Context, dish *entity.EditDishRequest) error
+	DeleteDish(ctx context.Context, id int32) error
 }
 
 type ImagesRepo interface {
@@ -90,23 +91,96 @@ func (s Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 		}
 	}
 
-	dish := &entity.AddDishRequest{
+	err = s.repo.AddDish(ctx, &entity.AddDishRequest{
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       req.Price,
 		Categories:  req.Categories,
 		ImageId:     imageId,
-	}
-	err = s.repo.AddDish(ctx, dish)
+	})
 	if err != nil {
 		if len(req.Image) > 0 {
 			delErr := s.imagesRepo.DeleteImage(ctx, dishImageCategory, imageId)
 			if delErr != nil {
-				s.logger.Error(ctx, fmt.Sprintf("error while deleting image with id=%s category=%s err=%v",
-					imageId, dishImageCategory, err))
+				s.logger.Error(ctx, "delete image",
+					log.Any("imageId", imageId),
+					log.Any("category", dishImageCategory),
+					log.Any("error", delErr),
+				)
 			}
 		}
 		return errors.WithMessage(err, "add dish")
+	}
+	return nil
+}
+
+func (s Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
+	dishes, err := s.repo.GetDishesByIds(ctx, []int32{req.Id})
+	if err != nil {
+		return errors.WithMessage(err, "get dishes by ids")
+	}
+	if len(dishes) == 0 {
+		return domain.ErrDishNotFound
+	}
+	if dishes[0].ImageId != "" {
+		err = s.imagesRepo.DeleteImage(ctx, dishImageCategory, dishes[0].ImageId)
+		if err != nil {
+			s.logger.Warn(ctx, "delete image",
+				log.Any("imageId", dishes[0].ImageId),
+				log.Any("category", dishImageCategory),
+				log.Any("error", err),
+			)
+			return errors.WithMessage(err, "delete dish image")
+		}
+	}
+	var imageId string
+	if len(req.Image) > 0 {
+		imageId, err = s.imagesRepo.UploadImage(ctx, dishImageCategory, req.Image)
+		if err != nil {
+			s.logger.Warn(ctx, "upload image",
+				log.Any("imageId", dishes[0].ImageId),
+				log.Any("category", dishImageCategory),
+				log.Any("error", err),
+			)
+			return errors.WithMessage(err, "upload dish image")
+		}
+	}
+	err = s.repo.EditDish(ctx, &entity.EditDishRequest{
+		Id:          req.Id,
+		Name:        req.Name,
+		Description: req.Description,
+		ImageId:     imageId,
+		Categories:  req.Categories,
+		Price:       req.Price,
+	})
+	if err != nil {
+		return errors.WithMessage(err, "edit dish")
+	}
+	return nil
+}
+
+func (s Dish) DeleteDish(ctx context.Context, id int32) error {
+	dishes, err := s.repo.GetDishesByIds(ctx, []int32{id})
+	if err != nil {
+		return errors.WithMessage(err, "get dishes by ids")
+	}
+	if len(dishes) == 0 {
+		return domain.ErrDishNotFound
+	}
+	if dishes[0].ImageId != "" {
+		err = s.imagesRepo.DeleteImage(ctx, dishImageCategory, dishes[0].ImageId)
+		if err != nil {
+			s.logger.Warn(ctx, "delete image",
+				log.Any("imageId", dishes[0].ImageId),
+				log.Any("category", dishImageCategory),
+				log.Any("error", err),
+			)
+			return errors.WithMessage(err, "delete dish image")
+		}
+	}
+	err = s.repo.DeleteDish(ctx, id)
+	if err != nil {
+		return errors.WithMessage(err, "delete dish")
 	}
 	return nil
 }

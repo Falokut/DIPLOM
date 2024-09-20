@@ -17,9 +17,22 @@ type GetDishesRequest struct {
 }
 
 type AddDishRequest struct {
-	Name        string `validate:"required,min=1"`
-	Description string
-	Price       int32   `validate:"gt=0"`
+	Name        string  `validate:"required,min=1"`
+	Description string  `validate:"max=256"`
+	Price       int32   `validate:"gte=800"`
 	Categories  []int32 `json:",omitempty"`
 	Image       []byte  `json:",omitempty"`
+}
+
+type EditDishRequest struct {
+	Id          int32   `json:",omitempty" validate:"required"`
+	Name        string  `validate:"required,min=1"`
+	Description string  `validate:"max=256"`
+	Price       int32   `validate:"gte=800"`
+	Categories  []int32 `json:",omitempty"`
+	Image       []byte  `json:",omitempty"`
+}
+
+type DeleteDishRequest struct {
+	Id int32 `json:",omitempty" validate:"required"`
 }

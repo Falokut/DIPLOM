@@ -4,6 +4,7 @@ package tests_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"dish_as_a_service/assembly"
 	"dish_as_a_service/conf"
 	"dish_as_a_service/domain"
@@ -97,6 +98,7 @@ func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 	t.Require().ElementsMatch([]string{"Горячее", "Холодное"}, dish.Categories)
 }
 
+// nolint:dupl
 func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	var addDish = entity.AddDishRequest{
 		Name:        fake.It[string](),
@@ -135,6 +137,7 @@ func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	t.Require().ElementsMatch([]string{"Напиток", "Холодное"}, dish.Categories)
 }
 
+// nolint:dupl
 func (t *DishSuite) Test_List_ByCategories_HappyPath() {
 	var addDish = entity.AddDishRequest{
 		Name:        fake.It[string](),
@@ -188,7 +191,7 @@ func (t *DishSuite) Test_AddDish_HappyPath() {
 	addDishReq := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
-		Price:       344,
+		Price:       1000,
 		Categories:  []int32{5, 6},
 	}
 	body, err := json.Marshal(addDishReq)
@@ -203,6 +206,7 @@ func (t *DishSuite) Test_AddDish_HappyPath() {
 	resp, err := t.cli.Do(req)
 	t.Require().NoError(err)
 	defer resp.Body.Close()
+	t.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	var ids []int32
 	err = t.db.Select(&ids, "SELECT id FROM dish WHERE name=$1 AND description=$2 AND price=$3 AND image_id=$4",
@@ -214,6 +218,147 @@ func (t *DishSuite) Test_AddDish_HappyPath() {
 	err = t.db.Select(&categoriesIds, "SELECT category_id FROM dish_categories WHERE dish_id=$1", ids[0])
 	t.Require().NoError(err)
 	t.Require().ElementsMatch(addDishReq.Categories, categoriesIds)
+}
+
+// nolint:funlen
+func (t *DishSuite) Test_EditDish_HappyPath() {
+	var userId string
+	err := t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@test",
+		"test",
+		true,
+	)
+	t.Require().NoError(err)
+
+	addDishReq := domain.AddDishRequest{
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       900,
+		Categories:  []int32{5, 6},
+	}
+	body, err := json.Marshal(addDishReq)
+	t.Require().NoError(err)
+
+	reqBody := bytes.NewReader(body)
+	req, err := http.NewRequest(http.MethodPost, t.getServerUrl("dishes"), reqBody)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	t.Require().Equal(http.StatusOK, resp.StatusCode)
+
+	var ids []int32
+	err = t.db.Select(&ids, "SELECT id FROM dish WHERE name=$1 AND description=$2 AND price=$3 AND image_id=$4",
+		addDishReq.Name, addDishReq.Description, addDishReq.Price, "")
+	t.Require().NoError(err)
+	t.Require().Len(ids, 1)
+
+	var categoriesIds []int32
+	err = t.db.Select(&categoriesIds, "SELECT category_id FROM dish_categories WHERE dish_id=$1", ids[0])
+	t.Require().NoError(err)
+	t.Require().ElementsMatch(addDishReq.Categories, categoriesIds)
+
+	editDishReq := domain.EditDishRequest{
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       800,
+		Categories:  []int32{1, 2, 5},
+	}
+	body, err = json.Marshal(editDishReq)
+	t.Require().NoError(err)
+
+	reqBody = bytes.NewReader(body)
+	req, err = http.NewRequest(http.MethodPost, t.getServerUrl(fmt.Sprintf("dishes/edit/%d", ids[0])), reqBody)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err = t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	t.Require().Equal(http.StatusOK, resp.StatusCode)
+
+	var dish entity.Dish
+	err = t.db.Get(&dish, "SELECT id, name, description, price FROM dish WHERE id=$1", ids[0])
+	t.Require().NoError(err)
+	expectedDish := entity.Dish{
+		Id:          ids[0],
+		Name:        editDishReq.Name,
+		Description: editDishReq.Description,
+		Price:       editDishReq.Price,
+	}
+	t.Require().Equal(expectedDish, dish)
+
+	err = t.db.Select(&categoriesIds, "SELECT category_id FROM dish_categories WHERE dish_id=$1", expectedDish.Id)
+	t.Require().NoError(err)
+	t.Require().ElementsMatch(editDishReq.Categories, categoriesIds)
+}
+
+func (t *DishSuite) Test_DeleteDish_HappyPath() {
+	var userId string
+	err := t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@test",
+		"test",
+		true,
+	)
+	t.Require().NoError(err)
+
+	addDishReq := domain.AddDishRequest{
+		Name:        fake.It[string](),
+		Description: fake.It[string](),
+		Price:       801,
+		Categories:  []int32{5, 6},
+	}
+	body, err := json.Marshal(addDishReq)
+	t.Require().NoError(err)
+
+	reqBody := bytes.NewReader(body)
+	req, err := http.NewRequest(http.MethodPost, t.getServerUrl("dishes"), reqBody)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	t.Require().Equal(http.StatusOK, resp.StatusCode)
+
+	var ids []int32
+	err = t.db.Select(&ids, "SELECT id FROM dish WHERE name=$1 AND description=$2 AND price=$3 AND image_id=$4",
+		addDishReq.Name, addDishReq.Description, addDishReq.Price, "")
+	t.Require().NoError(err)
+	t.Require().Len(ids, 1)
+
+	var categoriesIds []int32
+	err = t.db.Select(&categoriesIds, "SELECT category_id FROM dish_categories WHERE dish_id=$1", ids[0])
+	t.Require().NoError(err)
+	t.Require().ElementsMatch(addDishReq.Categories, categoriesIds)
+
+	req, err = http.NewRequest(http.MethodDelete, t.getServerUrl(fmt.Sprintf("dishes/delete/%d", ids[0])), http.NoBody)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	resp, err = t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	t.Require().Equal(http.StatusOK, resp.StatusCode)
+
+	var dish entity.Dish
+	err = t.db.Get(&dish, "SELECT id, name, description, price FROM dish WHERE id=$1", ids[0])
+	t.Require().ErrorIs(err, sql.ErrNoRows)
+
+	err = t.db.Select(&categoriesIds, "SELECT category_id FROM dish_categories WHERE dish_id=$1", ids[0])
+	t.Require().NoError(err)
+	t.Require().ElementsMatch([]int32{}, categoriesIds)
 }
 
 func (t *DishSuite) Test_AddDish_Forbidden() {
@@ -231,7 +376,7 @@ func (t *DishSuite) Test_AddDish_Forbidden() {
 	addDishReq := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
-		Price:       344,
+		Price:       800,
 		Categories:  []int32{5, 6},
 	}
 	body, err := json.Marshal(addDishReq)
