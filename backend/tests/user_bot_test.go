@@ -51,6 +51,7 @@ func (t *UserBotSuite) initBot() (*telegramt.BotServerMock, *telegram_bot.BotAPI
 		context.Background(),
 		t.test.Logger(),
 		t.db,
+		nil,
 		tgBot,
 		bgjobCli,
 		conf.LocalConfig{App: conf.App{AdminSecret: "secret"}},

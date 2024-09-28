@@ -17,7 +17,7 @@ import (
 	"github.com/Falokut/go-kit/test/telegramt"
 
 	"github.com/Falokut/go-kit/client/db"
-	"github.com/Falokut/go-kit/json"
+	"github.com/Falokut/go-kit/http/client"
 	"github.com/Falokut/go-kit/test"
 	"github.com/Falokut/go-kit/test/dbt"
 	"github.com/google/uuid"
@@ -29,10 +29,9 @@ type UserSuite struct {
 	suite.Suite
 	test *test.Test
 
-	db         *dbt.TestDb
-	userRepo   repository.User
-	cli        *http.Client
-	serverAddr string
+	db       *dbt.TestDb
+	userRepo repository.User
+	cli      *client.Client
 }
 
 func TestUser(t *testing.T) {
@@ -54,21 +53,18 @@ func (t *UserSuite) SetupTest() {
 		context.Background(),
 		test.Logger(),
 		t.db.Client,
+		nil,
 		tgBot,
 		bgjobCli,
 		getConfig(),
 	)
 	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
-	t.serverAddr = server.Listener.Addr().String()
-	t.cli = server.Client()
+	t.cli = client.NewWithClient(server.Client())
+	t.cli.GlobalRequestConfig().BaseUrl = fmt.Sprintf("http://%s", server.Listener.Addr().String())
 	t.T().Cleanup(func() {
 		server.Close()
 	})
-}
-
-func (t *UserSuite) getServerUrl(endpoint string) string {
-	return fmt.Sprintf("http://%s/%s", t.serverAddr, endpoint)
 }
 
 func (t *UserSuite) Test_IsAdmin_HappyPath() {
@@ -83,12 +79,14 @@ func (t *UserSuite) Test_IsAdmin_HappyPath() {
 	)
 	t.Require().NoError(err)
 
-	resp, err := t.cli.Get(t.getServerUrl("users/is_admin?userId=" + userId))
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
 	var isAdmin domain.IsUserAdminResponse
-	err = json.NewDecoder(resp.Body).Decode(&isAdmin)
+	_, err = t.cli.Get("/users/is_admin").
+		QueryParams(map[string]any{
+			"userId": userId,
+		}).
+		StatusCodeToError().
+		JsonResponseBody(&isAdmin).
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().True(isAdmin.IsAdmin)
 
@@ -101,22 +99,26 @@ func (t *UserSuite) Test_IsAdmin_HappyPath() {
 		false,
 	)
 	t.Require().NoError(err)
-
-	resp, err = t.cli.Get(t.getServerUrl("users/is_admin?userId=" + userId))
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&isAdmin)
+	_, err = t.cli.Get("/users/is_admin").
+		QueryParams(map[string]any{
+			"userId": userId,
+		}).
+		StatusCodeToError().
+		JsonResponseBody(&isAdmin).
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().False(isAdmin.IsAdmin)
 }
 
 func (t *UserSuite) Test_IsAdmin_NotFound() {
 	userId := uuid.NewString()
-	resp, err := t.cli.Get(t.getServerUrl("users/is_admin?userId=" + userId))
+	resp, err := t.cli.Get("/users/is_admin").
+		QueryParams(map[string]any{
+			"userId": userId,
+		}).
+		Do(context.Background())
 	t.Require().NoError(err)
-	defer resp.Body.Close()
-	t.Require().Equal(http.StatusNotFound, resp.StatusCode)
+	t.Require().Equal(http.StatusNotFound, resp.StatusCode())
 }
 
 func (t *UserSuite) Test_GetUserIdByTelegramId_HappyPath() {
@@ -136,24 +138,20 @@ func (t *UserSuite) Test_GetUserIdByTelegramId_HappyPath() {
 	err = t.db.Get(&userId, "SELECT id FROM users_telegrams WHERE telegram_id=$1", telegramId)
 	t.Require().NoError(err)
 
-	resp, err := t.cli.Get(t.getServerUrl(
-		fmt.Sprintf("users/get_by_telegram_id/%d", telegramId)),
-	)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
 	var userIdRep domain.GetUserIdByTelegramIdResponse
-	err = json.NewDecoder(resp.Body).Decode(&userIdRep)
+	_, err = t.cli.Get(fmt.Sprintf("/users/get_by_telegram_id/%d", telegramId)).
+		JsonResponseBody(&userIdRep).
+		StatusCodeToError().
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().Equal(userId, userIdRep.UserId)
 }
 
 func (t *UserSuite) Test_GetUserIdByTelegramId_NotFound() {
 	var telegramId = fake.It[int64]()
-	resp, err := t.cli.Get(t.getServerUrl(
-		fmt.Sprintf("users/get_by_telegram_id/%d", telegramId)),
-	)
+	resp, err := t.cli.Get(
+		fmt.Sprintf("/users/get_by_telegram_id/%d", telegramId),
+	).Do(context.Background())
 	t.Require().NoError(err)
-	defer resp.Body.Close()
-	t.Require().Equal(http.StatusNotFound, resp.StatusCode)
+	t.Require().Equal(http.StatusNotFound, resp.StatusCode())
 }

@@ -2,7 +2,6 @@ package assembly
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"dish_as_a_service/bot"
@@ -21,6 +20,7 @@ import (
 	telegram_payment "dish_as_a_service/service/payment/telegram"
 
 	"github.com/Falokut/go-kit/client/db"
+	"github.com/Falokut/go-kit/http/client"
 	"github.com/Falokut/go-kit/http/endpoint"
 	"github.com/Falokut/go-kit/http/router"
 	"github.com/Falokut/go-kit/log"
@@ -41,6 +41,7 @@ func Locator(
 	ctx context.Context,
 	logger log.Logger,
 	dbCli *db.Client,
+	imagesCli *client.Client,
 	tgBot *telegram_bot.BotAPI,
 	bgJobCli *bgjob.Client,
 	cfg conf.LocalConfig,
@@ -52,7 +53,7 @@ func Locator(
 	userContr := controller.NewUser(userService)
 	userBotContr := bcontroller.NewUser(userService)
 
-	imagesRepo := repository.NewImage(http.DefaultClient, cfg.Images.BaseServiceUrl, cfg.Images.BaseImagePath)
+	imagesRepo := repository.NewImage(imagesCli, cfg.Images.BaseImagePath)
 	dishRepo := repository.NewDish(dbCli)
 	dishService := service.NewDish(dishRepo, imagesRepo, logger)
 	dishContrl := controller.NewDish(dishService)

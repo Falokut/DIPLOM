@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Falokut/go-kit/http"
+	"github.com/Falokut/go-kit/http/client"
 
 	"dish_as_a_service/conf"
 
@@ -28,6 +29,7 @@ type Assembly struct {
 	tgBot              *telegram_bot.BotAPI
 	workers            []*bgjob.Worker
 	bgjobCli           *bgjob.Client
+	imagesCli          *client.Client
 	server             *http.Server
 	healthcheckManager *healthcheck.Manager
 	localCfg           conf.LocalConfig
@@ -50,8 +52,10 @@ func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
 		return nil, errors.WithMessage(err, "init bot")
 	}
 	server := http.NewServer(logger)
+	imagesCli := client.Default()
+	imagesCli.GlobalRequestConfig().BaseUrl = localCfg.Images.BaseServiceUrl
 
-	locatorCfg, err := Locator(ctx, logger, dbCli, tgBot, bgjobCli, localCfg)
+	locatorCfg, err := Locator(ctx, logger, dbCli, imagesCli, tgBot, bgjobCli, localCfg)
 	if err != nil {
 		return nil, errors.WithMessage(err, "locator config")
 	}
@@ -65,6 +69,7 @@ func New(ctx context.Context, logger log.Logger) (*Assembly, error) {
 		logger:             logger,
 		localCfg:           localCfg,
 		db:                 dbCli,
+		imagesCli:          imagesCli,
 		tgBot:              tgBot,
 		server:             server,
 		workers:            locatorCfg.Workers,

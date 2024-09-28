@@ -2,7 +2,6 @@
 package tests_test
 
 import (
-	"bytes"
 	"context"
 	"dish_as_a_service/assembly"
 	"dish_as_a_service/domain"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/Falokut/go-kit/client/db"
 	"github.com/Falokut/go-kit/http/apierrors"
+	"github.com/Falokut/go-kit/http/client"
 	"github.com/Falokut/go-kit/json"
 	"github.com/Falokut/go-kit/test"
 	"github.com/Falokut/go-kit/test/dbt"
@@ -31,8 +31,7 @@ type DishCategoriesSuite struct {
 	db                 *dbt.TestDb
 	dishCategoriesRepo repository.DishesCategories
 	dishRepo           repository.Dish
-	cli                *http.Client
-	serverAddr         string
+	cli                *client.Client
 }
 
 func TestDishCategories(t *testing.T) {
@@ -55,30 +54,25 @@ func (t *DishCategoriesSuite) SetupTest() {
 		context.Background(),
 		test.Logger(),
 		t.db.Client,
+		nil,
 		tgBot,
 		bgjobCli,
 		getConfig(),
 	)
 	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
-	t.serverAddr = server.Listener.Addr().String()
-	t.cli = server.Client()
+	t.cli = client.NewWithClient(server.Client())
+	t.cli.GlobalRequestConfig().BaseUrl = fmt.Sprintf("http://%s", server.Listener.Addr())
 	t.T().Cleanup(func() {
 		server.Close()
 	})
 }
 
-func (t *DishCategoriesSuite) getServerUrl(endpoint string) string {
-	return fmt.Sprintf("http://%s/%s", t.serverAddr, endpoint)
-}
-
 func (t *DishCategoriesSuite) Test_GetAllCategories_HappyPath() {
-	resp, err := t.cli.Get(t.getServerUrl("/dishes/all_categories"))
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
 	var categories []domain.DishCategory
-	err = json.NewDecoder(resp.Body).Decode(&categories)
+	_, err := t.cli.Get("/dishes/all_categories").
+		JsonResponseBody(&categories).
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().ElementsMatch([]domain.DishCategory{
 		{
@@ -113,12 +107,10 @@ func (t *DishCategoriesSuite) Test_GetAllCategories_HappyPath() {
 }
 
 func (t *DishCategoriesSuite) Test_GetDishesCategories_HappyPath() {
-	resp, err := t.cli.Get(t.getServerUrl("/dishes/categories"))
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
 	var categories []domain.DishCategory
-	err = json.NewDecoder(resp.Body).Decode(&categories)
+	_, err := t.cli.Get("/dishes/categories").
+		JsonResponseBody(&categories).
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().Empty(categories)
 
@@ -131,13 +123,10 @@ func (t *DishCategoriesSuite) Test_GetDishesCategories_HappyPath() {
 	})
 	t.Require().NoError(err)
 
-	resp, err = t.cli.Get(t.getServerUrl("/dishes/categories"))
+	_, err = t.cli.Get("/dishes/categories").
+		JsonResponseBody(&categories).
+		Do(context.Background())
 	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&categories)
-	t.Require().NoError(err)
-
 	t.Require().ElementsMatch([]domain.DishCategory{
 		{
 			Id:   1,
@@ -152,14 +141,10 @@ func (t *DishCategoriesSuite) Test_GetDishesCategories_HappyPath() {
 
 func (t *DishCategoriesSuite) Test_GetCategory_HappyPath() {
 	const categoryId = 3
-	resp, err := t.cli.Get(
-		t.getServerUrl(fmt.Sprintf("/dishes/categories/%d", categoryId)),
-	)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
 	var category domain.DishCategory
-	err = json.NewDecoder(resp.Body).Decode(&category)
+	_, err := t.cli.Get(fmt.Sprintf("/dishes/categories/%d", categoryId)).
+		JsonResponseBody(&category).
+		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().Equal(domain.DishCategory{Id: categoryId, Name: "Напиток"}, category)
 }
@@ -177,25 +162,16 @@ func (t *DishCategoriesSuite) Test_AddCategory_HappyPath() {
 	t.Require().NoError(err)
 
 	categoryName := fake.It[string]()
-	body, err := json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	req := domain.AddCategoryRequest{Name: categoryName}
+	var resp domain.AddCategoryResponse
+	_, err = t.cli.Post("/dishes/categories").
+		Header("X-User-Id", userId).
+		JsonRequestBody(req).
+		JsonResponseBody(&resp).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody := bytes.NewReader(body)
-	req, err := http.NewRequest(http.MethodPost,
-		t.getServerUrl("dishes/categories"), reqBody)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	var categoryId domain.AddCategoryResponse
-	err = json.NewDecoder(resp.Body).Decode(&categoryId)
-	t.Require().NoError(err)
-
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 }
@@ -213,48 +189,35 @@ func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
 	t.Require().NoError(err)
 
 	categoryName := fake.It[string]()
-	body, err := json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	req := domain.AddCategoryRequest{Name: categoryName}
+	var resp domain.AddCategoryResponse
+	_, err = t.cli.Post("/dishes/categories").
+		Header("X-User-Id", userId).
+		JsonRequestBody(req).
+		JsonResponseBody(&resp).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody := bytes.NewReader(body)
-	req, err := http.NewRequest(http.MethodPost,
-		t.getServerUrl("dishes/categories"), reqBody)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	var categoryId domain.AddCategoryResponse
-	err = json.NewDecoder(resp.Body).Decode(&categoryId)
-	t.Require().NoError(err)
-
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
-	req, err = http.NewRequest(
-		http.MethodDelete,
-		t.getServerUrl(fmt.Sprintf("dishes/categories/%d", categoryId.Id)),
-		http.NoBody,
-	)
+	err = t.cli.Delete(fmt.Sprintf("dishes/categories/%d", resp.Id)).
+		Header("X-User-Id", userId).
+		DoWithoutResponse(context.Background())
 	t.Require().NoError(err)
 
-	req.Header.Add("X-User-Id", userId)
-	resp, err = t.cli.Do(req)
+	getResp, err := t.cli.Get(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+		Do(context.Background())
 	t.Require().NoError(err)
-	defer resp.Body.Close()
+	t.Require().NoError(err)
+	t.Require().EqualValues(http.StatusNotFound, getResp.StatusCode())
 
-	resp, err = t.cli.Get(t.getServerUrl(fmt.Sprintf("/dishes/categories/%d", categoryId.Id)))
+	respBody, err := getResp.Body()
 	t.Require().NoError(err)
-	defer resp.Body.Close()
-	t.Require().NoError(err)
-	t.Require().EqualValues(http.StatusNotFound, resp.StatusCode)
 
 	var errorResp apierrors.Error
-	err = json.NewDecoder(resp.Body).Decode(&errorResp)
+	err = json.Unmarshal(respBody, &errorResp)
 	t.Require().NoError(err)
 	t.Require().EqualValues(domain.ErrCodeDishCategoryNotFound, errorResp.ErrorCode)
 }
@@ -272,51 +235,29 @@ func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
 	t.Require().NoError(err)
 
 	categoryName := fake.It[string]()
-	body, err := json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	req := domain.AddCategoryRequest{Name: categoryName}
+	var resp domain.AddCategoryResponse
+	_, err = t.cli.Post("/dishes/categories").
+		Header("X-User-Id", userId).
+		JsonRequestBody(req).
+		JsonResponseBody(&resp).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody := bytes.NewReader(body)
-	req, err := http.NewRequest(
-		http.MethodPost,
-		t.getServerUrl("dishes/categories"),
-		reqBody,
-	)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	var categoryId domain.AddCategoryResponse
-	err = json.NewDecoder(resp.Body).Decode(&categoryId)
-	t.Require().NoError(err)
-
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
 	newCategoryName := fake.It[string]()
-	body, err = json.Marshal(domain.RenameCategoryRequest{Name: newCategoryName})
+	renameReq := domain.RenameCategoryRequest{Name: newCategoryName}
+	_, err = t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+		Header("X-User-Id", userId).
+		JsonRequestBody(renameReq).
+		StatusCodeToError().
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody = bytes.NewReader(body)
-	req, err = http.NewRequest(
-		http.MethodPost,
-		t.getServerUrl(fmt.Sprintf("dishes/categories/%d", categoryId.Id)),
-		reqBody,
-	)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err = t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-	t.Require().EqualValues(http.StatusOK, resp.StatusCode)
-
-	category, err = t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	category, err = t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(newCategoryName, category.Name)
 }
@@ -334,63 +275,34 @@ func (t *DishCategoriesSuite) Test_RenameCategory_Conflict() {
 	t.Require().NoError(err)
 
 	categoryName := fake.It[string]()
-	body, err := json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	req := domain.AddCategoryRequest{Name: categoryName}
+	var resp domain.AddCategoryResponse
+	_, err = t.cli.Post("/dishes/categories").
+		Header("X-User-Id", userId).
+		JsonRequestBody(req).
+		JsonResponseBody(&resp).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody := bytes.NewReader(body)
-	req, err := http.NewRequest(
-		http.MethodPost,
-		t.getServerUrl("dishes/categories"),
-		reqBody,
-	)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	var categoryId domain.AddCategoryResponse
-	err = json.NewDecoder(resp.Body).Decode(&categoryId)
-	t.Require().NoError(err)
-
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
 	categoryName = fake.It[string]()
-	body, err = json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	_, err = t.cli.Post("/dishes/categories").
+		Header("X-User-Id", userId).
+		JsonRequestBody(domain.AddCategoryRequest{Name: categoryName}).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	reqBody = bytes.NewReader(body)
-	req, err = http.NewRequest(
-		http.MethodPost,
-		t.getServerUrl("dishes/categories"),
-		reqBody,
-	)
+	renameReq := domain.RenameCategoryRequest{Name: categoryName}
+	renameResp, err := t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+		Header("X-User-Id", userId).
+		JsonRequestBody(renameReq).
+		Do(context.Background())
 	t.Require().NoError(err)
 
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err = t.cli.Do(req)
+	_, err = t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
 	t.Require().NoError(err)
-	defer resp.Body.Close()
-
-	body, err = json.Marshal(domain.RenameCategoryRequest{Name: categoryName})
-	t.Require().NoError(err)
-
-	req, err = http.NewRequest(
-		http.MethodPost,
-		t.getServerUrl(fmt.Sprintf("dishes/categories/%d", categoryId.Id)),
-		bytes.NewReader(body),
-	)
-	t.Require().NoError(err)
-
-	req.Header.Add("X-User-Id", userId)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err = t.cli.Do(req)
-	t.Require().NoError(err)
-	defer resp.Body.Close()
-	t.Require().EqualValues(http.StatusConflict, resp.StatusCode)
+	t.Require().EqualValues(http.StatusConflict, renameResp.StatusCode())
 }

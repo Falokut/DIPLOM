@@ -5,7 +5,7 @@ listen:
   port: 9999
 
 images:
-  base_service_url: https://falokut.ru/api/images-storage-service
+  base_service_url: https://falokut.ru/api/images-storage-service/
   base_image_path: https://falokut.ru/image
 db:
   schema: dish_as_a_service
