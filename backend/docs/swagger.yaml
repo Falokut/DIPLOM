@@ -255,7 +255,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-      summary: Получить категории
+      summary: Получить все категории
       tags:
       - dishes_categories
   /dishes/categories:
@@ -275,7 +275,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-      summary: Получить категории
+      summary: Получить категории блюд
       tags:
       - dishes_categories
     post:

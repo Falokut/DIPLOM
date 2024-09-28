@@ -25,10 +25,10 @@ func NewDishesCategories(service DishesCategoriesService) DishesCategories {
 	return DishesCategories{service: service}
 }
 
-// Get categories
+// Get all categories
 //
 //	@Tags		dishes_categories
-//	@Summary	Получить категории
+//	@Summary	Получить все категории
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{array}		domain.DishCategory
@@ -38,10 +38,10 @@ func (c DishesCategories) GetAllCategories(ctx context.Context) ([]domain.DishCa
 	return c.service.GetAllCategories(ctx)
 }
 
-// Get categories
+// Get dishes categories
 //
 //	@Tags		dishes_categories
-//	@Summary	Получить категории
+//	@Summary	Получить категории блюд
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{array}		domain.DishCategory
