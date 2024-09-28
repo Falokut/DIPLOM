@@ -94,7 +94,7 @@ func (r Dish) GetDishesByIds(ctx context.Context, ids []int32) ([]entity.Dish, e
 
 func (r Dish) GetDishesByCategories(ctx context.Context, limit int32, offset int32, ids []int32) ([]entity.Dish, error) {
 	query := `
-		SELECT 
+	SELECT 
 		d.id,
 		d.name,
 		d.description,
@@ -104,12 +104,13 @@ func (r Dish) GetDishesByCategories(ctx context.Context, limit int32, offset int
 	FROM dish AS d
 	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
 	LEFT JOIN categories AS c ON f_c.category_id=c.id
-	GROUP BY d.id,d.name,d.description,d.price,d.image_id
-	HAVING d.id=ANY($1)
-	ORDER BY d.id;`
+	GROUP BY d.id, d.name, d.description, d.price, d.image_id
+	HAVING array_agg(c.id) @> $1
+	ORDER BY d.id
+	LIMIT $2 OFFSET $3;`
 
 	var res []entity.Dish
-	err := r.cli.SelectContext(ctx, &res, query, ids)
+	err := r.cli.SelectContext(ctx, &res, query, ids, limit, offset)
 	if err != nil {
 		return nil, errors.WithMessage(err, "get dish list")
 	}

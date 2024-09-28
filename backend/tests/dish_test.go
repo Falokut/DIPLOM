@@ -159,7 +159,7 @@ func (t *DishSuite) Test_List_ByCategories_HappyPath() {
 	err = t.dishRepo.AddDish(context.Background(), &addDish)
 	t.Require().NoError(err)
 
-	resp, err := t.cli.Get(t.getServerUrl("dishes?categoriesIds=6,2&limit=2"))
+	resp, err := t.cli.Get(t.getServerUrl("dishes?categoriesIds=4,2&limit=2"))
 	t.Require().NoError(err)
 	defer resp.Body.Close()
 
@@ -174,6 +174,13 @@ func (t *DishSuite) Test_List_ByCategories_HappyPath() {
 	t.Require().Equal(addDish.Description, dish.Description)
 	t.Require().Equal("my_image_path/dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Острое", "Холодное"}, dish.Categories)
+
+	resp, err = t.cli.Get(t.getServerUrl("dishes?categoriesIds=6,2&limit=2"))
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&dishes)
+	t.Require().NoError(err)
+	t.Require().Empty(dishes)
 }
 
 func (t *DishSuite) Test_AddDish_HappyPath() {
