@@ -1,4 +1,4 @@
-// nolint:noctx
+// nolint:noctx,funlen
 package tests_test
 
 import (
@@ -319,4 +319,78 @@ func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
 	category, err = t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(newCategoryName, category.Name)
+}
+
+func (t *DishCategoriesSuite) Test_RenameCategory_Conflict() {
+	var userId string
+	err := t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@test",
+		"test",
+		true,
+	)
+	t.Require().NoError(err)
+
+	categoryName := fake.It[string]()
+	body, err := json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	t.Require().NoError(err)
+
+	reqBody := bytes.NewReader(body)
+	req, err := http.NewRequest(
+		http.MethodPost,
+		t.getServerUrl("dishes/categories"),
+		reqBody,
+	)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+
+	var categoryId domain.AddCategoryResponse
+	err = json.NewDecoder(resp.Body).Decode(&categoryId)
+	t.Require().NoError(err)
+
+	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), categoryId.Id)
+	t.Require().NoError(err)
+	t.Require().Equal(categoryName, category.Name)
+
+	categoryName = fake.It[string]()
+	body, err = json.Marshal(domain.AddCategoryRequest{Name: categoryName})
+	t.Require().NoError(err)
+
+	reqBody = bytes.NewReader(body)
+	req, err = http.NewRequest(
+		http.MethodPost,
+		t.getServerUrl("dishes/categories"),
+		reqBody,
+	)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err = t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+
+	body, err = json.Marshal(domain.RenameCategoryRequest{Name: categoryName})
+	t.Require().NoError(err)
+
+	req, err = http.NewRequest(
+		http.MethodPost,
+		t.getServerUrl(fmt.Sprintf("dishes/categories/%d", categoryId.Id)),
+		bytes.NewReader(body),
+	)
+	t.Require().NoError(err)
+
+	req.Header.Add("X-User-Id", userId)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err = t.cli.Do(req)
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+	t.Require().EqualValues(http.StatusConflict, resp.StatusCode)
 }

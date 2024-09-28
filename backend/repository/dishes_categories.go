@@ -7,7 +7,8 @@ import (
 	"dish_as_a_service/entity"
 
 	"github.com/Falokut/go-kit/client/db"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pkg/errors"
 )
 
@@ -73,9 +74,9 @@ func (r DishesCategories) AddCategory(ctx context.Context, category string) (int
 
 func (r DishesCategories) RenameCategory(ctx context.Context, id int32, newName string) error {
 	_, err := r.cli.ExecContext(ctx, "UPDATE categories SET name = $1 WHERE id = $2", newName, id)
-	var pgErr pgx.PgError
+	var pgErr *pgconn.PgError
 	switch {
-	case errors.As(err, &pgErr) && pgErr.Code == "23505":
+	case errors.As(err, &pgErr) && pgErr.SQLState() == pgerrcode.UniqueViolation:
 		return domain.ErrDishCategoryConflict
 	case err != nil:
 		return errors.WithMessage(err, "execute query")
