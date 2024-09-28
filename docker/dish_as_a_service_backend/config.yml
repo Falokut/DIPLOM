@@ -7,7 +7,7 @@ listen:
   port: 8080
 
 images:
-  base_service_url: http://gateway:3000/api/images-storage-service
+  base_service_url: http://gateway:3000/api/images-storage-service/
   base_image_path: https://falokut.ru/image
 db:
   schema: dish_as_a_service
