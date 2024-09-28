@@ -3,14 +3,6 @@ filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
-github.com/Falokut/go-kit v0.0.0-20240917192651-e9e7f7caf3ed h1:2yN3Jni5i3grkWwvFtxihkBzErz/jLsCyzVrCrwF3nM=
-github.com/Falokut/go-kit v0.0.0-20240917192651-e9e7f7caf3ed/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
-github.com/Falokut/go-kit v0.0.0-20240928155219-ecc406b9c0ce h1:lNw4smTS9LIRRcLXq509KKrO3hNDdo7kifk+X+66fWk=
-github.com/Falokut/go-kit v0.0.0-20240928155219-ecc406b9c0ce/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
-github.com/Falokut/go-kit v0.0.0-20240928155544-fd226c350444 h1:KtvdQBqzsjwk/y5XykyLHWrrpKAPNiuSMWEN82/53N0=
-github.com/Falokut/go-kit v0.0.0-20240928155544-fd226c350444/go.mod h1:qAbC48tgmXS+TX9Yd/iztfbrjIV7eRBIHsXiQboZSYU=
-github.com/Falokut/go-kit v0.0.0-20240928161000-b8f206cad51b h1:YuX6FdWeafAH+7/ch2N41OBDIf71cnhx9WPjKm7JeMw=
-github.com/Falokut/go-kit v0.0.0-20240928161000-b8f206cad51b/go.mod h1:I90RbrbS7VLzYmkU1OpyRrAE6entkZn27O6Tw9+epFU=
 github.com/Falokut/go-kit v0.0.0-20240928161301-5544cdecdff1 h1:23br5Z5gn0fh8wcNWQQk74g64pBfehWfu+S7qD9HnN0=
 github.com/Falokut/go-kit v0.0.0-20240928161301-5544cdecdff1/go.mod h1:I90RbrbS7VLzYmkU1OpyRrAE6entkZn27O6Tw9+epFU=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
