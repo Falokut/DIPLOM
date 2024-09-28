@@ -18,10 +18,23 @@ type DishesCategories struct {
 func NewDishesCategories(cli *db.Client) DishesCategories {
 	return DishesCategories{cli: cli}
 }
-
-func (r DishesCategories) GetCategories(ctx context.Context) ([]entity.DishCategory, error) {
+func (r DishesCategories) GetAllCategories(ctx context.Context) ([]entity.DishCategory, error) {
 	var categories []entity.DishCategory
-	err := r.cli.SelectContext(ctx, &categories, "SELECT id, name FROM categories")
+	err := r.cli.SelectContext(ctx, &categories, "SELECT id, name FROM categories ORDER BY id")
+	if err != nil {
+		return nil, errors.WithMessage(err, "execute query")
+	}
+	return categories, nil
+}
+
+func (r DishesCategories) GetDishesCategories(ctx context.Context) ([]entity.DishCategory, error) {
+	var categories []entity.DishCategory
+	query := `
+	SELECT DISTINCT c.id, c.name
+	FROM dish_categories dc
+	JOIN categories c ON dc.category_id = c.id
+	ORDER BY c.id;`
+	err := r.cli.SelectContext(ctx, &categories, query)
 	if err != nil {
 		return nil, errors.WithMessage(err, "execute query")
 	}

@@ -6,10 +6,16 @@ export class DishCategory {
     name: string
 }
 
+const allDishesCategoriesEndpoint = '/dishes/all_categories'
+export async function GetAllDishesCategories(): Promise<DishCategory[]> {
+    return await fetch(GetBackendBasePath() + allDishesCategoriesEndpoint).then(response => response.json())
+}
+
 const dishesCategoriesEndpoint = '/dishes/categories'
 export async function GetDishesCategories(): Promise<DishCategory[]> {
     return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint).then(response => response.json())
 }
+
 
 export async function GetDishCategoriesById(categoryId: number): Promise<DishCategory[]> {
     return await fetch(GetBackendBasePath() + dishesCategoriesEndpoint + '/' + categoryId).then(response => response.json()).catch(reason => alert(reason))

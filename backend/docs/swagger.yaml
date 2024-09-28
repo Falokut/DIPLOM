@@ -238,6 +238,26 @@ paths:
       summary: Add Dish
       tags:
       - dishes
+  /dishes/all_categories:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.DishCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Получить категории
+      tags:
+      - dishes_categories
   /dishes/categories:
     get:
       consumes:

@@ -9,7 +9,8 @@ import (
 )
 
 type DishesCategoriesRepo interface {
-	GetCategories(ctx context.Context) ([]entity.DishCategory, error)
+	GetAllCategories(ctx context.Context) ([]entity.DishCategory, error)
+	GetDishesCategories(ctx context.Context) ([]entity.DishCategory, error)
 	GetCategory(ctx context.Context, id int32) (entity.DishCategory, error)
 	AddCategory(ctx context.Context, category string) (int32, error)
 	RenameCategory(ctx context.Context, id int32, newName string) error
@@ -24,10 +25,25 @@ func NewDishesCategories(repo DishesCategoriesRepo) DishesCategories {
 	return DishesCategories{repo: repo}
 }
 
-func (s DishesCategories) GetCategories(ctx context.Context) ([]domain.DishCategory, error) {
-	categories, err := s.repo.GetCategories(ctx)
+func (s DishesCategories) GetAllCategories(ctx context.Context) ([]domain.DishCategory, error) {
+	categories, err := s.repo.GetAllCategories(ctx)
 	if err != nil {
-		return nil, errors.WithMessage(err, "get categories")
+		return nil, errors.WithMessage(err, "get all categories")
+	}
+	domainCategories := make([]domain.DishCategory, len(categories))
+	for i, category := range categories {
+		domainCategories[i] = domain.DishCategory{
+			Id:   category.Id,
+			Name: category.Name,
+		}
+	}
+	return domainCategories, nil
+}
+
+func (s DishesCategories) GetDishesCategories(ctx context.Context) ([]domain.DishCategory, error) {
+	categories, err := s.repo.GetDishesCategories(ctx)
+	if err != nil {
+		return nil, errors.WithMessage(err, "get dishes categories")
 	}
 	domainCategories := make([]domain.DishCategory, len(categories))
 	for i, category := range categories {
@@ -49,6 +65,7 @@ func (s DishesCategories) GetCategory(ctx context.Context, id int32) (domain.Dis
 		Name: category.Name,
 	}, nil
 }
+
 func (s DishesCategories) AddCategory(ctx context.Context, category string) (int32, error) {
 	id, err := s.repo.AddCategory(ctx, category)
 	if err != nil {

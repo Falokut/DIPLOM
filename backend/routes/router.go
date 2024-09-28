@@ -66,8 +66,13 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 		},
 		{
 			Method:  http.MethodGet,
+			Path:    "/dishes/all_categories",
+			Handler: r.DishesCategories.GetAllCategories,
+		},
+		{
+			Method:  http.MethodGet,
 			Path:    "/dishes/categories",
-			Handler: r.DishesCategories.GetCategories,
+			Handler: r.DishesCategories.GetDishesCategories,
 		},
 		{
 			Method:  http.MethodGet,

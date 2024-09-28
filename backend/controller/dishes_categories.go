@@ -10,7 +10,8 @@ import (
 )
 
 type DishesCategoriesService interface {
-	GetCategories(ctx context.Context) ([]domain.DishCategory, error)
+	GetDishesCategories(ctx context.Context) ([]domain.DishCategory, error)
+	GetAllCategories(ctx context.Context) ([]domain.DishCategory, error)
 	GetCategory(ctx context.Context, id int32) (domain.DishCategory, error)
 	AddCategory(ctx context.Context, category string) (int32, error)
 	RenameCategory(ctx context.Context, req domain.RenameCategoryRequest) error
@@ -32,9 +33,22 @@ func NewDishesCategories(service DishesCategoriesService) DishesCategories {
 //	@Produce	json
 //	@Success	200	{array}		domain.DishCategory
 //	@Failure	500	{object}	apierrors.Error
+//	@Router		/dishes/all_categories [GET]
+func (c DishesCategories) GetAllCategories(ctx context.Context) ([]domain.DishCategory, error) {
+	return c.service.GetAllCategories(ctx)
+}
+
+// Get categories
+//
+//	@Tags		dishes_categories
+//	@Summary	Получить категории
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{array}		domain.DishCategory
+//	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes/categories [GET]
-func (c DishesCategories) GetCategories(ctx context.Context) ([]domain.DishCategory, error) {
-	return c.service.GetCategories(ctx)
+func (c DishesCategories) GetDishesCategories(ctx context.Context) ([]domain.DishCategory, error) {
+	return c.service.GetDishesCategories(ctx)
 }
 
 // Get category

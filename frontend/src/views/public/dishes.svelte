@@ -79,6 +79,8 @@
   .dishes_categories {
     display: inline-flex;
     overflow-x: scroll;
+    scroll-snap-type: proximity;
+    scroll-behavior: smooth;
     max-width: 90vw;
   }
   .category_button {
@@ -87,7 +89,7 @@
     white-space: nowrap;
   }
   .selected_category_button {
-    background-color: var(--tg-theme-hint-color)!important;
+    background-color: var(--tg-theme-hint-color) !important;
     margin: 5px;
     white-space: nowrap;
   }

@@ -6,6 +6,7 @@ import (
 	"context"
 	"dish_as_a_service/assembly"
 	"dish_as_a_service/domain"
+	"dish_as_a_service/entity"
 	"dish_as_a_service/repository"
 	"fmt"
 	"net/http"
@@ -29,6 +30,7 @@ type DishCategoriesSuite struct {
 
 	db                 *dbt.TestDb
 	dishCategoriesRepo repository.DishesCategories
+	dishRepo           repository.Dish
 	cli                *http.Client
 	serverAddr         string
 }
@@ -44,6 +46,7 @@ func (t *DishCategoriesSuite) SetupTest() {
 	t.test = test
 	t.db = dbt.New(test, db.WithMigrationRunner("../migrations", test.Logger()))
 	t.dishCategoriesRepo = repository.NewDishesCategories(t.db.Client)
+	t.dishRepo = repository.NewDish(t.db.Client)
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
@@ -69,8 +72,8 @@ func (t *DishCategoriesSuite) getServerUrl(endpoint string) string {
 	return fmt.Sprintf("http://%s/%s", t.serverAddr, endpoint)
 }
 
-func (t *DishCategoriesSuite) Test_GetCategories_HappyPath() {
-	resp, err := t.cli.Get(t.getServerUrl("/dishes/categories"))
+func (t *DishCategoriesSuite) Test_GetAllCategories_HappyPath() {
+	resp, err := t.cli.Get(t.getServerUrl("/dishes/all_categories"))
 	t.Require().NoError(err)
 	defer resp.Body.Close()
 
@@ -105,6 +108,44 @@ func (t *DishCategoriesSuite) Test_GetCategories_HappyPath() {
 		{
 			Id:   7,
 			Name: "Мясное",
+		},
+	}, categories)
+}
+
+func (t *DishCategoriesSuite) Test_GetDishesCategories_HappyPath() {
+	resp, err := t.cli.Get(t.getServerUrl("/dishes/categories"))
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+
+	var categories []domain.DishCategory
+	err = json.NewDecoder(resp.Body).Decode(&categories)
+	t.Require().NoError(err)
+	t.Require().Empty(categories)
+
+	err = t.dishRepo.AddDish(context.Background(), &entity.AddDishRequest{
+		Name:        "dish",
+		Description: "desc",
+		ImageId:     "image_id",
+		Price:       1000,
+		Categories:  []int32{1, 2},
+	})
+	t.Require().NoError(err)
+
+	resp, err = t.cli.Get(t.getServerUrl("/dishes/categories"))
+	t.Require().NoError(err)
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&categories)
+	t.Require().NoError(err)
+
+	t.Require().ElementsMatch([]domain.DishCategory{
+		{
+			Id:   1,
+			Name: "Горячее",
+		},
+		{
+			Id:   2,
+			Name: "Холодное",
 		},
 	}, categories)
 }

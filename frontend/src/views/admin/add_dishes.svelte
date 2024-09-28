@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import DishPreview from "./dish_preview.svelte";
-  import { GetDishesCategories } from "../../client/dishes_categories";
+  import { GetAllDishesCategories } from "../../client/dishes_categories";
   import { AddDish } from "../../client/dish";
   import { retrieveLaunchParams } from "@telegram-apps/sdk";
   import { ToBase64 } from "../../utils/base64";
@@ -65,7 +65,7 @@
   }
 
   async function loadDishesCategories() {
-    let categories = await GetDishesCategories();
+    let categories = await GetAllDishesCategories();
     let dishCategories = [];
     categories.forEach((value) => {
       dishCategories.push(value.name);

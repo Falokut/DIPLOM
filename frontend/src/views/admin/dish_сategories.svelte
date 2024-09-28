@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { GetDishesCategories } from "../../client/dishes_categories";
+  import { GetAllDishesCategories } from "../../client/dishes_categories";
   import { retrieveLaunchParams } from "@telegram-apps/sdk";
   import { navigate } from "svelte-routing";
 
@@ -24,7 +24,7 @@
       navigate("/admin", { replace: true });
     });
 
-    categories = await GetDishesCategories();
+    categories = await GetAllDishesCategories();
   });
   onDestroy(() => {
     removeBackButtonListFn();
