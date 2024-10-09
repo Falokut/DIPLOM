@@ -13,6 +13,8 @@ services:
       SERVER_PORT: 8080
       SERVER_HOST: 0.0.0.0
       SERVER_ENABLE_CORS: false
+    volumes:
+      - ./.env:/app/.env
     deploy:
       mode: replicated
       replicas: 1
