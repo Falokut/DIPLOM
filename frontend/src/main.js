@@ -11,7 +11,11 @@ const app = new App({
 })
 
 export function GetBackendBasePath() {
-  return import.meta.env.VITE_API_URL + "/api/dish_as_a_service";
+  let baseUrl = import.meta.env.VITE_API_URL
+  if (!baseUrl) {
+    baseUrl = ""
+  }
+  return baseUrl + "/api/dish_as_a_service";
 }
 
 export default app
