@@ -16,7 +16,6 @@ import (
 	"dish_as_a_service/service/events"
 	"dish_as_a_service/service/payment"
 	"dish_as_a_service/service/payment/expiration"
-
 	telegram_payment "dish_as_a_service/service/payment/telegram"
 
 	"github.com/Falokut/go-kit/client/db"
@@ -79,9 +78,7 @@ func Locator(
 	expirationWorkerService := expiration.NewWorker(orderRepo)
 	expirationController := expiration.NewWorkerController(expirationWorkerService)
 
-	var paymentMethods = map[string]payment.PaymentService{
-		telegram_payment.PaymentMethod: telegram_payment.NewPayment(userRepo, bgJobCli),
-	}
+	paymentMethods := payment.NewPaymentMethods(userRepo, bgJobCli)
 	paymentService := payment.NewPayment(logger, paymentMethods, expirationService)
 
 	orderService := service.NewOrder(paymentService, orderRepo, dishRepo)
