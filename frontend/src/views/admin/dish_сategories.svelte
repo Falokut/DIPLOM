@@ -35,7 +35,7 @@
 </script>
 
 {#key categories}
-  <div class="dish_category_div">
+  <div class="dish-categories">
     {#each categories as category}
       <DishCategory
         {category}
@@ -47,31 +47,31 @@
   </div>
 {/key}
 
-<div class="add_dish_category_container">
+<div class="add-dish-categories">
   <AddDishCategory
     OnAdd={(category) => {
       categories.push(category);
-      categories=categories;
+      categories = categories;
     }}
   />
 </div>
 
 <style>
-  .dish_category_div {
-    display: grid;
-    grid-auto-flow: row;
-    gap: 2rem;
+  .dish-categories {
+    display: flex;
+    flex-flow: column;
     width: 90vw;
     background-color: var(--tg-theme-secondary-bg-color);
-    border-radius: 5%;
+    border-radius: 5px;
+    padding: 10px;
   }
-  .add_dish_category_container {
+
+  .add-dish-categories {
     display: flex;
 
-    padding-top: 1rem;
+    padding: 10px;
     width: 90vw;
     height: auto;
     min-height: 30vh;
-    padding-bottom: 1rem;
   }
 </style>

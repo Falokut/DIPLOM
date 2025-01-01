@@ -12,28 +12,20 @@
   });
 </script>
 
-<div class="dish_container">
-  <div class="dish_name">{dish.name} x {count}</div>
-  <div class="spacer"></div>
-  <div class="dish_price">{FormatPriceDefault(dish.price)}</div>
+<div class="dish-container">
+  <div class="dish-name">{dish.name} x {count}</div>
+  <div class="dish-price">{FormatPriceDefault(dish.price)}</div>
 </div>
 
 <style>
-  :root {
-    --cart-item-height: 32px;
+  .dish-container {
+    display: flex;
+    padding: 10px;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
   }
-
-  .dish_container {
-    width: 100vw;
-    height: var(--cart-item-height);
-    display: inline-flex;
-  }
-  .dish_name {
-    padding-left: var(--container-padding-lr);
-  }
-
-  .dish_price {
+  .dish-price {
     text-align: right;
-    padding-right: var(--container-padding-lr);
   }
 </style>

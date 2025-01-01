@@ -10,7 +10,7 @@ export class Dish {
 }
 
 const dishesEndpoint = '/dishes'
-export async function GetDishes(dishIds: undefined | string[], limit, offset, categoriesIds) {
+export async function GetDishes(dishIds?: any[], limit?, offset?, categoriesIds?) {
     let queryParams = {}
     if (dishIds && dishIds.length > 0) {
         queryParams = { "ids": dishIds.join(',') }

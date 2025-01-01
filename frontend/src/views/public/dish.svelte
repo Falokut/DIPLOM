@@ -28,15 +28,17 @@
       showIncrDecrButtons = true;
     }
   });
-  var previewSize = 90;
 </script>
 
 <div class="dish">
-  {#if count > 0}
-    <div class="dish-count">{count}</div>
-  {/if}
-  <PreviewImage bind:url={dish.url} bind:size={previewSize} bind:alt={dish.name}
-  ></PreviewImage>
+  <div class="dish-img-count">
+    <div class="dish-image">
+      <PreviewImage bind:url={dish.url} bind:alt={dish.name} />
+    </div>
+    {#if count > 0}
+      <div class="dish-count">{count}</div>
+    {/if}
+  </div>
   <div class="dish-caption">{dish.name}</div>
   <div class="dish-caption">{FormatPriceDefault(dish.price)}</div>
   <div class="dish-count-buttons">
@@ -65,48 +67,50 @@
 </div>
 
 <style>
-  :root {
-    --dish-width: 110px;
-    --dish-height: 200px;
-    --dish-preview-size: 90px;
-    --dish-counter-size: 25px;
+  .dish-image {
+    width: 150px;
+    height: 150px;
   }
-
-  .dish-count {
+  .dish-img-count {
+    display: flex;
     position: relative;
-    width: var(--dish-counter-size);
-    height: var(--dish-counter-size);
+    justify-content: center;
+    width: 100%;
+  }
+  .dish-count {
+    position: absolute;
     border-radius: 40%;
-
-    margin-left: calc(var(--dish-width) - var(--dish-counter-size));
-    margin-bottom: calc(var(--dish-counter-size) * -1);
-
     background-color: orange;
-
-    font-size: medium;
+    width: 36px;
+    height: 36px;
+    right: 0px;
+    top: 0px;
     font-weight: bold;
+    font-size: medium;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .dish-caption {
-    font-size: small;
     margin-top: auto;
+    font-size: medium;
   }
 
   .dish {
+    background-color: var(--tg-theme-secondary-bg-color);
+    border-radius: 5%;
+    padding: 10px;
+    margin: 5px;
     text-align: center;
     display: inline-block;
-
-    width: var(--dish-width);
-    height: var(--dish-height);
   }
 
   .dish-count-buttons {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-flow: column;
-    gap: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
     text-align: center;
     font-size: medium;
     font-weight: bold;
@@ -121,11 +125,14 @@
     height: 100%;
     text-align: center;
   }
+
   .dish-count-buttons #dish-count-incr-button {
     background-color: rgb(17, 151, 17);
+    width: 45%;
   }
 
   .dish-count-buttons #dish-count-decr-button {
     background-color: rgb(182, 19, 19);
+    width: 45%;
   }
 </style>

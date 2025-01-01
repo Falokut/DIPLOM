@@ -36,14 +36,14 @@
   });
 </script>
 
-<div class="orders_container">
+<div class="orders-container">
   <DynamicScroll {nextChunk} let:value maxRetryCountOnPreLoad={0}>
     <OrderItem order={value} />
   </DynamicScroll>
 </div>
 
 <style>
-  .orders_container {
+  .orders-container {
     height: 95vh;
     border-radius: 8px;
     width: 95vw;

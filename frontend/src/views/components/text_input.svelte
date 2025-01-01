@@ -3,8 +3,9 @@
   export let label = "";
 </script>
 
-<div class="input_div">
-  <div class="input_label">{label}</div>
-  <input class="input_box input_area" type="text" bind:value />
+<div class="input-div">
+  {#if label.length > 0}
+    <div class="input-label">{label}</div>
+  {/if}
+  <input class="input-box input-area" type="text" bind:value />
 </div>
-

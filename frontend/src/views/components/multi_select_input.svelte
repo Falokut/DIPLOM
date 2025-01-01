@@ -6,9 +6,9 @@
   import MultiSelect from "svelte-multiselect";
 </script>
 
-<div class="input_div">
-  <div class="input_label">{label}</div>
-  <div class="input_multiselect_box">
+<div class="input-div">
+  <div class="input-label">{label}</div>
+  <div class="input-multiselect_box">
     <MultiSelect
       bind:selected
       bind:options
@@ -25,7 +25,7 @@
     max-height: 100%;
   }
 
-  .input_multiselect_box {
+  .input-multiselect_box {
     font-size: medium;
     margin: auto;
     vertical-align: middle;
@@ -37,7 +37,7 @@
     margin: 0;
   }
 
-  .input_multiselect_box {
+  .input-multiselect_box {
     color: var(--tg-theme-text-color);
     padding-right: 10px;
     height: auto;

@@ -1,14 +1,13 @@
 <script>
   export let url = "";
   export let alt = "";
-  export let size = 90;
 </script>
 
 <img
   class="preview"
   src={url}
   {alt}
-  style="width: {size}px;height: {size}px;"
+  style="width: 100%;height: 100%;"
 />
 
 <style>

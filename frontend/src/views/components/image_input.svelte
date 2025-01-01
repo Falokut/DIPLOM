@@ -19,9 +19,9 @@
   }
 </script>
 
-<div class="input_div">
-  <div class="input_label">{label}</div>
-  <div class="input_box">
+<div class="input-div">
+  <div class="input-label">{label}</div>
+  <div class="input-box">
     <button class="file_upload_button" on:click={openFileInput}
       >{uploadLabel}</button
     >

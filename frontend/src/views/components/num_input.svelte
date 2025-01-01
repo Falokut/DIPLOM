@@ -21,10 +21,10 @@
   }
 </script>
 
-<div class="input_div">
-  <div class="input_label">{label}</div>
+<div class="input-div">
+  <div class="input-label">{label}</div>
   <input
-    class="input_box input_area"
+    class="input-box input-area"
     type="number"
     on:change={handleInput}
     bind:value={bindVal}

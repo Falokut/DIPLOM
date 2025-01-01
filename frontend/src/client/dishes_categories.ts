@@ -36,11 +36,15 @@ export async function RenameDishesCategory(userId: string, newName: string, cate
             name: newName,
         },
         DefaultClient.UserAuthHeader(userId),
-    ).then(response => response.json()).catch(reason => alert(reason))
+    ).catch(reason => alert(reason))
 }
 
 export async function DeleteDishesCategory(userId: string, categoryId: number) {
-    return await DefaultClient.Delete(dishesCategoriesEndpoint + '/' + categoryId, null, DefaultClient.UserAuthHeader(userId)).catch(reason => alert(reason))
+    return await DefaultClient.Delete(
+        dishesCategoriesEndpoint + '/' + categoryId,
+        null,
+        DefaultClient.UserAuthHeader(userId)
+    ).catch(reason => alert(reason))
 }
 
 

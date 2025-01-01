@@ -52,18 +52,18 @@
 </script>
 
 <div class="dish">
-  <div class="dishes_categories">
+  <div class="dishes-categories">
     {#each categories as category}
       <button
         class={category.id == selectedCategory
-          ? "selected_category_button"
-          : "category_button"}
+          ? "selected-category-button"
+          : "category-button"}
         on:click={() => selectCategory(category.id)}>{category.name}</button
       >
     {/each}
   </div>
   <div class="spacer"></div>
-  <div class="grid">
+  <div class="dishes-container">
     {#each dishes as dish}
       <Dish bind:dish />
     {/each}
@@ -71,24 +71,27 @@
 </div>
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+  .dishes-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start;
   }
-  .dishes_categories {
+  
+  .dishes-categories {
     display: inline-flex;
+    justify-content: center;
     overflow-x: scroll;
     scroll-snap-type: proximity;
     scroll-behavior: smooth;
-    max-width: 90vw;
+    width: 95vw;
   }
-  .category_button {
+  .category-button {
     font-size: medium;
     margin: 5px;
     white-space: nowrap;
   }
-  .selected_category_button {
+  .selected-category-button {
     background-color: var(--tg-theme-hint-color) !important;
     margin: 5px;
     white-space: nowrap;

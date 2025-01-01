@@ -29,34 +29,33 @@
   }
 </script>
 
-<div class="category_container">
+<div class="category">
   <input
-    class="input_area category_input"
+    class="input-area category-input"
     type="text"
     bind:value={categoryName}
   />
-  <button class="add_button" on:click={addDishCategory}>Добавить</button>
+  <button class="add-button" on:click={addDishCategory}>Добавить</button>
 </div>
 
 <style>
-  .category_container {
-    border-radius: 3%;
+  .category {
+    border-radius: 5px;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
-    font-size: large;
     background-color: var(--tg-theme-secondary-bg-color);
     align-items: center;
     margin: auto;
     padding: 5px;
     width: 100vw;
   }
-  .category_input {
+  .category-input {
     border-radius: 3px;
   }
 
-  .add_button {
+  .add-button {
     display: block;
     border: 1px solid var(--tg-theme-bg-color);
     margin-right: 5px;

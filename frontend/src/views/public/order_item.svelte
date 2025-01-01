@@ -33,14 +33,14 @@
   });
 </script>
 
-<div class="order_box">
-  <div class="order_info">
-    <div class="order_text">
+<div class="order-box">
+  <div class="order-info">
+    <div class="order-text">
       Заказ от {orderDate}
     </div>
     <div class="spacer"></div>
     <button
-      class="show_hide_order_items_button"
+      class="show-hide-order-items-button"
       on:click={() => {
         showOrderItems = !showOrderItems;
       }}>v</button
@@ -49,7 +49,7 @@
   <div>
     {#if showOrderItems}
       <div
-        class="order_items"
+        class="order-items"
         transition:slide={{
           delay: 250,
           duration: 300,
@@ -58,21 +58,23 @@
         }}
       >
         {#each order.items as item}
-          <div class="user_order_item">
-            <div class="name_count">{item.name} x {item.count}</div>
+          <div class="user-order-item">
+            <div class="name-count">{item.name} x {item.count}</div>
             <div class="spacer"></div>
-            <div class="total_price">
+            <div class="total-price">
               {FormatPriceDefault(item.totalPrice)}
             </div>
           </div>
         {/each}
         <div class="line"></div>
-        <div class="order_total">
+        <div class="order-total">
           {#if orderStatus != ""}
-            <div class="order_text">{orderStatus}</div>
+            <div>Статус:</div>
+            <div class="spacer"></div>
+            <div class="order-text">{orderStatus}</div>
             <div class="spacer"></div>
           {/if}
-          <div class="user_order_total">Итого:</div>
+          <div class="user-order-total">Итого:</div>
           <div class="spacer"></div>
           <div>{FormatPriceDefault(order.total)}</div>
         </div>
@@ -82,23 +84,24 @@
 </div>
 
 <style>
-  .order_box {
-    padding-top: 3px;
+  .order-box {
+    padding: 10px;
     --order-item-border-color: var(--tg-theme-text-color) * 0.1;
   }
-  .order_total {
+  .order-total {
     display: flex;
     flex-direction: row;
     margin: var(--container-padding-lr);
   }
-  .order_items {
+  .order-items {
     background-color: var(--tg-theme-bg-color);
     border-radius: 8px;
+    padding: 10px;
     margin: var(--container-padding-lr);
     border: 2px solid var(--tg-theme-text-color);
     background-clip: padding-box;
   }
-  .order_info {
+  .order-info {
     padding-top: 3px;
     display: flex;
     flex-direction: row;
@@ -107,7 +110,7 @@
     text-align: start;
     font-weight: normal;
   }
-  .order_text {
+  .order-text {
     margin-left: var(--container-padding-lr);
   }
   .line {
@@ -115,7 +118,7 @@
     height: 1px;
     background-color: var(--tg-theme-text-color);
   }
-  .show_hide_order_items_button {
+  .show-hide-order-items-button {
     display: inline-flex;
     justify-content: center;
     background-color: transparent;
@@ -125,21 +128,21 @@
     padding-bottom: 0;
     font-weight: normal;
   }
-  .show_hide_order_items_button:hover {
+  .show-hide-order-items-button:hover {
     color: green;
   }
-  .user_order_item {
+  .user-order-item {
     display: inline-flex;
     flex-direction: row;
     flex-wrap: nowrap;
 
     width: 100%;
   }
-  .user_order_item .name_count {
+  .user-order-item .name-count {
     padding-left: var(--container-padding-lr);
     text-align: left;
   }
-  .user_order_item .total_price {
+  .user-order-item .total-price {
     padding-right: var(--container-padding-lr);
     text-align: right;
   }

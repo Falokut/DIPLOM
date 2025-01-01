@@ -11,6 +11,7 @@
   const { initData } = retrieveLaunchParams();
   import { navigate } from "svelte-routing";
   import { FormatPriceDefault } from "../../utils/format_price";
+  import TextAreaInput from "../components/text_area_input.svelte";
 
   const mainButtonRes = initMainButton();
   let mainButton = mainButtonRes[0];
@@ -80,64 +81,62 @@
   });
 </script>
 
-<h3>Корзина:</h3>
-<div class="line"></div>
-<div class="cart">
-  {#each dishes as dish}
-    <CartItem bind:dish />
-  {/each}
+<div class="page-container">
+  <h3>Корзина:</h3>
   <div class="line"></div>
-</div>
-<div class="total_block">
-  <div class="total_text">Итого:</div>
+  <div class="cart">
+    {#each dishes as dish}
+      <CartItem bind:dish />
+    {/each}
+    <div class="line"></div>
+  </div>
+  <div class="total-block">
+    <div class="total-text">Итого:</div>
+    <div class="total-price">{FormatPriceDefault(total)}</div>
+  </div>
   <div class="spacer"></div>
-  <div class="total_price">{FormatPriceDefault(total)}</div>
-</div>
-<div class="wishes">
-  <textarea bind:value={wishes} class="wishes-input"></textarea>
+  <div class="wishes">
+    <TextAreaInput bind:value={wishes} label={"пожелания"} />
+  </div>
 </div>
 
 <style>
   .cart {
     font-weight: normal;
-    font-size: medium;
+    width: 100%;
   }
+
+  .page-container {
+    width: 90vw;
+    border-radius: 5px;
+  }
+
+  .spacer {
+    height: 5vh;
+    background-color: var(--tg-theme-bg-color);
+  }
+
   .wishes {
-    width: 100vw;
-    height: 30vh;
-    text-align: center;
-  }
-
-  .wishes-input {
-    background-color: var(--tg-theme-secondary-bg-color);
-    color: var(--tg-theme-text-color);
-    font-size: 14px;
-
-    width: 80vw;
-    height: 20vh;
+    width: 100%;
     border: 0px;
-    border-radius: 3%;
     resize: none;
     outline: none;
   }
 
   .line {
-    border-radius: 30%;
     height: 5px;
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--tg-theme-bg-color);
   }
 
-  .total_block {
-    display: inline-flex;
-    width: 100%;
+  .total-block {
+    display: flex;
+    padding: 10px;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
   }
 
-  .total_text {
-    text-align: left;
-    padding-left: var(--container-padding-lr);
-  }
-  .total_price {
+  .total-price {
     text-align: right;
-    padding-right: var(--container-padding-lr);
   }
 </style>

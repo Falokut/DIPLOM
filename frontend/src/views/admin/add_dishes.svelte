@@ -39,9 +39,6 @@
   var removeMainButtonListFn;
   var removeBackButtonListFn;
   onMount(() => {
-    if (notAllowed) {
-      return;
-    }
     mainButton.setParams({
       text: "Добавить блюдо",
       isVisible: true,
@@ -59,10 +56,6 @@
     removeMainButtonListFn();
     removeBackButtonListFn();
   });
-
-  function reload() {
-    window.location.reload();
-  }
 
   async function loadDishesCategories() {
     let categories = await GetAllDishesCategories();
@@ -93,75 +86,65 @@
 
     let ok = await AddDish(req, userId);
     if (ok) {
-      reload();
+      window.location.reload();
       return;
     }
     mainButton.enable();
   }
 </script>
 
+<h3>Добавить блюдо</h3>
 <div class="add_dish_container">
-  <h3>Добавление блюда</h3>
-  <div class="input_container">
-    <TextInput bind:value={dish.name} label={"название:"} />
-    <NumInput
-      bind:value={dish.price}
-      label={"цена:"}
-      min={8000}
-      max={1000000}
+  <TextInput bind:value={dish.name} label={"название:"} />
+  <NumInput bind:value={dish.price} label={"цена:"} min={8000} max={1000000} />
+  <ImageInput
+    bind:outputUrl={dish.url}
+    label={"картинка:"}
+    bind:file={image}
+    uploadLabel={"выбрать файл"}
+  />
+  {#await loadDishesCategories() then dishCategories}
+    <MultiSelectInput
+      options={dishCategories}
+      label={"категории:"}
+      bind:selected={selectedCategories}
+      onchange={() => {
+        dish.categories = [];
+        selectedCategories.forEach((name) => {
+          let id = dishesCategoriesMap.get(name);
+          dish.categories.push(id);
+        });
+      }}
     />
-    <ImageInput
-      bind:outputUrl={dish.url}
-      label={"картинка:"}
-      bind:file={image}
-      uploadLabel={"выбрать файл"}
-    />
-    {#await loadDishesCategories() then dishCategories}
-      <MultiSelectInput
-        options={dishCategories}
-        label={"категории:"}
-        bind:selected={selectedCategories}
-        onchange={() => {
-          dish.categories = [];
-          selectedCategories.forEach((name) => {
-            let id = dishesCategoriesMap.get(name);
-            dish.categories.push(id);
-          });
-        }}
-      />
-    {/await}
-    <TextAreaInput bind:value={dish.description} label={"описание"} />
-  </div>
-
-  <div class="dish_preview">
-    <h3>Предосмотр:</h3>
-    {#if dish.url != "" && dish.name != "" && dish.price > 0}
-      <DishPreview bind:dish />
-    {/if}
-  </div>
+  {/await}
+  <TextAreaInput bind:value={dish.description} label={"описание"} />
 </div>
+
+{#if dish.url != "" && dish.name != "" && dish.price > 0}
+  <h3>Предосмотр:</h3>
+  <div class="dish_preview">
+    <DishPreview bind:dish />
+  </div>
+{/if}
 
 <style>
   .add_dish_container {
-    height: 130vh;
+    background-color: var(--tg-theme-secondary-bg-color);
     display: grid;
     grid-template-rows: 1fr;
     grid-auto-flow: row;
-  }
-  .input_container {
-    font-size: large;
-    margin: auto;
-    background-color: var(--tg-theme-secondary-bg-color);
-    display: grid;
-    grid-auto-flow: row;
     gap: 1rem;
-    height: 90vh;
-    min-height: calc(var(--tg-viewport-height) * 0.9);
-    width: 95%;
     border-radius: 8px;
+    padding: 20px 10px 20px 10px;
+    width: 90vw;
   }
 
   .dish_preview {
     height: 50vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
   }
 </style>
