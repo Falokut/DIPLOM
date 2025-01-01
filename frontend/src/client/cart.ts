@@ -1,7 +1,7 @@
 const cartKey = "cart"
 import { initMainButton, MainButton } from '@telegram-apps/sdk';
-import { GetBackendBasePath } from '../main'
 import { GetUserIdByTelegramId } from './user'
+import { DefaultClient } from '../utils/client';
 const mainButtonRes = initMainButton();
 let mainButton = mainButtonRes[0]
 
@@ -39,27 +39,17 @@ export async function ProcessOrder(telegramId: number, wishes: string): Promise<
         return false
     }
     let items = objectFromCart(GetCart())
-    let req = {
+
+    let resp = await DefaultClient.PostJSON(processOrderEndpoint, {
         userId: userId,
         paymentMethod: "telegram",
         wishes: wishes,
         items: items,
-    }
-
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    let processOrderOptions = {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(req),
-    }
-
-    let resp = await fetch(GetBackendBasePath() + processOrderEndpoint, processOrderOptions)
+    })
     if (resp.ok) {
         localStorage.removeItem(cartKey);
-        return true
     }
-    return false;
+    return resp.ok;
 }
 
 export function SetDishCount(dishId: number, count: number) {

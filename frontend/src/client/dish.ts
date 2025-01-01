@@ -1,5 +1,4 @@
-import { GetUserIdHeader } from './user'
-import { GetBackendBasePath } from '../main'
+import { DefaultClient } from '../utils/client'
 
 export class Dish {
     id: number
@@ -11,17 +10,17 @@ export class Dish {
 }
 
 const dishesEndpoint = '/dishes'
-export async function GetDishes(ids: undefined | string[], limit, offset, categoryId) {
-    let url = GetBackendBasePath() + dishesEndpoint
-    if (ids && ids.length > 0) {
-        url += "?ids=" + ids.join(',')
+export async function GetDishes(dishIds: undefined | string[], limit, offset, categoriesIds) {
+    let queryParams = {}
+    if (dishIds && dishIds.length > 0) {
+        queryParams = { "ids": dishIds.join(',') }
     } else {
-        url += "?limit=" + limit + "&offset=" + offset
-        if (categoryId) {
-            url += "&categoriesIds=" + categoryId
-        }
+        queryParams = { "limit": limit, offset: offset }
+        if (categoriesIds) queryParams["categoriesIds"] = categoriesIds
     }
-    return await fetch(url).then(response => response.json()).catch(reason => console.log(reason))
+    return await DefaultClient.Get(dishesEndpoint, queryParams).
+        then(response => response.json()).
+        catch(reason => console.log(reason))
 }
 
 export class AddDishObj {
@@ -33,11 +32,7 @@ export class AddDishObj {
 }
 
 export async function AddDish(dish: AddDishObj, userId: string): Promise<boolean | void> {
-    let headers = GetUserIdHeader(userId);
-    headers.set("content-type", "application/json; charset=utf8")
-    return await fetch(GetBackendBasePath() + dishesEndpoint, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(dish)
-    }).then(resp => resp.ok).catch(reason => alert(reason))
+    return await DefaultClient.PostJSON(dishesEndpoint, dish, DefaultClient.UserAuthHeader(userId)).
+        then(resp => resp.ok).
+        catch(reason => alert(reason))
 }

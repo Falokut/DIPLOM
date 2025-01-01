@@ -1,5 +1,5 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
-import { GetBackendBasePath } from '../main'
+import { DefaultClient } from "../utils/client";
 
 export async function UserIsAdmin(): Promise<boolean> {
     const { initData } = retrieveLaunchParams();
@@ -15,10 +15,9 @@ export async function UserIsAdmin(): Promise<boolean> {
     return userAdmin;
 }
 
-const getUserIdByTelegramIdEndpoint = '/users/get_by_telegram_id/'
-
+const getUserIdByTelegramIdEndpoint = '/users/get_by_telegram_id'
 export async function GetUserIdByTelegramId(telegramId: number): Promise<string> {
-    let resp = await fetch(GetBackendBasePath() + getUserIdByTelegramIdEndpoint + telegramId)
+    let resp = await DefaultClient.Get(getUserIdByTelegramIdEndpoint + "/" + telegramId)
     if (!resp.ok) {
         console.error(resp)
         return ''
@@ -27,19 +26,13 @@ export async function GetUserIdByTelegramId(telegramId: number): Promise<string>
     return userIdResp.userId
 }
 
-const isUserAdminEndpoint = '/users/'
+const isUserAdminEndpoint = '/users/is_admin'
 export async function IsUserAdmin(userId: string): Promise<boolean> {
-    let resp = await fetch(GetBackendBasePath() + isUserAdminEndpoint + '/is_admin?userId=' + userId)
+    let resp = await DefaultClient.Get(isUserAdminEndpoint, {"userId":userId})
     if (!resp.ok) {
         console.error(resp)
         return false
     }
     let isUserAdminResp = await resp.json()
     return isUserAdminResp.isAdmin
-}
-
-export function GetUserIdHeader(userId: string): Headers {
-    let headers = new Headers();
-    headers.set("X-USER-ID", userId)
-    return headers
 }

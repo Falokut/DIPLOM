@@ -1,5 +1,5 @@
-import { GetUserIdHeader } from './user'
 import { GetBackendBasePath } from '../main'
+import { DefaultClient } from '../utils/client'
 
 export class UserOrder {
     id: string
@@ -21,8 +21,11 @@ export class UserOrderItem {
 
 const userOrdersEndpoint = "/orders/my"
 export async function GetUserOrders(userId: string, offset: number, limit: number): Promise<UserOrder[]> {
-    let url = GetBackendBasePath() + userOrdersEndpoint + "?limit=" + limit + "&offset=" + offset
-    return await fetch(url,
-        { headers: GetUserIdHeader(userId) }
-    ).then(response => response.json()).catch(reason => alert(reason))
+    return await DefaultClient.Get(
+        userOrdersEndpoint,
+        { "limit": limit, "offset": offset },
+        DefaultClient.UserAuthHeader(userId)
+    ).
+        then(response => response.json()).
+        catch(reason => alert(reason))
 }
