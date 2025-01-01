@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   tracing_network:
     name: "tracing_network"

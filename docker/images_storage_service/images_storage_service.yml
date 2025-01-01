@@ -1,5 +1,3 @@
-version: "3.8"
-
 include:
    - ../minio_storage/minio_storage.yml
 networks:
