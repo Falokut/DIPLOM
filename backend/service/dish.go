@@ -28,7 +28,7 @@ type ImagesRepo interface {
 	GetImageUrl(category, imageId string) string
 }
 
-const dishImageCategory = "dish"
+const dishImageCategory = "image-dish"
 
 type Dish struct {
 	repo       DishRepo
