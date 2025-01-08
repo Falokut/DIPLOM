@@ -1,17 +1,17 @@
 include:
    - ../minio_storage/minio_storage.yml
 networks:
-   images_storage_network:
-      name: "images_storage_network"
+   storage_network:
+      name: "storage_network"
 
 services:
-   images_storage_service:
-      hostname: images_storage_service
-      image: falokut/images_storage_service-alpine:latest
+   storage_service:
+      hostname: storage_service
+      image: falokut/storage_service-alpine:latest
       expose:
          - 8080
       networks:
-         - images_storage_network
+         - storage_network
          - gateway_network
          - minio_storage_network
       volumes:

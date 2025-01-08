@@ -5,9 +5,11 @@ import (
 	"strings"
 
 	"github.com/Falokut/go-kit/log"
+	"github.com/google/uuid"
 
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
+
 	"github.com/pkg/errors"
 )
 
@@ -21,7 +23,7 @@ type DishRepo interface {
 }
 
 type ImagesRepo interface {
-	UploadImage(ctx context.Context, category string, image []byte) (string, error)
+	UploadImage(ctx context.Context, req entity.UploadFileRequest) error
 	DeleteImage(ctx context.Context, category, imageId string) error
 	GetImageUrl(category, imageId string) string
 }
@@ -85,7 +87,13 @@ func (s Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 	var imageId string
 	var err error
 	if len(req.Image) > 0 {
-		imageId, err = s.imagesRepo.UploadImage(ctx, dishImageCategory, req.Image)
+		imageId = uuid.NewString()
+		uploadImageReq := entity.UploadFileRequest{
+			Category: dishImageCategory,
+			Filename: imageId,
+			Content:  req.Image,
+		}
+		err = s.imagesRepo.UploadImage(ctx, uploadImageReq)
 		if err != nil {
 			return errors.WithMessage(err, "upload image")
 		}
@@ -135,14 +143,15 @@ func (s Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
 	}
 	var imageId string
 	if len(req.Image) > 0 {
-		imageId, err = s.imagesRepo.UploadImage(ctx, dishImageCategory, req.Image)
+		imageId = uuid.NewString()
+		uploadImageReq := entity.UploadFileRequest{
+			Category: dishImageCategory,
+			Filename: imageId,
+			Content:  req.Image,
+		}
+		err = s.imagesRepo.UploadImage(ctx, uploadImageReq)
 		if err != nil {
-			s.logger.Warn(ctx, "upload image",
-				log.Any("imageId", dishes[0].ImageId),
-				log.Any("category", dishImageCategory),
-				log.Any("error", err),
-			)
-			return errors.WithMessage(err, "upload dish image")
+			return errors.WithMessage(err, "upload image")
 		}
 	}
 	err = s.repo.EditDish(ctx, &entity.EditDishRequest{

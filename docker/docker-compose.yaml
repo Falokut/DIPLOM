@@ -2,7 +2,7 @@ include:
   - ./postgres/postgres.yml
   - ./dish_as_a_service_backend/dish_as_a_service.yml
   - ./dish_as_a_service_frontend/dish_as_a_service.yml
-  - ./images_storage_service/images_storage_service.yml
+  - ./storage_service/storage_service.yml
   - ./tracing_service/tracing_service.yml
 
 networks:
@@ -27,7 +27,7 @@ services:
         condition: unless-stopped
     depends_on:
       #-----------------services-----------------
-      images_storage_service:
+      storage_service:
         condition: service_started
       dish_as_a_service:
         condition: service_started
