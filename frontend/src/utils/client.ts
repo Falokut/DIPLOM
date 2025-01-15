@@ -42,9 +42,9 @@ export class Client {
         return fetch(this.baseUrl + endpoint + query, reqOptions)
     }
 
-    public UserAuthHeader(userId: string): Headers {
+    public UserBearerAuthHeader(token): Headers {
         let headers = new Headers();
-        headers.set("X-USER-ID", userId)
+        headers.set("Authorization", 'Bearer ' + token)
         return headers
     }
 

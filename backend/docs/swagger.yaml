@@ -59,29 +59,52 @@ definitions:
       name:
         type: string
     type: object
-  domain.Empty:
+  domain.EditDishRequest:
+    properties:
+      categories:
+        items:
+          type: integer
+        type: array
+      description:
+        maxLength: 256
+        type: string
+      id:
+        type: integer
+      image:
+        items:
+          type: integer
+        type: array
+      name:
+        minLength: 1
+        type: string
+      price:
+        minimum: 800
+        type: integer
+    required:
+    - id
+    - name
     type: object
   domain.GetDishesCategory:
     properties:
       id:
         type: integer
     type: object
-  domain.GetUserIdByTelegramIdResponse:
+  domain.HasAdminPrivilegesResponse:
     properties:
-      userId:
-        type: string
-    type: object
-  domain.IsUserAdminRequest:
-    properties:
-      userId:
-        type: string
-    required:
-    - userId
-    type: object
-  domain.IsUserAdminResponse:
-    properties:
-      isAdmin:
+      hasAdminPrivileges:
         type: boolean
+    type: object
+  domain.LoginByTelegramRequest:
+    properties:
+      initTelegramData:
+        type: string
+    type: object
+  domain.LoginResponse:
+    properties:
+      accessToken:
+        $ref: '#/definitions/domain.TokenResponse'
+      refreshToken:
+        $ref: '#/definitions/domain.TokenResponse'
     type: object
   domain.OrderItem:
     properties:
@@ -107,14 +130,11 @@ definitions:
       paymentMethod:
         minLength: 1
         type: string
-      userId:
-        type: string
       wishes:
         type: string
     required:
     - items
     - paymentMethod
-    - userId
     type: object
   domain.ProcessOrderResponse:
     properties:
@@ -131,6 +151,13 @@ definitions:
     required:
     - id
     - name
+    type: object
+  domain.TokenResponse:
+    properties:
+      expiresAt:
+        type: string
+      token:
+        type: string
     type: object
   domain.UserOrder:
     properties:
@@ -167,6 +194,63 @@ info:
   title: falokut_dish_as_a_service
   version: 1.0.0
 paths:
+  /auth/access_token:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
+      summary: Обновить токен доступа
+      tags:
+      - auth
+  /auth/login_by_telegram:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: тело запроса
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginByTelegramRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LoginResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Войти в аккаунт
+      tags:
+      - auth
   /dishes:
     get:
       description: возвращает список блюд
@@ -217,16 +301,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/domain.AddDishRequest'
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
-        required: true
-        type: string
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Empty'
+            type: object
         "403":
           description: Forbidden
           schema:
@@ -235,6 +314,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Add Dish
       tags:
       - dishes
@@ -288,11 +369,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/domain.AddCategoryRequest'
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -312,13 +388,13 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Создать категорию
       tags:
       - dishes_categories
-  /dishes/categories/:id:
+  /dishes/categories/{id}:
     delete:
-      consumes:
-      - application/json
       parameters:
       - description: request body
         in: body
@@ -326,18 +402,18 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/domain.DeleteCategoryRequest'
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
+      - description: Идентификатор категории
+        in: path
+        name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "204":
           description: No Content
           schema:
-            $ref: '#/definitions/domain.Empty'
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -346,6 +422,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Удалить категорию
       tags:
       - dishes_categories
@@ -388,17 +466,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/domain.RenameCategoryRequest'
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
-        required: true
-        type: string
       - description: Идентификатор категории
         in: path
         name: id
@@ -416,7 +483,7 @@ paths:
         "204":
           description: No Content
           schema:
-            $ref: '#/definitions/domain.Empty'
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -432,25 +499,19 @@ paths:
       summary: Переименовать категорию
       tags:
       - dishes_categories
-  /dishes/delete/:id:
+  /dishes/delete/{id}:
     delete:
-      consumes:
-      - application/json
       parameters:
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
-        required: true
-        type: string
       - description: идентификатор блюда
-        in: query
+        in: path
         name: id
+        required: true
         type: integer
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Empty'
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -467,24 +528,66 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Delete Dish
       tags:
       - dishes
-  /dishes/edit/:id:
+  /dishes/edit/{id}:
     post:
       consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.EditDishRequest'
+      - description: идентификатор блюда
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
+      summary: Edit Dish
+      tags:
+      - dishes
+  /has_admin_privileges:
+    get:
+      consumes:
+      - application/json
+      produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Empty'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-        "403":
-          description: Forbidden
+            $ref: '#/definitions/domain.HasAdminPrivilegesResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
         "404":
@@ -495,6 +598,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
+      summary: Обновить токен доступа
+      tags:
+      - auth
   /orders:
     post:
       consumes:
@@ -525,6 +633,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Заказать
       tags:
       - order
@@ -539,11 +649,6 @@ paths:
         in: query
         name: offset
         type: integer
-      - description: id пользователя
-        in: header
-        name: X-USER-ID
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -567,64 +672,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
       summary: Получить заказы
       tags:
       - order
-  /users/get_by_telegram_id/:telegramId:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Идентификатор категории
-        in: path
-        name: telegramId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.GetUserIdByTelegramIdResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-      summary: Получить id пользователя по telegram id
-      tags:
-      - users
-  /users/is_admin:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/domain.IsUserAdminRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.IsUserAdminResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Проверить, является ли пользователь админом
-      tags:
-      - users
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

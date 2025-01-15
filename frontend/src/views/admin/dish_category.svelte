@@ -1,12 +1,9 @@
 <script lang="ts">
-  import { GetUserIdByTelegramId } from "../../client/user";
   import {
     RenameDishesCategory,
     DeleteDishesCategory,
   } from "../../client/dishes_categories";
-  import { retrieveLaunchParams } from "@telegram-apps/sdk";
   import TextInput from "../components/text_input.svelte";
-  const { initData } = retrieveLaunchParams();
 
   export let category = {
     name: "",
@@ -15,17 +12,11 @@
   export let remove = function () {};
 
   async function updateDishName() {
-    let userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) return;
-
-    RenameDishesCategory(userId, category.name, category.id);
+    RenameDishesCategory(category.name, category.id);
   }
 
   async function deleteCategory() {
-    let userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) return;
-
-    await DeleteDishesCategory(userId, category.id);
+    await DeleteDishesCategory(category.id);
     remove();
   }
 </script>

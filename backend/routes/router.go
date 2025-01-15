@@ -9,21 +9,21 @@ import (
 )
 
 type Router struct {
+	Auth             controller.Auth
 	Dish             controller.Dish
 	DishesCategories controller.DishesCategories
 	Order            controller.Order
-	User             controller.User
 }
 
-func (r Router) InitRoutes(authMiddleware UserAuth, wrapper endpoint.Wrapper) *router.Router {
+func (r Router) InitRoutes(authMiddleware AuthMiddleware, wrapper endpoint.Wrapper) *router.Router {
 	mux := router.New()
 	for _, desc := range endpointDescriptors(r) {
 		endpointWrapper := wrapper
 		switch {
 		case desc.IsAdmin:
-			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.UserAdminAuth)
+			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.AdminAuthToken())
 		case desc.NeedUserAuth:
-			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.UserAuth)
+			endpointWrapper = wrapper.WithMiddlewares(authMiddleware.UserAuthToken())
 		}
 		mux.Handler(desc.Method, desc.Path, endpointWrapper.Endpoint(desc.Handler))
 	}
@@ -98,9 +98,10 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			Handler: r.DishesCategories.DeleteCategory,
 		},
 		{
-			Method:  http.MethodPost,
-			Path:    "/orders",
-			Handler: r.Order.ProcessOrder,
+			Method:       http.MethodPost,
+			Path:         "/orders",
+			Handler:      r.Order.ProcessOrder,
+			NeedUserAuth: true,
 		},
 		{
 			Method:       http.MethodGet,
@@ -109,14 +110,19 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			NeedUserAuth: true,
 		},
 		{
-			Method:  http.MethodGet,
-			Path:    "/users/get_by_telegram_id/:telegramId",
-			Handler: r.User.GetUserIdByTelegramId,
+			Method:  http.MethodPost,
+			Path:    "/auth/login_by_telegram",
+			Handler: r.Auth.LoginByTelegram,
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/users/is_admin",
-			Handler: r.User.IsAdmin,
+			Path:    "/auth/refresh_access_token",
+			Handler: r.Auth.RefreshAccessToken,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/has_admin_privileges",
+			Handler: r.Auth.HasAdminPrivileges,
 		},
 	}
 }

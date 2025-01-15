@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { GetUserIdByTelegramId } from "../../client/user";
   import {
     AddDishCategory,
     DishCategory,
   } from "../../client/dishes_categories";
   import { retrieveLaunchParams } from "@telegram-apps/sdk";
-  const { initData } = retrieveLaunchParams();
 
   export let categoryName = "";
   export let OnAdd = (category: DishCategory) => {};
@@ -14,12 +12,8 @@
     if (categoryName == "") {
       return;
     }
-    let userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) {
-      return;
-    }
 
-    let dishCategory = await AddDishCategory(userId, categoryName);
+    let dishCategory = await AddDishCategory(categoryName);
     if (dishCategory.id != undefined) {
       dishCategory.name = categoryName;
       OnAdd(dishCategory);

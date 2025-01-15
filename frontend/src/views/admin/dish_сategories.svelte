@@ -1,25 +1,18 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import { GetAllDishesCategories } from "../../client/dishes_categories";
-  import { retrieveLaunchParams } from "@telegram-apps/sdk";
   import { navigate } from "svelte-routing";
 
   import { initBackButton } from "@telegram-apps/sdk";
   import DishCategory from "./dish_category.svelte";
   import AddDishCategory from "./add_dish_category.svelte";
 
-  const { initData } = retrieveLaunchParams();
-  const notAllowed = initData === undefined || initData.user === undefined;
 
   const backButtonRes = initBackButton();
   var backButton = backButtonRes[0];
   let categories = [];
   var removeBackButtonListFn;
   onMount(async () => {
-    if (notAllowed) {
-      window.close();
-      return;
-    }
     removeBackButtonListFn = backButton.on("click", () => {
       navigate("/admin", { replace: true });
     });

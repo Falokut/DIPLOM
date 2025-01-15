@@ -84,7 +84,7 @@ func (s Order) IsOrderingAllowed(ctx context.Context) (bool, error) {
 	return allowed, nil
 }
 
-func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest) (string, error) {
+func (s Order) ProcessOrder(ctx context.Context, userId string, req domain.ProcessOrderRequest) (string, error) {
 	allowed, err := s.orderRepo.IsOrderingAllowed(ctx)
 	if err != nil {
 		return "", errors.WithMessage(err, "is ordering allowed")
@@ -138,7 +138,7 @@ func (s Order) ProcessOrder(ctx context.Context, req domain.ProcessOrderRequest)
 		Id:            uuid.NewString(),
 		PaymentMethod: req.PaymentMethod,
 		Items:         orderItems,
-		UserId:        req.UserId,
+		UserId:        userId,
 		Total:         total,
 		Wishes:        req.Wishes,
 		Status:        entity.OrderItemStatusProcess,

@@ -80,12 +80,12 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 //
 //	@Tags		dishes
 //	@Summary	Add Dish
-//	@Param		body		body	domain.AddDishRequest	true	"request body"
+//	@Param		body	body	domain.AddDishRequest	true	"request body"
 //
-//	@Param		X-USER-ID	header	string					true	"id пользователя"
+//	@Security	Bearer
 //
 //	@Accept		json
-//	@Success	200	{object}	domain.Empty
+//	@Success	200	{object}	any
 //	@Failure	403	{object}	apierrors.Error
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes [POST]
@@ -101,19 +101,18 @@ func (c Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 //
 //	@Tags		dishes
 //	@Summary	Edit Dish
-//	@Param		body		body	domain.EditDishRequest	true	"request body"
+//	@Param		body	body	domain.EditDishRequest	true	"request body"
+//	@Param		id		path	int32					true	"идентификатор блюда"
 //
-//	@Param		X-USER-ID	header	string					true	"id пользователя"
+//	@Security	Bearer
 //
-//	@Param		id			query	int32					false	"идентификатор блюда"
-
-// @Accept		json
-// @Success	200	{object}	domain.Empty
-// @Failure	400	{object}	apierrors.Error
-// @Failure	403	{object}	apierrors.Error
-// @Failure	404	{object}	apierrors.Error
-// @Failure	500	{object}	apierrors.Error
-// @Router		/dishes/edit/:id [POST]
+//	@Accept		json
+//	@Success	200	{object}	any
+//	@Failure	400	{object}	apierrors.Error
+//	@Failure	403	{object}	apierrors.Error
+//	@Failure	404	{object}	apierrors.Error
+//	@Failure	500	{object}	apierrors.Error
+//	@Router		/dishes/edit/{id} [POST]
 func (c Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
 	err := c.service.EditDish(ctx, req)
 	switch {
@@ -129,16 +128,16 @@ func (c Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
 //	@Tags		dishes
 //	@Summary	Delete Dish
 //
-//	@Param		X-USER-ID	header	string	true	"id пользователя"
+//	@Param		id	path	int32	true	"идентификатор блюда"
 //
-//	@Param		id			query	int32	false	"идентификатор блюда"
-//	@Accept		json
-//	@Success	200	{object}	domain.Empty
+//	@Security	Bearer
+//
+//	@Success	200	{object}	any
 //	@Failure	400	{object}	apierrors.Error
 //	@Failure	403	{object}	apierrors.Error
 //	@Failure	404	{object}	apierrors.Error
 //	@Failure	500	{object}	apierrors.Error
-//	@Router		/dishes/delete/:id [DELETE]
+//	@Router		/dishes/delete/{id} [DELETE]
 func (c Dish) DeleteDish(ctx context.Context, req domain.DeleteDishRequest) error {
 	err := c.service.DeleteDish(ctx, req.Id)
 	switch {

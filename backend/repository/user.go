@@ -107,17 +107,21 @@ func (r User) GetUserChatId(ctx context.Context, userId string) (int64, error) {
 	}
 }
 
-func (r User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (string, error) {
-	query := "SELECT id FROM users_telegrams WHERE telegram_id=$1"
-	var userId string
-	err := r.cli.GetContext(ctx, &userId, query, telegramId)
+func (r User) GetUserByTelegramId(ctx context.Context, telegramId int64) (entity.User, error) {
+	query := `
+	SELECT u.id, u.username, u.name, u.admin
+	FROM users u
+	JOIN users_telegrams ut ON u.id=ut.id
+	WHERE ut.telegram_id=$1`
+	var user entity.User
+	err := r.cli.GetContext(ctx, &user, query, telegramId)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return "", domain.ErrUserNotFound
+		return entity.User{}, domain.ErrUserNotFound
 	case err != nil:
-		return "", errors.WithMessage(err, "select users_telegrams")
+		return entity.User{}, errors.WithMessagef(err, "select %s", query)
 	default:
-		return userId, nil
+		return user, nil
 	}
 }
 
@@ -198,4 +202,18 @@ func (r User) GetUserChatIdByUsername(ctx context.Context, username string) (int
 		return 0, errors.WithMessage(err, "get user chat id by username")
 	}
 	return chatId, nil
+}
+
+func (r User) GetUserIdByTelegramId(ctx context.Context, telegramId int64) (string, error) {
+	query := "SELECT id FROM users_telegrams WHERE telegram_id=$1"
+	var userId string
+	err := r.cli.GetContext(ctx, &userId, query, telegramId)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return "", domain.ErrUserNotFound
+	case err != nil:
+		return "", errors.WithMessagef(err, "select %s", query)
+	default:
+		return userId, nil
+	}
 }

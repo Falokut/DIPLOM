@@ -2,13 +2,11 @@
   import { DynamicScroll } from "svelte-dynamic-scroll";
   import { GetUserOrders, UserOrder } from "../../client/order";
   import OrderItem from "./order_item.svelte";
-  import { GetUserIdByTelegramId } from "../../client/user";
 
   import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
   import { onMount, onDestroy } from "svelte";
   import { navigate } from "svelte-routing";
 
-  const { initData } = retrieveLaunchParams();
   const pageLimit = 30;
   let currentOffset = 0;
   const backButtonRes = initBackButton();
@@ -17,11 +15,7 @@
   async function nextChunk(
     lastVal: UserOrder | undefined
   ): Promise<UserOrder[]> {
-    let userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) {
-      return;
-    }
-    let orders = await GetUserOrders(userId, currentOffset, pageLimit);
+    let orders = await GetUserOrders(currentOffset, pageLimit);
     currentOffset += orders.length;
     return orders;
   }

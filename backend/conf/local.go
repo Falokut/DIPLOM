@@ -15,6 +15,7 @@ type LocalConfig struct {
 	Listen          config.Listen            `yaml:"listen"`
 	Images          Images                   `yaml:"images"`
 	Payment         Payment                  `yaml:"payment"`
+	Auth            Auth                     `yaml:"auth"`
 }
 
 type App struct {
@@ -28,4 +29,15 @@ type Images struct {
 
 type Payment struct {
 	ExpirationDelay time.Duration `yaml:"expiration_delay" env:"PAYMENT_EXPIRATION_DELAY"`
+}
+
+type Auth struct {
+	Access                 JwtToken      `yaml:"access"`
+	Refresh                JwtToken      `yaml:"refresh"`
+	TelegramExpireDuration time.Duration `yaml:"telegram_expire_duration" validate:"required,min=24h"`
+}
+
+type JwtToken struct {
+	TTL    time.Duration `yaml:"ttl" validate:"required,min=24h"`
+	Secret string        `yaml:"secret" validate:"required,min=10"`
 }

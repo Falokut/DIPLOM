@@ -53,19 +53,17 @@ func (c DishesCategories) GetDishesCategories(ctx context.Context) ([]domain.Dis
 
 // Get category
 //
-//	@Param		body	body	domain.GetDishesCategory	true	"request body"
-//
 //	@Tags		dishes_categories
 //	@Summary	Получить категорию
 //	@Produce	json
+//	@Param		body	body		domain.GetDishesCategory	true	"request body"
+//	@Param		id		path		int32						true	"Идентификатор категории"
 //
-//	@Param		id	path		int	true	"Идентификатор категории"
-//
-//	@Success	200	{object}	domain.DishCategory
-//	@Failure	400	{object}	apierrors.Error
-//	@Failure	404	{object}	apierrors.Error
-//	@Failure	500	{object}	apierrors.Error
-//	@Router		/dishes/categories/:id [GET]
+//	@Success	200		{object}	domain.DishCategory
+//	@Failure	400		{object}	apierrors.Error
+//	@Failure	404		{object}	apierrors.Error
+//	@Failure	500		{object}	apierrors.Error
+//	@Router		/dishes/categories/{id} [GET]
 func (c DishesCategories) GetCategory(ctx context.Context, req domain.GetDishesCategory) (*domain.DishCategory, error) {
 	category, err := c.service.GetCategory(ctx, req.Id)
 	switch {
@@ -84,9 +82,9 @@ func (c DishesCategories) GetCategory(ctx context.Context, req domain.GetDishesC
 
 // Add category
 //
-//	@Param		body		body	domain.AddCategoryRequest	true	"request body"
+//	@Param		body	body	domain.AddCategoryRequest	true	"request body"
 //
-//	@Param		X-USER-ID	header	string						true	"id пользователя"
+//	@Security	Bearer
 //
 //	@Tags		dishes_categories
 //	@Summary	Создать категорию
@@ -107,23 +105,23 @@ func (c DishesCategories) AddCategory(ctx context.Context, req domain.AddCategor
 
 // Rename category
 //
-//	@Param		body		body	domain.RenameCategoryRequest	true	"request body"
+//	@Param		body	body	domain.RenameCategoryRequest	true	"request body"
 //
-//	@Param		X-USER-ID	header	string							true	"id пользователя"
+//	@Security	Bearer
+
+// @Tags		dishes_categories
+// @Summary	Переименовать категорию
+// @Accept		json
+// @Produce	json
 //
-//	@Tags		dishes_categories
-//	@Summary	Переименовать категорию
-//	@Accept		json
-//	@Produce	json
+// @Param		id		path		int								true	"Идентификатор категории"
+// @Param		body	body		domain.RenameCategoryRequest	true	"request body"
 //
-//	@Param		id		path		int								true	"Идентификатор категории"
-//
-//	@Param		body	body		domain.RenameCategoryRequest	true	"request body"
-//	@Success	204		{object}	domain.Empty
-//	@Failure	400		{object}	apierrors.Error
-//	@Failure	403		{object}	apierrors.Error
-//	@Failure	500		{object}	apierrors.Error
-//	@Router		/dishes/categories/:id [POST]
+// @Success	204		{object}	any
+// @Failure	400		{object}	apierrors.Error
+// @Failure	403		{object}	apierrors.Error
+// @Failure	500		{object}	apierrors.Error
+// @Router		/dishes/categories/{id} [POST]
 func (c DishesCategories) RenameCategory(ctx context.Context, req domain.RenameCategoryRequest) error {
 	err := c.service.RenameCategory(ctx, req)
 	switch {
@@ -143,18 +141,19 @@ func (c DishesCategories) RenameCategory(ctx context.Context, req domain.RenameC
 
 // Delete category
 //
-//	@Param		body		body	domain.DeleteCategoryRequest	true	"request body"
-//
-//	@Param		X-USER-ID	header	string							true	"id пользователя"
-//
 //	@Tags		dishes_categories
 //	@Summary	Удалить категорию
-//	@Accept		json
 //	@Produce	json
-//	@Success	204	{object}	domain.Empty
+//
+//	@Param		body	body	domain.DeleteCategoryRequest	true	"request body"
+//	@Param		id		path	int32							true	"Идентификатор категории"
+//
+//	@Security	Bearer
+//
+//	@Success	204	{object}	any
 //	@Failure	400	{object}	apierrors.Error
 //	@Failure	500	{object}	apierrors.Error
-//	@Router		/dishes/categories/:id [DELETE]
+//	@Router		/dishes/categories/{id} [DELETE]
 func (c DishesCategories) DeleteCategory(ctx context.Context, req domain.DeleteCategoryRequest) error {
 	return c.service.DeleteCategory(ctx, req.Id)
 }

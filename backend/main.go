@@ -9,11 +9,16 @@ import (
 	"github.com/Falokut/go-kit/shutdown"
 )
 
-//	@title			falokut_dish_as_a_service
-//	@version		1.0.0
-//	@description	Сервис для заказа еды
-//	@BasePath		/api/dish_as_a_service
-
+// @title						falokut_dish_as_a_service
+// @version					1.0.0
+// @description				Сервис для заказа еды
+// @BasePath					/api/dish_as_a_service
+//
+// @securityDefinitions.apikey	Bearer
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and JWT token.
+//
 //go:generate swag init --parseDependency
 //go:generate rm -f docs/swagger.json docs/docs.go
 func main() {

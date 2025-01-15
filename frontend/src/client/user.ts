@@ -1,38 +1,68 @@
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { DefaultClient } from "../utils/client";
 
-export async function UserIsAdmin(): Promise<boolean> {
-    const { initData } = retrieveLaunchParams();
-    if (initData === undefined || initData.user === undefined) {
-        return false;
+const accessTokenKey = "access";
+const accessTokenExpiresAtKey = "access_expire_at";
+const refreshTokenKey = "refresh";
+const refreshTokenExpiresAtKey = "refresh_expire_at";
+
+export async function GetAccessToken() {
+    const accessToken = sessionStorage.getItem(accessTokenKey);
+    const accessTokenExpiresAt = sessionStorage.getItem(accessTokenExpiresAtKey)
+    if (accessToken && accessTokenExpiresAt && new Date(accessTokenExpiresAt) > new Date()) {
+        return accessToken;
     }
-    const userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) {
-        return false;
+    const refreshToken = sessionStorage.getItem(refreshTokenKey);
+    const refreshTokenExpiresAt = sessionStorage.getItem(refreshTokenExpiresAtKey)
+    if (refreshToken && refreshTokenExpiresAt && new Date(refreshTokenExpiresAt) > new Date()) {
+        return refreshAccessToken(refreshToken);
     }
 
-    let userAdmin = await IsUserAdmin(userId);
-    return userAdmin;
+    return await auth();
 }
 
-const getUserIdByTelegramIdEndpoint = '/users/get_by_telegram_id'
-export async function GetUserIdByTelegramId(telegramId: number): Promise<string> {
-    let resp = await DefaultClient.Get(getUserIdByTelegramIdEndpoint + "/" + telegramId)
-    if (!resp.ok) {
-        console.error(resp)
-        return ''
+const authByTelegramEndpoint = '/auth/login_by_telegram'
+export async function auth(): Promise<string> {
+    const { initDataRaw } = retrieveLaunchParams();
+    if (initDataRaw == undefined) {
+        throw "undefined init data!";
     }
-    let userIdResp = await resp.json()
-    return userIdResp.userId
+    let resp = await DefaultClient.PostJSON(authByTelegramEndpoint,
+        {
+            initTelegramData: initDataRaw
+        })
+    if (!resp.ok) {
+        return ""
+    }
+    const jsonResp = await resp.json();
+    localStorage.setItem(accessTokenKey, jsonResp.accessToken.token);
+    localStorage.setItem(accessTokenExpiresAtKey, jsonResp.accessToken.expiresAt);
+    localStorage.setItem(refreshTokenKey, jsonResp.refreshToken.token);
+    localStorage.setItem(refreshTokenExpiresAtKey, jsonResp.refreshToken.expiresAt);
+    return jsonResp.accessToken.token;
 }
 
-const isUserAdminEndpoint = '/users/is_admin'
-export async function IsUserAdmin(userId: string): Promise<boolean> {
-    let resp = await DefaultClient.Get(isUserAdminEndpoint, {"userId":userId})
+async function refreshAccessToken(refreshToken: string): Promise<string> {
+    let resp = await DefaultClient.Get(authByTelegramEndpoint, null, DefaultClient.UserBearerAuthHeader(refreshToken))
     if (!resp.ok) {
-        console.error(resp)
+        return ""
+    }
+    const jsonResp = await resp.json();
+    localStorage.setItem(accessTokenKey, jsonResp.accessToken.token);
+    localStorage.setItem(accessTokenExpiresAtKey, jsonResp.accessToken.expiresAt);
+    return jsonResp.accessToken.token;
+}
+
+const isUserAdminEndpoint = '/has_admin_privileges'
+export async function IsUserAdmin(): Promise<boolean> {
+    let accessToken = await GetAccessToken()
+    if (!accessToken) {
+        return false;
+    }
+    let resp = await DefaultClient.Get(isUserAdminEndpoint, null, DefaultClient.UserBearerAuthHeader(accessToken))
+    if (!resp.ok) {
         return false
     }
     let isUserAdminResp = await resp.json()
-    return isUserAdminResp.isAdmin
+    return isUserAdminResp.hasAdminPrivileges
 }

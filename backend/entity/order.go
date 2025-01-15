@@ -23,12 +23,6 @@ const (
 	SuccessOrderCommand  = "success_order"
 )
 
-type ProcessOrderRequest struct {
-	Items  []OrderItem
-	UserId string
-	Total  int32
-}
-
 type PaymentPayload struct {
 	ChatId  int64
 	OrderId string

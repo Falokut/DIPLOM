@@ -1,22 +1,30 @@
 package domain
 
 import (
+	"net/http"
+
+	"github.com/Falokut/go-kit/http/apierrors"
 	"github.com/pkg/errors"
 )
 
 var (
-	ErrInvalidPaymentMethod   = errors.New("невалидный способ оплаты")
-	ErrUserAlreadyExists      = errors.New("пользователь уже существует")
-	ErrUserNotFound           = errors.New("пользователь не найден")
-	ErrUserOperationForbidden = errors.New("данная операция запрещена для пользователя")
-	ErrWrongSecret            = errors.New("неверный пароль")
-	ErrDishNotFound           = errors.New("не все блюда были найдены")
-	ErrInvalidDishCount       = errors.New("невалидное значение количества блюд")
-	ErrDishCategoryNotFound   = errors.New("категория не найдена")
-	ErrDishCategoryConflict   = errors.New("категория с таким именем уже существует")
-	ErrUnauthorized           = errors.New("заголовок для авторизации не передан")
-	ErrOrderingForbidden      = errors.New("оформление заказов приостановлено")
-	ErrOrderNotFound          = errors.New("заказ не найден")
+	ErrInvalidPaymentMethod       = errors.New("невалидный способ оплаты")
+	ErrUserAlreadyExists          = errors.New("пользователь уже существует")
+	ErrUserNotFound               = errors.New("пользователь не найден")
+	ErrTelegramSignMissing        = errors.New("отсутствует подпись от telegram")
+	ErrTelegramAuthDateMissing    = errors.New("отсутствует дата создания токена от telegram")
+	ErrTelegramCredentialsExpired = errors.New("данные от telegram устарели")
+	ErrInvalidTelegramCredentials = errors.New("невалидные данные от telegram")
+	ErrUserOperationForbidden     = errors.New("данная операция запрещена для пользователя")
+	ErrWrongSecret                = errors.New("неверный пароль")
+	ErrDishNotFound               = errors.New("не все блюда были найдены")
+	ErrInvalidDishCount           = errors.New("невалидное значение количества блюд")
+	ErrDishCategoryNotFound       = errors.New("категория не найдена")
+	ErrDishCategoryConflict       = errors.New("категория с таким именем уже существует")
+	ErrInvalidToken               = errors.New("невалидный токен")
+	ErrForbidden                  = errors.New("доступ запрещён")
+	ErrOrderingForbidden          = errors.New("оформление заказов приостановлено")
+	ErrOrderNotFound              = errors.New("заказ не найден")
 )
 
 const (
@@ -31,6 +39,15 @@ const (
 	ErrCodeWrongSecret          = 606
 	ErrCodeOrderingForbidden    = 607
 
-	ErrCodeEmptyUserIdHeader = 700
-	ErrCodeUserNotAdmin      = 701
+	ErrCodeUnauthorized = 700
+	ErrCodeForbidden    = 701
 )
+
+func DomainInvalidTokenError(err error) error {
+	return apierrors.New(
+		http.StatusUnauthorized,
+		ErrCodeUnauthorized,
+		ErrInvalidToken.Error(),
+		err,
+	)
+}

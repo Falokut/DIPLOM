@@ -1,7 +1,7 @@
 const cartKey = "cart"
 import { initMainButton, MainButton } from '@telegram-apps/sdk';
-import { GetUserIdByTelegramId } from './user'
 import { DefaultClient } from '../utils/client';
+
 const mainButtonRes = initMainButton();
 let mainButton = mainButtonRes[0]
 
@@ -19,6 +19,10 @@ export function GetDishCount(dishId: number): number {
     return count == undefined ? 0 : count;
 }
 
+export function ClearCart(){
+    localStorage.removeItem(cartKey);
+}
+
 export function LoadCart(): MainButton {
     mainButton.setParams({
         text: "Корзина",
@@ -30,26 +34,6 @@ export function LoadCart(): MainButton {
         mainButton.hide();
     }
     return mainButton;
-}
-
-const processOrderEndpoint = '/orders'
-export async function ProcessOrder(telegramId: number, wishes: string): Promise<boolean> {
-    let userId = await GetUserIdByTelegramId(telegramId)
-    if (userId.length == 0) {
-        return false
-    }
-    let items = objectFromCart(GetCart())
-
-    let resp = await DefaultClient.PostJSON(processOrderEndpoint, {
-        userId: userId,
-        paymentMethod: "telegram",
-        wishes: wishes,
-        items: items,
-    })
-    if (resp.ok) {
-        localStorage.removeItem(cartKey);
-    }
-    return resp.ok;
 }
 
 export function SetDishCount(dishId: number, count: number) {

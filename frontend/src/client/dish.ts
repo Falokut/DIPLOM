@@ -1,4 +1,5 @@
 import { DefaultClient } from '../utils/client'
+import { GetAccessToken } from './user'
 
 export class Dish {
     id: number
@@ -31,8 +32,9 @@ export class AddDishObj {
     image: any
 }
 
-export async function AddDish(dish: AddDishObj, userId: string): Promise<boolean | void> {
-    return await DefaultClient.PostJSON(dishesEndpoint, dish, DefaultClient.UserAuthHeader(userId)).
+export async function AddDish(dish: AddDishObj): Promise<boolean | void> {
+    const accessToken = await GetAccessToken();
+    return await DefaultClient.PostJSON(dishesEndpoint, dish, DefaultClient.UserBearerAuthHeader(accessToken)).
         then(resp => resp.ok).
         catch(reason => alert(reason))
 }

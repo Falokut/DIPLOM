@@ -49,8 +49,10 @@ func Locator(
 	secret := repository.NewSecret(cfg.App.AdminSecret)
 	adminEvents := events.NewAdminEvents(tgBot)
 	userService := service.NewUser(userRepo, secret, adminEvents)
-	userContr := controller.NewUser(userService)
 	userBotContr := bcontroller.NewUser(userService)
+
+	authService := service.NewAuth(cfg.Auth, cfg.Bot.Token, userRepo)
+	authController := controller.NewAuth(authService)
 
 	imagesRepo := repository.NewImage(imagesCli, cfg.Images.BaseImagePath)
 	dishRepo := repository.NewDish(dbCli)
@@ -61,7 +63,7 @@ func Locator(
 	dishesCategoriesService := service.NewDishesCategories(dishesCategoriesRepo)
 	dishesCategoriesContrl := controller.NewDishesCategories(dishesCategoriesService)
 
-	authMiddleware := routes.NewAuthMiddleware(userRepo)
+	authMiddleware := routes.NewAuthMiddleware(cfg.Auth.Access.Secret)
 	orderRepo := repository.NewOrder(dbCli)
 	paymentBot := bot.NewPaymentBot(cfg.Bot.PaymentToken, tgBot, orderRepo)
 	telegramWorkerService := telegram_payment.NewWorker(paymentBot)
@@ -84,9 +86,9 @@ func Locator(
 	orderService := service.NewOrder(paymentService, orderRepo, dishRepo)
 	orderControl := controller.NewOrder(orderService)
 	hrouter := routes.Router{
+		Auth:             authController,
 		Dish:             dishContrl,
 		DishesCategories: dishesCategoriesContrl,
-		User:             userContr,
 		Order:            orderControl,
 	}
 	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo, orderRepo)

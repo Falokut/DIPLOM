@@ -1,14 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { GetCart, ProcessOrder, SetDishCount } from "../../client/cart";
+  import { ClearCart, GetCart, SetDishCount } from "../../client/cart";
+  import { ProcessOrder } from "../../client/order";
   import { GetDishes } from "../../client/dish";
   import CartItem from "./cart_item.svelte";
-  import {
-    initMainButton,
-    initBackButton,
-    retrieveLaunchParams,
-  } from "@telegram-apps/sdk";
-  const { initData } = retrieveLaunchParams();
+  import { initMainButton, initBackButton } from "@telegram-apps/sdk";
   import { navigate } from "svelte-routing";
   import { FormatPriceDefault } from "../../utils/format_price";
   import TextAreaInput from "../components/text_area_input.svelte";
@@ -60,11 +56,13 @@
     mainButton.enable();
     removeMainButtonListFn = mainButton.on("click", async () => {
       mainButton.disable();
-      let result = await ProcessOrder(initData.user.id, wishes);
+      const items = GetCart();
+      let result = await ProcessOrder(items,wishes);
       mainButton.enable();
       if (!result) {
         return;
       }
+      ClearCart()
       navigate("/", { replace: true });
     });
 

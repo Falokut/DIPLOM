@@ -3,7 +3,6 @@
   import DishPreview from "./dish_preview.svelte";
   import { GetAllDishesCategories } from "../../client/dishes_categories";
   import { AddDish } from "../../client/dish";
-  import { retrieveLaunchParams } from "@telegram-apps/sdk";
   import { ToBase64 } from "../../utils/base64";
   import { navigate } from "svelte-routing";
 
@@ -12,11 +11,7 @@
   import NumInput from "../components/num_input.svelte";
   import ImageInput from "../components/image_input.svelte";
   import MultiSelectInput from "../components/multi_select_input.svelte";
-  import { GetUserIdByTelegramId } from "../../client/user";
   import TextAreaInput from "../components/text_area_input.svelte";
-
-  const { initData } = retrieveLaunchParams();
-  const notAllowed = initData === undefined || initData.user === undefined;
 
   let dish = {
     name: "",
@@ -69,10 +64,6 @@
 
   async function addDish() {
     mainButton.disable();
-    let userId = await GetUserIdByTelegramId(initData.user.id);
-    if (userId.length == 0) {
-      return;
-    }
     let req = {
       name: dish.name,
       description: dish.description,
@@ -84,7 +75,7 @@
       await ToBase64(image).then((data) => (req.image = data));
     }
 
-    let ok = await AddDish(req, userId);
+    let ok = await AddDish(req);
     if (ok) {
       window.location.reload();
       return;

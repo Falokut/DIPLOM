@@ -1,4 +1,5 @@
 import { DefaultClient } from '../utils/client'
+import { GetAccessToken } from './user'
 
 export class DishCategory {
     id: number
@@ -21,29 +22,32 @@ export async function GetDishCategoriesById(categoryId: number): Promise<DishCat
         then(response => response.json()).catch(reason => alert(reason))
 }
 
-export async function AddDishCategory(userId: string, name: string): Promise<DishCategory> {
+export async function AddDishCategory(name: string): Promise<DishCategory> {
+    let accessToken = await GetAccessToken();
     return await DefaultClient.PostJSON(dishesCategoriesEndpoint,
         {
             name: name,
         },
-        DefaultClient.UserAuthHeader(userId),
+        DefaultClient.UserBearerAuthHeader(accessToken),
     ).then(response => response.json()).catch(reason => alert(reason))
 }
 
-export async function RenameDishesCategory(userId: string, newName: string, categoryId: number) {
+export async function RenameDishesCategory(newName: string, categoryId: number) {
+    let accessToken = await GetAccessToken();
     return await DefaultClient.PostJSON(dishesCategoriesEndpoint + '/' + categoryId,
         {
             name: newName,
         },
-        DefaultClient.UserAuthHeader(userId),
+        DefaultClient.UserBearerAuthHeader(accessToken),
     ).catch(reason => alert(reason))
 }
 
-export async function DeleteDishesCategory(userId: string, categoryId: number) {
+export async function DeleteDishesCategory(categoryId: number) {
+    let accessToken = await GetAccessToken();
     return await DefaultClient.Delete(
         dishesCategoriesEndpoint + '/' + categoryId,
         null,
-        DefaultClient.UserAuthHeader(userId)
+        DefaultClient.UserBearerAuthHeader(accessToken)
     ).catch(reason => alert(reason))
 }
 

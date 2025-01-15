@@ -42,7 +42,7 @@ func (m AdminAuth) AdminAuth(next router.HandlerFunc) router.HandlerFunc {
 		}
 		if !isAdmin {
 			return nil, apierrors.NewBusinessError(
-				domain.ErrCodeUserNotAdmin,
+				domain.ErrCodeForbidden,
 				domain.ErrUserOperationForbidden.Error(),
 				domain.ErrUserOperationForbidden,
 			)

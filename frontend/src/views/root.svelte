@@ -1,10 +1,10 @@
 <script>
   import { navigate } from "svelte-routing";
-  import { UserIsAdmin } from "../client/user";
+  import { IsUserAdmin } from "../client/user";
   import { onMount } from "svelte";
 
   onMount(async () => {
-    let isAdmin = await UserIsAdmin();
+    let isAdmin = await IsUserAdmin();
     if (isAdmin) {
       navigate("/admin");
     } else {
