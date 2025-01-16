@@ -1,6 +1,11 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { ClearCart, GetCart, SetDishCount } from "../../client/cart";
+  import {
+    ClearCart,
+    ObjectFromCart,
+    GetCart,
+    SetDishCount,
+  } from "../../client/cart";
   import { ProcessOrder } from "../../client/order";
   import { GetDishes } from "../../client/dish";
   import CartItem from "./cart_item.svelte";
@@ -56,13 +61,13 @@
     mainButton.enable();
     removeMainButtonListFn = mainButton.on("click", async () => {
       mainButton.disable();
-      const items = GetCart();
-      let result = await ProcessOrder(items,wishes);
+      const items = ObjectFromCart(GetCart());
+      let result = await ProcessOrder(items, wishes);
       mainButton.enable();
       if (!result) {
         return;
       }
-      ClearCart()
+      ClearCart();
       navigate("/", { replace: true });
     });
 

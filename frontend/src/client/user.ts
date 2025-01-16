@@ -7,13 +7,13 @@ const refreshTokenKey = "refresh";
 const refreshTokenExpiresAtKey = "refresh_expire_at";
 
 export async function GetAccessToken() {
-    const accessToken = sessionStorage.getItem(accessTokenKey);
-    const accessTokenExpiresAt = sessionStorage.getItem(accessTokenExpiresAtKey)
+    const accessToken = localStorage.getItem(accessTokenKey);
+    const accessTokenExpiresAt = localStorage.getItem(accessTokenExpiresAtKey)
     if (accessToken && accessTokenExpiresAt && new Date(accessTokenExpiresAt) > new Date()) {
         return accessToken;
     }
-    const refreshToken = sessionStorage.getItem(refreshTokenKey);
-    const refreshTokenExpiresAt = sessionStorage.getItem(refreshTokenExpiresAtKey)
+    const refreshToken = localStorage.getItem(refreshTokenKey);
+    const refreshTokenExpiresAt = localStorage.getItem(refreshTokenExpiresAtKey)
     if (refreshToken && refreshTokenExpiresAt && new Date(refreshTokenExpiresAt) > new Date()) {
         return refreshAccessToken(refreshToken);
     }

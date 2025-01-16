@@ -54,10 +54,10 @@ export function SetDishCount(dishId: number, count: number) {
 }
 
 function saveCart(cart: Map<string, number>) {
-    localStorage.setItem(cartKey, JSON.stringify(objectFromCart(cart)));
+    localStorage.setItem(cartKey, JSON.stringify(ObjectFromCart(cart)));
 }
 
-function objectFromCart(cart: Map<string, number>): any {
+export function ObjectFromCart(cart: Map<string, number>): any {
     let obj = new Object();
     cart.forEach((v, k) => {
         obj[k.toString()] = v;
