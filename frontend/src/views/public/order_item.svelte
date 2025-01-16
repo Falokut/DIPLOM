@@ -91,13 +91,12 @@
   .order-total {
     display: flex;
     flex-direction: row;
-    margin: var(--container-padding-lr);
   }
   .order-items {
     background-color: var(--tg-theme-bg-color);
     border-radius: 8px;
     padding: 10px;
-    margin: var(--container-padding-lr);
+    margin: 5px;
     border: 2px solid var(--tg-theme-text-color);
     background-clip: padding-box;
   }
@@ -110,9 +109,6 @@
     text-align: start;
     font-weight: normal;
   }
-  .order-text {
-    margin-left: var(--container-padding-lr);
-  }
   .line {
     width: 100%;
     height: 1px;
@@ -123,7 +119,6 @@
     justify-content: center;
     background-color: transparent;
     border: 1px solid var(--tg-theme-text-color);
-    margin-right: var(--container-padding-lr);
     padding-top: 0;
     padding-bottom: 0;
     font-weight: normal;
@@ -139,11 +134,9 @@
     width: 100%;
   }
   .user-order-item .name-count {
-    padding-left: var(--container-padding-lr);
     text-align: left;
   }
   .user-order-item .total-price {
-    padding-right: var(--container-padding-lr);
     text-align: right;
   }
 </style>
