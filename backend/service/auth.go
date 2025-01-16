@@ -109,7 +109,7 @@ func (s Auth) RefreshAccessToken(ctx context.Context, refreshToken string) (*dom
 func (s Auth) HasAdminPrivileges(ctx context.Context, accessToken string) (*domain.HasAdminPrivilegesResponse, error) {
 	tokenValue, err := jwt.ParseToken(accessToken, s.cfg.Access.Secret)
 	if err != nil {
-		return nil, domain.DomainInvalidTokenError(err)
+		return nil, domain.DomainInvalidTokenError(err) //nolint:wrapcheck
 	}
 
 	return &domain.HasAdminPrivilegesResponse{
