@@ -1,5 +1,5 @@
 log:
-  level: DEBUG
+  level: debug
   console_output: true
 listen:
   port: 9999
