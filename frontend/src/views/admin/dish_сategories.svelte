@@ -7,7 +7,6 @@
   import DishCategory from "./dish_category.svelte";
   import AddDishCategory from "./add_dish_category.svelte";
 
-
   const backButtonRes = initBackButton();
   var backButton = backButtonRes[0];
   let categories = [];
@@ -30,12 +29,7 @@
 {#key categories}
   <div class="dish-categories">
     {#each categories as category}
-      <DishCategory
-        {category}
-        remove={() => {
-          remove(category.id);
-        }}
-      ></DishCategory>
+      <DishCategory {category} {remove} />
     {/each}
   </div>
 {/key}

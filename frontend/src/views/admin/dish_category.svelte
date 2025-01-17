@@ -9,7 +9,7 @@
     name: "",
     id: 0,
   };
-  export let remove = function () {};
+  export let remove = function (id) {};
 
   async function updateDishName() {
     RenameDishesCategory(category.name, category.id);
@@ -17,7 +17,7 @@
 
   async function deleteCategory() {
     await DeleteDishesCategory(category.id);
-    remove();
+    remove(category.id);
   }
 </script>
 
