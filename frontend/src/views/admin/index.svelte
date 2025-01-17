@@ -12,15 +12,15 @@
     },
     {
       url: "/dishes",
-      text: "заказать",
+      text: "Заказать",
     },
     {
       url: "/admin/dishes/categories",
-      text: "категории",
+      text: "Категории",
     },
     {
       url: "/orders",
-      text: "мои заказы",
+      text: "Мои заказы",
     },
   ];
 </script>

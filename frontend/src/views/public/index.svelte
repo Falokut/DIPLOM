@@ -4,11 +4,11 @@
   let buttons = [
     {
       url: "/orders",
-      text: "мои заказы",
+      text: "Мои заказы",
     },
     {
       url: "/dishes",
-      text: "заказать",
+      text: "Заказать",
     },
   ];
 </script>
