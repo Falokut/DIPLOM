@@ -3,6 +3,7 @@ import RootIndex from './views/root.svelte'
 import AdminIndex from './views/admin/index.svelte'
 import AdminAddDishesIndex from './views/admin/add_dishes.svelte'
 import AdminDishesCategoriesIndex from './views/admin/dish_сategories.svelte'
+import AdminDeleteDishesIndex from './views/admin/delete_dishes.svelte'
 // ----------
 import PublicIndex from './views/public/index.svelte'
 import DishesIndex from './views/public/dishes.svelte'
@@ -37,6 +38,10 @@ const routes = [
     {
         name: "/admin/dishes/add",
         component: AdminAddDishesIndex,
+    },
+    {
+        name: "/admin/dishes/delete",
+        component: AdminDeleteDishesIndex,
     },
     {
         name: "/admin/dishes/categories",

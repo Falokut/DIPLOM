@@ -6,6 +6,10 @@
       url: "/admin/dishes/add",
       text: "Добавить блюдо",
     },
+        {
+      url: "/admin/dishes/delete",
+      text: "Удалить блюдо",
+    },
     {
       url: "/dishes",
       text: "заказать",

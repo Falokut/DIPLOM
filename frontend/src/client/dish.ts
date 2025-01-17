@@ -38,3 +38,12 @@ export async function AddDish(dish: AddDishObj): Promise<boolean | void> {
         then(resp => resp.ok).
         catch(reason => alert(reason))
 }
+
+export async function DeleteDish(id: any) {
+    const accessToken = await GetAccessToken();
+    return await DefaultClient.Delete(dishesEndpoint + "/delete/" + id, null, DefaultClient.UserBearerAuthHeader(accessToken)).
+        then(resp => resp.ok).
+        catch(reason => alert(reason))
+}
+
+}
