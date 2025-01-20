@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/Falokut/go-kit/http/apierrors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
+	"maps"
 )
 
 type DishesRepo interface {
@@ -110,7 +111,7 @@ func (s Order) ProcessOrder(ctx context.Context, userId string, req domain.Proce
 		}
 	}
 
-	dishes, err := s.dishesRepo.GetDishesByIds(ctx, maps.Keys(items))
+	dishes, err := s.dishesRepo.GetDishesByIds(ctx, slices.Collect(maps.Keys(items)))
 	if err != nil {
 		return "", errors.WithMessage(err, "get prices")
 	}
