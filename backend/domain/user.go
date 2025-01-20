@@ -12,14 +12,6 @@ type RegisterUser struct {
 	Telegram *Telegram `json:",omitempty"`
 }
 
-type GetUserIdByTelegramIdRequest struct {
-	TelegramId int64 `validate:"required"`
-}
-
-type IsUserAdminRequest struct {
-	UserId string `validate:"required,uuid"`
-}
-
 type Telegram struct {
 	ChatId int64
 	UserId int64
@@ -28,12 +20,4 @@ type Telegram struct {
 type AddAdminSecretRequest struct {
 	ChatId int64
 	Secret string
-}
-
-type GetUserIdByTelegramIdResponse struct {
-	UserId string
-}
-
-type IsUserAdminResponse struct {
-	IsAdmin bool
 }
