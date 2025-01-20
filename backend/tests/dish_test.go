@@ -8,11 +8,13 @@ import (
 	"dish_as_a_service/conf"
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
+	"dish_as_a_service/jwt"
 	"dish_as_a_service/repository"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/Falokut/go-kit/client/db"
 	"github.com/Falokut/go-kit/http/client"
@@ -26,7 +28,9 @@ import (
 
 type DishSuite struct {
 	suite.Suite
-	test *test.Test
+	test             *test.Test
+	adminAccessToken string
+	userAccessToken  string
 
 	db       *dbt.TestDb
 	dishRepo repository.Dish
@@ -48,6 +52,7 @@ func (t *DishSuite) SetupTest() {
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
 	tgBot, _ := telegramt.TestBot(test)
+	cfg := getConfig()
 	locatorCfg, err := assembly.Locator(
 		context.Background(),
 		test.Logger(),
@@ -55,12 +60,51 @@ func (t *DishSuite) SetupTest() {
 		nil,
 		tgBot,
 		bgjobCli,
-		getConfig(),
+		cfg,
 	)
 	t.Require().NoError(err)
+
 	server := httptest.NewServer(locatorCfg.HttpRouter)
 	t.cli = client.NewWithClient(server.Client())
 	t.cli.GlobalRequestConfig().BaseUrl = fmt.Sprintf("http://%s", server.Listener.Addr())
+
+	var userId string
+	err = t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@admin",
+		"test",
+		true,
+	)
+	t.Require().NoError(err)
+
+	jwtGen, err := jwt.GenerateToken(cfg.Auth.Access.Secret, cfg.Auth.Access.TTL, entity.TokenUserInfo{
+		UserId:   userId,
+		RoleName: domain.AdminType,
+	})
+	t.Require().NoError(err)
+
+	t.adminAccessToken = domain.BearerToken + " " + jwtGen.Token
+
+	err = t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@user",
+		"test",
+		false,
+	)
+	t.Require().NoError(err)
+
+	jwtGen, err = jwt.GenerateToken(cfg.Auth.Access.Secret, cfg.Auth.Access.TTL, entity.TokenUserInfo{
+		UserId:   userId,
+		RoleName: domain.UserType,
+	})
+	t.Require().NoError(err)
+
+	t.userAccessToken = domain.BearerToken + " " + jwtGen.Token
+
 	t.T().Cleanup(func() {
 		server.Close()
 	})
@@ -91,7 +135,7 @@ func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 	dish := dishes[0]
 	t.Require().Equal(addDish.Name, dish.Name)
 	t.Require().Equal(addDish.Description, dish.Description)
-	t.Require().Equal("my_image_path/dish/"+addDish.ImageId, dish.Url)
+	t.Require().Equal("my_image_path/image-dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Горячее", "Холодное"}, dish.Categories)
 }
 
@@ -132,7 +176,7 @@ func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	t.Require().EqualValues(2, dish.Id)
 	t.Require().Equal(addDish.Name, dish.Name)
 	t.Require().Equal(addDish.Description, dish.Description)
-	t.Require().Equal("my_image_path/dish/"+addDish.ImageId, dish.Url)
+	t.Require().Equal("my_image_path/image-dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Напиток", "Холодное"}, dish.Categories)
 }
 
@@ -174,7 +218,7 @@ func (t *DishSuite) Test_List_ByCategories_HappyPath() {
 	t.Require().EqualValues(2, dish.Id)
 	t.Require().Equal(addDish.Name, dish.Name)
 	t.Require().Equal(addDish.Description, dish.Description)
-	t.Require().Equal("my_image_path/dish/"+addDish.ImageId, dish.Url)
+	t.Require().Equal("my_image_path/image-dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Острое", "Холодное"}, dish.Categories)
 
 	_, err = t.cli.Get("/dishes").
@@ -189,26 +233,14 @@ func (t *DishSuite) Test_List_ByCategories_HappyPath() {
 }
 
 func (t *DishSuite) Test_AddDish_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	req := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
 		Price:       900,
 		Categories:  []int32{5, 6},
 	}
-	t.Require().NoError(err)
-	_, err = t.cli.Post("/dishes").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		Do(context.Background())
 	t.Require().NoError(err)
@@ -227,26 +259,14 @@ func (t *DishSuite) Test_AddDish_HappyPath() {
 
 // nolint:funlen
 func (t *DishSuite) Test_EditDish_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	req := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
 		Price:       900,
 		Categories:  []int32{5, 6},
 	}
-	t.Require().NoError(err)
-	_, err = t.cli.Post("/dishes").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		StatusCodeToError().
 		Do(context.Background())
@@ -270,8 +290,9 @@ func (t *DishSuite) Test_EditDish_HappyPath() {
 		Categories:  []int32{1, 2, 5},
 	}
 	t.Require().NoError(err)
+
 	_, err = t.cli.Post(fmt.Sprintf("dishes/edit/%d", ids[0])).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(editDishReq).
 		StatusCodeToError().
 		Do(context.Background())
@@ -294,26 +315,14 @@ func (t *DishSuite) Test_EditDish_HappyPath() {
 }
 
 func (t *DishSuite) Test_DeleteDish_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	req := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
 		Price:       900,
 		Categories:  []int32{5, 6},
 	}
-	t.Require().NoError(err)
-	_, err = t.cli.Post("/dishes").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		Do(context.Background())
 	t.Require().NoError(err)
@@ -330,7 +339,7 @@ func (t *DishSuite) Test_DeleteDish_HappyPath() {
 	t.Require().ElementsMatch(req.Categories, categoriesIds)
 
 	err = t.cli.Delete(fmt.Sprintf("dishes/delete/%d", ids[0])).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		DoWithoutResponse(context.Background())
 	t.Require().NoError(err)
 
@@ -344,17 +353,6 @@ func (t *DishSuite) Test_DeleteDish_HappyPath() {
 }
 
 func (t *DishSuite) Test_AddDish_Forbidden() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		false,
-	)
-	t.Require().NoError(err)
-
 	addDishReq := domain.AddDishRequest{
 		Name:        fake.It[string](),
 		Description: fake.It[string](),
@@ -364,7 +362,7 @@ func (t *DishSuite) Test_AddDish_Forbidden() {
 
 	resp, err := t.cli.Post("/dishes").
 		JsonRequestBody(addDishReq).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.userAccessToken).
 		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().Equal(http.StatusForbidden, resp.StatusCode())
@@ -383,6 +381,12 @@ func getConfig() conf.LocalConfig {
 		},
 		App: conf.App{
 			AdminSecret: "secret",
+		},
+		Auth: conf.Auth{
+			Access: conf.JwtToken{
+				TTL:    time.Hour,
+				Secret: fake.It[string](),
+			},
 		},
 	}
 }

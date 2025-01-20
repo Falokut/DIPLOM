@@ -6,6 +6,7 @@ import (
 	"dish_as_a_service/assembly"
 	"dish_as_a_service/domain"
 	"dish_as_a_service/entity"
+	"dish_as_a_service/jwt"
 	"dish_as_a_service/repository"
 	"fmt"
 	"net/http"
@@ -26,7 +27,8 @@ import (
 
 type DishCategoriesSuite struct {
 	suite.Suite
-	test *test.Test
+	test             *test.Test
+	adminAccessToken string
 
 	db                 *dbt.TestDb
 	dishCategoriesRepo repository.DishesCategories
@@ -50,6 +52,8 @@ func (t *DishCategoriesSuite) SetupTest() {
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
 	bgjobCli := bgjob.NewClient(bgjobDb)
 	tgBot, _ := telegramt.TestBot(test)
+	cfg := getConfig()
+
 	locatorCfg, err := assembly.Locator(
 		context.Background(),
 		test.Logger(),
@@ -57,12 +61,32 @@ func (t *DishCategoriesSuite) SetupTest() {
 		nil,
 		tgBot,
 		bgjobCli,
-		getConfig(),
+		cfg,
 	)
 	t.Require().NoError(err)
 	server := httptest.NewServer(locatorCfg.HttpRouter)
 	t.cli = client.NewWithClient(server.Client())
 	t.cli.GlobalRequestConfig().BaseUrl = fmt.Sprintf("http://%s", server.Listener.Addr())
+
+	var userId string
+	err = t.db.Get(&userId,
+		`INSERT INTO users(username,name,admin)
+		VALUES($1,$2,$3)
+		RETURNING id;`,
+		"@test",
+		"test",
+		true,
+	)
+	t.Require().NoError(err)
+
+	jwtGen, err := jwt.GenerateToken(cfg.Auth.Access.Secret, cfg.Auth.Access.TTL, entity.TokenUserInfo{
+		UserId:   userId,
+		RoleName: domain.AdminType,
+	})
+	t.Require().NoError(err)
+
+	t.adminAccessToken = domain.BearerToken + " " + jwtGen.Token
+
 	t.T().Cleanup(func() {
 		server.Close()
 	})
@@ -150,22 +174,11 @@ func (t *DishCategoriesSuite) Test_GetCategory_HappyPath() {
 }
 
 func (t *DishCategoriesSuite) Test_AddCategory_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	categoryName := fake.It[string]()
 	req := domain.AddCategoryRequest{Name: categoryName}
 	var resp domain.AddCategoryResponse
-	_, err = t.cli.Post("/dishes/categories").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes/categories").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
@@ -177,22 +190,11 @@ func (t *DishCategoriesSuite) Test_AddCategory_HappyPath() {
 }
 
 func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	categoryName := fake.It[string]()
 	req := domain.AddCategoryRequest{Name: categoryName}
 	var resp domain.AddCategoryResponse
-	_, err = t.cli.Post("/dishes/categories").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes/categories").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
@@ -203,7 +205,7 @@ func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
 	t.Require().Equal(categoryName, category.Name)
 
 	err = t.cli.Delete(fmt.Sprintf("dishes/categories/%d", resp.Id)).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		DoWithoutResponse(context.Background())
 	t.Require().NoError(err)
 
@@ -223,22 +225,11 @@ func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
 }
 
 func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	categoryName := fake.It[string]()
 	req := domain.AddCategoryRequest{Name: categoryName}
 	var resp domain.AddCategoryResponse
-	_, err = t.cli.Post("/dishes/categories").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes/categories").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
@@ -251,7 +242,7 @@ func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
 	newCategoryName := fake.It[string]()
 	renameReq := domain.RenameCategoryRequest{Name: newCategoryName}
 	_, err = t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(renameReq).
 		StatusCodeToError().
 		Do(context.Background())
@@ -263,22 +254,11 @@ func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
 }
 
 func (t *DishCategoriesSuite) Test_RenameCategory_Conflict() {
-	var userId string
-	err := t.db.Get(&userId,
-		`INSERT INTO users(username,name,admin)
-		VALUES($1,$2,$3)
-		RETURNING id;`,
-		"@test",
-		"test",
-		true,
-	)
-	t.Require().NoError(err)
-
 	categoryName := fake.It[string]()
 	req := domain.AddCategoryRequest{Name: categoryName}
 	var resp domain.AddCategoryResponse
-	_, err = t.cli.Post("/dishes/categories").
-		Header("X-User-Id", userId).
+	_, err := t.cli.Post("/dishes/categories").
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
@@ -290,14 +270,14 @@ func (t *DishCategoriesSuite) Test_RenameCategory_Conflict() {
 
 	categoryName = fake.It[string]()
 	_, err = t.cli.Post("/dishes/categories").
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(domain.AddCategoryRequest{Name: categoryName}).
 		Do(context.Background())
 	t.Require().NoError(err)
 
 	renameReq := domain.RenameCategoryRequest{Name: categoryName}
 	renameResp, err := t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
-		Header("X-User-Id", userId).
+		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(renameReq).
 		Do(context.Background())
 	t.Require().NoError(err)

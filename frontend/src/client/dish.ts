@@ -46,4 +46,9 @@ export async function DeleteDish(id: any) {
         catch(reason => alert(reason))
 }
 
+export async function EditDish(dish: Dish) {
+    const accessToken = await GetAccessToken();
+    return await DefaultClient.PostJSON(dishesEndpoint + "/edit/" + dish.id, dish, DefaultClient.UserBearerAuthHeader(accessToken)).
+        then(resp => resp.ok).
+        catch(reason => alert(reason))
 }
