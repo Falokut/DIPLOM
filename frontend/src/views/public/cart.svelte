@@ -84,24 +84,26 @@
   });
 </script>
 
-<div class="page-container">
+<main>
   <h3>Корзина:</h3>
-  <div class="line"></div>
-  <div class="cart">
+  <horizontalSpacer class="primary-bg small" />
+  <section class="cart">
     {#each dishes as dish}
       <CartItem bind:dish />
     {/each}
-    <div class="line"></div>
-  </div>
-  <div class="total-block">
+    <horizontalSpacer class="primary-bg small" />
+  </section>
+
+  <section class="total-block">
     <div class="total-text">Итого:</div>
     <div class="total-price">{FormatPriceDefault(total)}</div>
-  </div>
-  <div class="spacer"></div>
-  <div class="wishes">
+  </section>
+
+  <horizontalSpacer class="primary-bg y-5" />
+  <section class="wishes">
     <TextAreaInput bind:value={wishes} label={"пожелания"} />
-  </div>
-</div>
+  </section>
+</main>
 
 <style>
   .cart {
@@ -109,26 +111,11 @@
     width: 100%;
   }
 
-  .page-container {
-    width: 90vw;
-    border-radius: 5px;
-  }
-
-  .spacer {
-    height: 5vh;
-    background-color: var(--tg-theme-bg-color);
-  }
-
   .wishes {
     width: 100%;
     border: 0px;
     resize: none;
     outline: none;
-  }
-
-  .line {
-    height: 5px;
-    background-color: var(--tg-theme-bg-color);
   }
 
   .total-block {

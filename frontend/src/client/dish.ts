@@ -26,7 +26,6 @@ export async function GetDishes(dishIds?: any[], limit?, offset?, categoriesIds?
 
 export class AddDishObj {
     name: string
-    description: string
     price: number
     categories: number[]
     image: any

@@ -6,7 +6,7 @@
       url: "/admin/dishes/add",
       text: "Добавить блюдо",
     },
-        {
+    {
       url: "/admin/dishes/delete",
       text: "Удалить блюдо",
     },
@@ -25,13 +25,13 @@
   ];
 </script>
 
-<div class="grid grid-cols-1 medium-grid-cols-3 grid-gap">
+<main class="grid grid-cols-1 medium-grid-cols-3 grid-gap">
   {#each buttons as item}
     <button class="btn" on:click={() => navigate(item.url, { replace: true })}
-      >{item.text}</button
-    >
+      >{item.text}
+    </button>
   {/each}
-</div>
+</main>
 
 <style>
   .grid {

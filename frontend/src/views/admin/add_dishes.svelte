@@ -6,19 +6,16 @@
   import { ToBase64 } from "../../utils/base64";
   import { navigate } from "svelte-routing";
 
-  import { initMainButton, initBackButton } from "@telegram-apps/sdk";
+  import { initMainButton, initBackButton, number } from "@telegram-apps/sdk";
   import TextInput from "../components/text_input.svelte";
-  import NumInput from "../components/num_input.svelte";
   import ImageInput from "../components/image_input.svelte";
   import MultiSelectInput from "../components/multi_select_input.svelte";
-  import TextAreaInput from "../components/text_area_input.svelte";
 
   let dish = {
     name: "",
     categories: [],
-    description: "",
     url: "",
-    price: 0,
+    price: "",
   };
 
   var selectedCategories = [];
@@ -64,11 +61,14 @@
 
   async function addDish() {
     mainButton.disable();
+    let price = Math.ceil(Number(dish.price) * 100) / 100;
+    if (price < 80) {
+      return;
+    }
     let req = {
       name: dish.name,
-      description: dish.description,
       categories: dish.categories,
-      price: dish.price,
+      price: price * 100,
       image: null,
     };
     if (image != null && image.size > 0) {
@@ -84,58 +84,52 @@
   }
 </script>
 
-<h3>Добавить блюдо</h3>
-<div class="add_dish_container">
-  <TextInput bind:value={dish.name} label={"название:"} />
-  <NumInput bind:value={dish.price} label={"цена:"} min={8000} max={1000000} />
-  <ImageInput
-    bind:outputUrl={dish.url}
-    label={"картинка:"}
-    bind:file={image}
-    uploadLabel={"выбрать файл"}
-  />
-  {#await loadDishesCategories() then dishCategories}
-    <MultiSelectInput
-      options={dishCategories}
-      label={"категории:"}
-      bind:selected={selectedCategories}
-      onchange={() => {
-        dish.categories = [];
-        selectedCategories.forEach((name) => {
-          let id = dishesCategoriesMap.get(name);
-          dish.categories.push(id);
-        });
-      }}
+<main>
+  <h3>Добавить блюдо</h3>
+  <section class="add-dish-container">
+    <TextInput bind:value={dish.name} label={"название:"} />
+    <TextInput bind:value={dish.price} label={"цена:"} />
+    <ImageInput
+      bind:outputUrl={dish.url}
+      label={"картинка:"}
+      bind:file={image}
+      uploadLabel={"выбрать файл"}
     />
-  {/await}
-  <TextAreaInput bind:value={dish.description} label={"описание"} />
-</div>
-
-{#if dish.url != "" && dish.name != "" && dish.price > 0}
-  <h3>Предосмотр:</h3>
-  <div class="dish_preview">
-    <DishPreview bind:dish />
-  </div>
-{/if}
+    {#await loadDishesCategories() then dishCategories}
+      <MultiSelectInput
+        options={dishCategories}
+        label={"категории:"}
+        bind:selected={selectedCategories}
+        onchange={() => {
+          dish.categories = [];
+          selectedCategories.forEach((name) => {
+            let id = dishesCategoriesMap.get(name);
+            dish.categories.push(id);
+          });
+        }}
+      />
+    {/await}
+  </section>
+  <horizontalSpacer class="primary-bg y-5" />
+  <section class="dish-preview">
+    {#if dish.url != "" && dish.name != "" && dish.price != ""}
+      <h3>Предосмотр:</h3>
+      <DishPreview bind:dish />
+    {/if}
+  </section>
+</main>
 
 <style>
-  .add_dish_container {
-    background-color: var(--tg-theme-secondary-bg-color);
-    display: grid;
-    grid-template-rows: 1fr;
-    grid-auto-flow: row;
-    gap: 1rem;
-    border-radius: 8px;
-    padding: 20px 10px 20px 10px;
-    width: 90vw;
+  .add-dish-container {
+    background-color: var(--secondary-bg-color);
+    display: flex;
+    flex-direction: column;
   }
 
-  .dish_preview {
-    height: 50vh;
-    width: 100%;
+  .dish-preview {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-top: 20px;
+    flex-direction: column;
   }
 </style>

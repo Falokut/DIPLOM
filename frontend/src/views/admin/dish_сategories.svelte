@@ -26,29 +26,31 @@
   }
 </script>
 
-{#key categories}
-  <div class="dish-categories">
-    {#each categories as category}
-      <DishCategory {category} {remove} />
-    {/each}
-  </div>
-{/key}
+<main>
+  {#key categories}
+    <div class="dish-categories">
+      {#each categories as category}
+        <DishCategory {category} {remove} />
+      {/each}
+    </div>
+  {/key}
 
-<div class="add-dish-categories">
-  <AddDishCategory
-    OnAdd={(category) => {
-      categories.push(category);
-      categories = categories;
-    }}
-  />
-</div>
+  <div class="add-dish-categories">
+    <AddDishCategory
+      OnAdd={(category) => {
+        categories.push(category);
+        categories = categories;
+      }}
+    />
+  </div>
+</main>
 
 <style>
   .dish-categories {
     display: flex;
     flex-flow: column;
     width: 90vw;
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg-color);
     border-radius: 5px;
     padding: 10px;
   }

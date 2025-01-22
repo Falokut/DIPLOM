@@ -42,15 +42,16 @@ export async function auth(): Promise<string> {
     return jsonResp.accessToken.token;
 }
 
+const refreshAccessTokenEndpoint = "/auth/refresh_access_token"
 async function refreshAccessToken(refreshToken: string): Promise<string> {
-    let resp = await DefaultClient.Get(authByTelegramEndpoint, null, DefaultClient.UserBearerAuthHeader(refreshToken))
+    let resp = await DefaultClient.Get(refreshAccessTokenEndpoint, null, DefaultClient.UserBearerAuthHeader(refreshToken))
     if (!resp.ok) {
         return ""
     }
     const jsonResp = await resp.json();
-    localStorage.setItem(accessTokenKey, jsonResp.accessToken.token);
-    localStorage.setItem(accessTokenExpiresAtKey, jsonResp.accessToken.expiresAt);
-    return jsonResp.accessToken.token;
+    localStorage.setItem(accessTokenKey, jsonResp.token);
+    localStorage.setItem(accessTokenExpiresAtKey, jsonResp.expiresAt);
+    return jsonResp.token;
 }
 
 const isUserAdminEndpoint = '/has_admin_privileges'

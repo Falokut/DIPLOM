@@ -34,22 +34,23 @@
 </script>
 
 <div class="order-box">
-  <div class="order-info">
+  <section class="order-info">
     <div class="order-text">
       Заказ от {orderDate}
     </div>
-    <div class="spacer"></div>
+    <horizontalSpacer class="primary-bg small" />
     <button
       class="show-hide-order-items-button"
       on:click={() => {
         showOrderItems = !showOrderItems;
       }}>v</button
     >
-  </div>
-  <div>
+  </section>
+
+  <section>
     {#if showOrderItems}
       <div
-        class="order-items"
+        class="order-items primary-bg"
         transition:slide={{
           delay: 250,
           duration: 300,
@@ -60,44 +61,43 @@
         {#each order.items as item}
           <div class="user-order-item">
             <div class="name-count">{item.name} x {item.count}</div>
-            <div class="spacer"></div>
+            <horizontalSpacer class="primary-bg small" />
             <div class="total-price">
               {FormatPriceDefault(item.totalPrice)}
             </div>
           </div>
         {/each}
-        <div class="line"></div>
+        <horizontalSpacer class="primary-bg small" />
         <div class="order-total">
           {#if orderStatus != ""}
             <div>Статус:</div>
-            <div class="spacer"></div>
+            <horizontalSpacer class="primary-bg small" />
             <div class="order-text">{orderStatus}</div>
-            <div class="spacer"></div>
+            <horizontalSpacer class="primary-bg small" />
           {/if}
           <div class="user-order-total">Итого:</div>
-          <div class="spacer"></div>
+          <horizontalSpacer class="primary-bg small" />
           <div>{FormatPriceDefault(order.total)}</div>
         </div>
       </div>
     {/if}
-  </div>
+  </section>
 </div>
 
 <style>
   .order-box {
     padding: 10px;
-    --order-item-border-color: var(--tg-theme-text-color) * 0.1;
+    --order-item-border-color: var(--primary-bg-color) * 0.1;
   }
   .order-total {
     display: flex;
     flex-direction: row;
   }
   .order-items {
-    background-color: var(--tg-theme-bg-color);
     border-radius: 8px;
     padding: 10px;
     margin: 5px;
-    border: 2px solid var(--tg-theme-text-color);
+    border: 2px solid var(--primary-text-color);
     background-clip: padding-box;
   }
   .order-info {
@@ -108,11 +108,6 @@
     width: 100%;
     text-align: start;
     font-weight: normal;
-  }
-  .line {
-    width: 100%;
-    height: 1px;
-    background-color: var(--tg-theme-text-color);
   }
   .show-hide-order-items-button {
     display: inline-flex;

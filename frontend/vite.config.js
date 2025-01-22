@@ -5,9 +5,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 export default defineConfig({
   plugins: [svelte()],
   server: {
-    host: true,
+    host: "0.0.0.0",
     port: 8080,
     strictPort: true,
+    allowedHosts: true,
     cors: false,
     hmr: false,
   },

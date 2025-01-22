@@ -1,21 +1,22 @@
 <script lang="ts">
   import PreviewImage from "../components/preview_image.svelte";
+  import { FormatPriceDefault } from "../../utils/format_price";
 
   export let dish = {
     url: "",
     name: "",
     categories: [],
-    price: 0,
+    price: "",
   };
 </script>
 
-<div class="dish">
+<section class="dish">
   <div class="dish-image">
     <PreviewImage bind:url={dish.url} bind:alt={dish.name} />
   </div>
   <div class="dish-caption">{dish.name}</div>
-  <div class="dish-caption">{(dish.price / 100).toFixed(2) + "₽"}</div>
-</div>
+  <div class="dish-caption">{FormatPriceDefault(Number(dish.price))}</div>
+</section>
 
 <style>
   .dish-caption {
@@ -27,7 +28,7 @@
   }
 
   .dish {
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg-color);
     border-radius: 25%;
     text-align: center;
     display: flex;

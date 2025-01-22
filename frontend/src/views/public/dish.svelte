@@ -99,7 +99,7 @@
   }
 
   .dish {
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg-color);
     border-radius: 5%;
     padding: 10px;
     margin: 5px;

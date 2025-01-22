@@ -4,21 +4,19 @@
   import { initBackButton } from "@telegram-apps/sdk";
 
   import Dish from "./dish.svelte";
-  import { GetDishes } from "../../client/dish";
   import { LoadCart } from "../../client/cart";
-  import { GetDishesCategories } from "../../client/dishes_categories";
+  import DishesGrid from "../components/dishes_grid.svelte";
+  import CategoriesList from "../components/categories_list.svelte";
 
-  let dishes = [];
-  let categories = [];
   let mainButton = LoadCart();
   let removeListFn;
   let removeBackButtonListFn;
   const backButtonRes = initBackButton();
   var backButton = backButtonRes[0];
+
+  let dishesGrid: DishesGrid;
+  let categoriesList: CategoriesList;
   onMount(async () => {
-    dishes = await GetDishes(null, pageLimit, currentOffset, null);
-    currentOffset += dishes.length;
-    categories = await GetDishesCategories();
     removeListFn = mainButton.on("click", () => {
       navigate("/cart");
       mainButton.hide();
@@ -26,77 +24,22 @@
     removeBackButtonListFn = backButton.on("click", () => {
       navigate("/", { replace: true });
     });
+    categoriesList.$on(
+      categoriesList.CategoryChangedEventType,
+      (e: CustomEvent) => {
+        dishesGrid.selectedCategoryUpdated(e.detail.selectedCategory);
+      }
+    );
   });
 
   onDestroy(() => {
     removeListFn();
     removeBackButtonListFn();
   });
-
-  const pageLimit = 30;
-  let currentOffset = 0;
-  let selectedCategory = -1;
-  async function selectCategory(categoryId) {
-    if (categoryId == selectedCategory) {
-      currentOffset = 0;
-      dishes = await GetDishes(null, pageLimit, currentOffset, null);
-      currentOffset += dishes.length;
-      selectedCategory = -1;
-    } else {
-      currentOffset = 0;
-      dishes = await GetDishes(null, pageLimit, currentOffset, categoryId);
-      currentOffset += dishes.length;
-      selectedCategory = categoryId;
-    }
-  }
 </script>
 
-<div class="dish">
-  <div class="dishes-categories">
-    {#each categories as category}
-      <button
-        class={category.id == selectedCategory
-          ? "selected-category-button"
-          : "category-button"}
-        on:click={() => selectCategory(category.id)}>{category.name}</button
-      >
-    {/each}
-  </div>
-  <div class="spacer"></div>
-  <div class="dishes-container">
-    {#each dishes as dish}
-      <Dish bind:dish />
-    {/each}
-  </div>
-</div>
-
-<style>
-  .dishes-container {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-  
-  .dishes-categories {
-    display: inline-flex;
-    justify-content: center;
-    overflow-x: scroll;
-    scroll-snap-type: proximity;
-    scroll-behavior: smooth;
-    width: 95vw;
-  }
-  .category-button {
-    font-size: medium;
-    margin: 5px;
-    white-space: nowrap;
-  }
-  .selected-category-button {
-    background-color: var(--tg-theme-hint-color) !important;
-    margin: 5px;
-    white-space: nowrap;
-  }
-  .spacer {
-    height: 5vh;
-  }
-</style>
+<main class="dish">
+  <CategoriesList bind:this={categoriesList} />
+  <horizontalSpacer class="primary-bg y-5" />
+  <DishesGrid pageLimit={10} DishComponent={Dish} bind:this={dishesGrid} />
+</main>

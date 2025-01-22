@@ -21,13 +21,13 @@
   }
 </script>
 
-<div class="category-container">
+<section class="category-container">
   <TextInput bind:value={category.name} />
   <div class="buttons-container">
     <button class="apply-button" on:click={() => updateDishName()}>✓</button>
     <button class="remove-button" on:click={() => deleteCategory()}>✕</button>
   </div>
-</div>
+</section>
 
 <style>
   .category-container {

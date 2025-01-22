@@ -3,7 +3,6 @@
     AddDishCategory,
     DishCategory,
   } from "../../client/dishes_categories";
-  import { retrieveLaunchParams } from "@telegram-apps/sdk";
 
   export let categoryName = "";
   export let OnAdd = (category: DishCategory) => {};
@@ -23,14 +22,14 @@
   }
 </script>
 
-<div class="category">
+<section class="category">
   <input
     class="input-area category-input"
     type="text"
     bind:value={categoryName}
   />
   <button class="add-button" on:click={addDishCategory}>Добавить</button>
-</div>
+</section>
 
 <style>
   .category {
@@ -39,7 +38,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg-color);
     align-items: center;
     margin: auto;
     padding: 5px;
@@ -51,7 +50,7 @@
 
   .add-button {
     display: block;
-    border: 1px solid var(--tg-theme-bg-color);
+    border: 1px solid var(--primary-bg-color);
     margin-right: 5px;
   }
 </style>

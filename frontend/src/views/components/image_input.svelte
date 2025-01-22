@@ -15,20 +15,20 @@
   }
 
   function openFileInput() {
-    document.getElementById("file_upload_input").click();
+    document.getElementById("file-upload-input").click();
   }
 </script>
 
 <div class="input-div">
   <div class="input-label">{label}</div>
   <div class="input-box">
-    <button class="file_upload_button" on:click={openFileInput}
-      >{uploadLabel}</button
-    >
+    <button class="file-upload-button btn" on:click={openFileInput}
+      >{uploadLabel}
+    </button>
   </div>
   <input
     type="file"
-    id="file_upload_input"
+    id="file-upload-input"
     style="display:none;"
     bind:files
     on:change={fileInput}
@@ -37,9 +37,7 @@
 </div>
 
 <style>
-  .file_upload_button {
-    font-size: medium;
-    text-align: center;
+  .file-upload-button {
     width: 100%;
   }
 </style>

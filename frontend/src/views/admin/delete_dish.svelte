@@ -5,17 +5,17 @@
   import { FormatPriceDefault } from "../../utils/format_price";
 
   export let dish: Dish;
-  export let deletedFunc = function (id: any) {};
-
+  export let onRemove = (dishId) => {};
   async function deleteDish() {
     let confirmed = confirm("Удалить " + dish.name + "?");
     if (!confirmed) return;
+
     await DeleteDish(dish.id);
-    deletedFunc(dish.id);
+    onRemove(dish.id);
   }
 </script>
 
-<div class="dish">
+<section class="dish">
   <div class="dish-img-count">
     <div class="dish-image">
       <PreviewImage bind:url={dish.url} bind:alt={dish.name} />
@@ -31,7 +31,7 @@
       }}>удалить</button
     >
   </div>
-</div>
+</section>
 
 <style>
   .dish-image {
@@ -45,7 +45,7 @@
   }
 
   .dish {
-    background-color: var(--tg-theme-secondary-bg-color);
+    background-color: var(--secondary-bg-color);
     border-radius: 5%;
     padding: 10px;
     margin: 5px;
