@@ -42,8 +42,9 @@ export async function auth(): Promise<string> {
     return jsonResp.accessToken.token;
 }
 
+const refreshAccessTokenEndpoint = "/auth/refresh_access_token"
 async function refreshAccessToken(refreshToken: string): Promise<string> {
-    let resp = await DefaultClient.Get(authByTelegramEndpoint, null, DefaultClient.UserBearerAuthHeader(refreshToken))
+    let resp = await DefaultClient.Get(refreshAccessTokenEndpoint, null, DefaultClient.UserBearerAuthHeader(refreshToken))
     if (!resp.ok) {
         return ""
     }
