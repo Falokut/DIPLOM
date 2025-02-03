@@ -6,7 +6,7 @@
     url: "",
     name: "",
     categories: [],
-    price: "",
+    price: 0,
   };
 </script>
 
@@ -15,7 +15,7 @@
     <PreviewImage bind:url={dish.url} bind:alt={dish.name} />
   </div>
   <div class="dish-caption">{dish.name}</div>
-  <div class="dish-caption">{FormatPriceDefault(Number(dish.price))}</div>
+  <div class="dish-caption">{FormatPriceDefault(dish.price)}</div>
 </section>
 
 <style>

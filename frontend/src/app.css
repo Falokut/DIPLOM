@@ -60,13 +60,15 @@ main {
 
 section {
   padding: 10px;
-  width: 100%;
+}
+
+select {
+  background-color: var(--primary-bg-color);
+  color: var(--primary-text-color);
 }
 
 horizontalSpacer {
-  width: 100%;
   flex-grow: 1;
-
   .y-5 {
     height: 5vh;
   }
@@ -102,8 +104,8 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
-  white-space: nowrap;
-
+  transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+  
   .selected {
     color: var(--secondary-text-color)
   }

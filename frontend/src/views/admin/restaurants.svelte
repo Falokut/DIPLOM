@@ -27,6 +27,7 @@
 </script>
 
 <main>
+  <h3>Рестораны</h3>
   {#key restaurants}
     <div class="restaurants">
       {#each restaurants as restaurant}

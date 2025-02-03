@@ -16,9 +16,19 @@
     name: "",
     categories: [],
     url: "",
-    price: "",
+    price: 0,
     restaurantId: 0,
   };
+
+  function isDishValid(dish): boolean {
+    return (
+      dish.name != "" &&
+      dish.url != "" &&
+      dish.price > 80 &&
+      dish.restaurantId > 0
+    );
+  }
+  let dishPrice = "";
 
   var selectedCategories = [];
   var image: File = null;
@@ -62,15 +72,14 @@
   }
 
   async function addDish() {
-    mainButton.disable();
-    let price = Math.ceil(Number(dish.price) * 100) / 100;
-    if (price < 80) {
+    if (!isDishValid(dish)) {
       return;
     }
+    mainButton.disable();
     let req = {
       name: dish.name,
       categories: dish.categories,
-      price: price * 100,
+      price: dish.price,
       image: null,
       restaurantId: dish.restaurantId,
     };
@@ -91,7 +100,13 @@
   <h3>Добавить блюдо</h3>
   <section class="add-dish-container">
     <TextInput bind:value={dish.name} label={"название:"} />
-    <TextInput bind:value={dish.price} label={"цена:"} />
+    <TextInput
+      bind:value={dishPrice}
+      label={"цена:"}
+      onChange={() => {
+        dish.price = Math.ceil(Number(dishPrice) * 100);
+      }}
+    />
     <ImageInput
       bind:outputUrl={dish.url}
       label={"картинка:"}
@@ -127,7 +142,7 @@
   </section>
   <horizontalSpacer class="primary-bg y-5" />
   <section class="dish-preview">
-    {#if dish.url != "" && dish.name != "" && dish.price != ""}
+    {#if isDishValid(dish)}
       <h3>Предосмотр:</h3>
       <DishPreview bind:dish />
     {/if}
@@ -139,6 +154,7 @@
     background-color: var(--secondary-bg-color);
     display: flex;
     flex-direction: column;
+    gap: 1rem;
   }
 
   .dish-preview {

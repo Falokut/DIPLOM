@@ -36,7 +36,7 @@
 <style>
   .dishes-categories {
     display: flex;
-    width: 100%;
+    gap: 1rem;
     overflow-x: scroll;
   }
 </style>

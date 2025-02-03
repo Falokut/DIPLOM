@@ -86,7 +86,6 @@
 
 <style>
   .order-box {
-    padding: 10px;
     --order-item-border-color: var(--primary-bg-color) * 0.1;
   }
   .order-total {
@@ -101,11 +100,9 @@
     background-clip: padding-box;
   }
   .order-info {
-    padding-top: 3px;
     display: flex;
     flex-direction: row;
     align-items: baseline;
-    width: 100%;
     text-align: start;
     font-weight: normal;
   }
@@ -125,8 +122,6 @@
     display: inline-flex;
     flex-direction: row;
     flex-wrap: nowrap;
-
-    width: 100%;
   }
   .user-order-item .name-count {
     text-align: left;

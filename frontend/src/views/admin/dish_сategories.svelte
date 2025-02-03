@@ -27,6 +27,7 @@
 </script>
 
 <main>
+  <h3>Категории блюд</h3>
   {#key categories}
     <div class="dish-categories">
       {#each categories as category}

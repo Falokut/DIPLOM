@@ -27,6 +27,7 @@
   let wishes = "";
 
   onMount(async () => {
+    mainButton.show()
     let cartItems = GetCart();
     let dishesIds = [];
     cartItems.forEach((v, k) => {
@@ -112,7 +113,6 @@
   }
 
   .wishes {
-    width: 100%;
     border: 0px;
     resize: none;
     outline: none;
