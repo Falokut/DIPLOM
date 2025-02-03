@@ -21,6 +21,8 @@ var (
 	ErrInvalidDishCount           = errors.New("невалидное значение количества блюд")
 	ErrDishCategoryNotFound       = errors.New("категория не найдена")
 	ErrDishCategoryConflict       = errors.New("категория с таким именем уже существует")
+	ErrRestaurantNotFound         = errors.New("ресторан не найдена")
+	ErrRestaurantConflict         = errors.New("ресторан с таким названием уже существует")
 	ErrInvalidToken               = errors.New("невалидный токен")
 	ErrForbidden                  = errors.New("доступ запрещён")
 	ErrOrderingForbidden          = errors.New("оформление заказов приостановлено")
@@ -34,6 +36,8 @@ const (
 	ErrCodeDishNotFound         = 601
 	ErrCodeDishCategoryNotFound = 602
 	ErrCodeDishCategoryConflict = 603
+	ErrCodeRestaurantNotFound   = 602
+	ErrCodeRestaurantConflict   = 603
 	ErrCodeUserNotFound         = 604
 	ErrCodeUserAlreadyExists    = 605
 	ErrCodeWrongSecret          = 606

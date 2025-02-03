@@ -97,14 +97,17 @@ func (r Order) GetOrder(ctx context.Context, orderId string) (*entity.Order, err
 			'dishId', oi.dish_id,
 			'count', oi.count,
 			'price', oi.price,
+			'restaurantName', r.name,
 			'name', d.name
 			)
 		) AS items
     FROM orders o
     JOIN order_items oi ON o.id = oi.order_id
 	JOIN dish d ON oi.dish_id = d.id
+	JOIN restaurants AS r ON d.restaurant_id = r.id
     WHERE o.id = $1
 	GROUP BY o.id`
+
 	var order entity.Order
 	err := r.cli.GetContext(ctx, &order, query, orderId)
 	switch {

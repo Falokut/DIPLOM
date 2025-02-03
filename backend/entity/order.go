@@ -30,10 +30,11 @@ type PaymentPayload struct {
 }
 
 type OrderItem struct {
-	DishId int32
-	Count  int32
-	Price  int32
-	Name   string
+	DishId         int32
+	RestaurantName string
+	Count          int32
+	Price          int32
+	Name           string
 }
 
 type Order struct {

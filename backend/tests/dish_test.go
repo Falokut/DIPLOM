@@ -1,4 +1,4 @@
-// //nolint:noctx
+// //nolint:noctx,funlen
 package tests_test
 
 import (
@@ -31,6 +31,9 @@ type DishSuite struct {
 	test             *test.Test
 	adminAccessToken string
 	userAccessToken  string
+
+	restaurantName string
+	restaurantId   int32
 
 	db       *dbt.TestDb
 	dishRepo repository.Dish
@@ -105,6 +108,25 @@ func (t *DishSuite) SetupTest() {
 
 	t.userAccessToken = domain.BearerToken + " " + jwtGen.Token
 
+	dishCategoriesRepo := repository.NewDishesCategories(t.db.Client)
+	for _, category := range []string{
+		"Горячее",
+		"Холодное",
+		"Напиток",
+		"Острое",
+		"Рыба",
+		"Вегетарианское",
+		"Мясное",
+	} {
+		_, err := dishCategoriesRepo.AddCategory(context.Background(), category)
+		t.Require().NoError(err)
+	}
+
+	dishRestaurantsRepo := repository.NewRestaurant(t.db.Client)
+	t.restaurantName = fake.It[string]()
+	t.restaurantId, err = dishRestaurantsRepo.AddRestaurant(context.Background(), t.restaurantName)
+	t.Require().NoError(err)
+
 	t.T().Cleanup(func() {
 		server.Close()
 	})
@@ -112,11 +134,12 @@ func (t *DishSuite) SetupTest() {
 
 func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 	var addDish = entity.AddDishRequest{
-		Name:        fake.It[string](),
-		Description: fake.It[string](),
-		Price:       350,
-		ImageId:     fake.It[string](),
-		Categories:  []int32{1, 2},
+		Name:         fake.It[string](),
+		Description:  fake.It[string](),
+		Price:        350,
+		ImageId:      fake.It[string](),
+		Categories:   []int32{1, 2},
+		RestaurantId: t.restaurantId,
 	}
 	err := t.dishRepo.AddDish(context.Background(), &addDish)
 	t.Require().NoError(err)
@@ -137,26 +160,29 @@ func (t *DishSuite) Test_List_ByLimitOffset_HappyPath() {
 	t.Require().Equal(addDish.Description, dish.Description)
 	t.Require().Equal("my_image_path/image-dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Горячее", "Холодное"}, dish.Categories)
+	t.Require().Equal(t.restaurantName, dish.RestaurantName)
 }
 
 // nolint:dupl
 func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	var addDish = entity.AddDishRequest{
-		Name:        fake.It[string](),
-		Description: fake.It[string](),
-		Price:       350,
-		ImageId:     fake.It[string](),
-		Categories:  []int32{1, 2},
+		Name:         fake.It[string](),
+		Description:  fake.It[string](),
+		Price:        350,
+		ImageId:      fake.It[string](),
+		Categories:   []int32{1, 2},
+		RestaurantId: t.restaurantId,
 	}
 	err := t.dishRepo.AddDish(context.Background(), &addDish)
 	t.Require().NoError(err)
 
 	addDish = entity.AddDishRequest{
-		Name:        fake.It[string](),
-		Description: fake.It[string](),
-		Price:       544,
-		ImageId:     fake.It[string](),
-		Categories:  []int32{3, 2},
+		Name:         fake.It[string](),
+		Description:  fake.It[string](),
+		Price:        544,
+		ImageId:      fake.It[string](),
+		Categories:   []int32{3, 2},
+		RestaurantId: t.restaurantId,
 	}
 	err = t.dishRepo.AddDish(context.Background(), &addDish)
 	t.Require().NoError(err)
@@ -178,6 +204,7 @@ func (t *DishSuite) Test_List_ByIds_HappyPath() {
 	t.Require().Equal(addDish.Description, dish.Description)
 	t.Require().Equal("my_image_path/image-dish/"+addDish.ImageId, dish.Url)
 	t.Require().ElementsMatch([]string{"Напиток", "Холодное"}, dish.Categories)
+	t.Require().Equal(t.restaurantName, dish.RestaurantName)
 }
 
 // nolint:dupl

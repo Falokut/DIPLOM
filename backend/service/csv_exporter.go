@@ -46,8 +46,8 @@ func (s CsvExporter) GetOrdersCsv(ctx context.Context, start time.Time, end time
 		orderItems := make([]string, 0, len(order.Items))
 		for _, item := range order.Items {
 			orderItems = append(orderItems,
-				fmt.Sprintf("блюдо: '%s' количество: %d итоговая цена: %s",
-					item.Name, item.Count, formatMoney(item.Price),
+				fmt.Sprintf("блюдо: '%s' количество: %d итоговая цена: %s ресторан: %s",
+					item.Name, item.Count, formatMoney(item.Price), item.RestaurantName,
 				),
 			)
 		}

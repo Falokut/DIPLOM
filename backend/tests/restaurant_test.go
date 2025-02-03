@@ -25,28 +25,28 @@ import (
 	"github.com/txix-open/bgjob"
 )
 
-type DishCategoriesSuite struct {
+type RestaurantSuite struct {
 	suite.Suite
 	test             *test.Test
 	adminAccessToken string
 
-	db                 *dbt.TestDb
-	dishCategoriesRepo repository.DishesCategories
-	dishRepo           repository.Dish
-	cli                *client.Client
+	db              *dbt.TestDb
+	restaurantsRepo repository.Restaurant
+	dishRepo        repository.Dish
+	cli             *client.Client
 }
 
-func TestDishCategories(t *testing.T) {
+func TestDishRestaurants(t *testing.T) {
 	t.Parallel()
-	suite.Run(t, &DishCategoriesSuite{})
+	suite.Run(t, &RestaurantSuite{})
 }
 
 // nolint:dupl
-func (t *DishCategoriesSuite) SetupTest() {
+func (t *RestaurantSuite) SetupTest() {
 	test, _ := test.New(t.T())
 	t.test = test
 	t.db = dbt.New(test, db.WithMigrationRunner("../migrations", test.Logger()))
-	t.dishCategoriesRepo = repository.NewDishesCategories(t.db.Client)
+	t.restaurantsRepo = repository.NewRestaurant(t.db.Client)
 	t.dishRepo = repository.NewDish(t.db.Client)
 
 	bgjobDb := bgjob.NewPgStore(t.db.Client.DB.DB)
@@ -88,15 +88,10 @@ func (t *DishCategoriesSuite) SetupTest() {
 	t.adminAccessToken = domain.BearerToken + " " + jwtGen.Token
 
 	for _, category := range []string{
-		"Горячее",
-		"Холодное",
-		"Напиток",
-		"Острое",
-		"Рыба",
-		"Вегетарианское",
-		"Мясное",
+		"Додо",
+		"Вкусно",
 	} {
-		_, err := t.dishCategoriesRepo.AddCategory(context.Background(), category)
+		_, err := t.restaurantsRepo.AddRestaurant(context.Background(), category)
 		t.Require().NoError(err)
 	}
 
@@ -105,124 +100,71 @@ func (t *DishCategoriesSuite) SetupTest() {
 	})
 }
 
-func (t *DishCategoriesSuite) Test_GetAllCategories_HappyPath() {
-	var categories []domain.DishCategory
-	_, err := t.cli.Get("/dishes/all_categories").
-		JsonResponseBody(&categories).
+func (t *RestaurantSuite) Test_GetAllRestaurants_HappyPath() {
+	var restaurants []domain.Restaurant
+	_, err := t.cli.Get("/restaurants").
+		JsonResponseBody(&restaurants).
 		Do(context.Background())
 	t.Require().NoError(err)
-	t.Require().ElementsMatch([]domain.DishCategory{
+	t.Require().ElementsMatch([]domain.Restaurant{
 		{
 			Id:   1,
-			Name: "Горячее",
+			Name: "Додо",
 		},
 		{
 			Id:   2,
-			Name: "Холодное",
+			Name: "Вкусно",
 		},
-		{
-			Id:   3,
-			Name: "Напиток",
-		},
-		{
-			Id:   4,
-			Name: "Острое",
-		},
-		{
-			Id:   5,
-			Name: "Рыба",
-		},
-		{
-			Id:   6,
-			Name: "Вегетарианское",
-		},
-		{
-			Id:   7,
-			Name: "Мясное",
-		},
-	}, categories)
+	}, restaurants)
 }
 
-func (t *DishCategoriesSuite) Test_GetDishesCategories_HappyPath() {
-	var categories []domain.DishCategory
-	_, err := t.cli.Get("/dishes/categories").
-		JsonResponseBody(&categories).
-		Do(context.Background())
-	t.Require().NoError(err)
-	t.Require().Empty(categories)
-
-	err = t.dishRepo.AddDish(context.Background(), &entity.AddDishRequest{
-		Name:        "dish",
-		Description: "desc",
-		ImageId:     "image_id",
-		Price:       1000,
-		Categories:  []int32{1, 2},
-	})
-	t.Require().NoError(err)
-
-	_, err = t.cli.Get("/dishes/categories").
-		JsonResponseBody(&categories).
-		Do(context.Background())
-	t.Require().NoError(err)
-	t.Require().ElementsMatch([]domain.DishCategory{
-		{
-			Id:   1,
-			Name: "Горячее",
-		},
-		{
-			Id:   2,
-			Name: "Холодное",
-		},
-	}, categories)
-}
-
-func (t *DishCategoriesSuite) Test_GetCategory_HappyPath() {
-	const categoryId = 3
-	var category domain.DishCategory
-	_, err := t.cli.Get(fmt.Sprintf("/dishes/categories/%d", categoryId)).
+func (t *RestaurantSuite) Test_GetRestaurant_HappyPath() {
+	const restaurantId = 2
+	var category domain.Restaurant
+	_, err := t.cli.Get(fmt.Sprintf("/restaurants/%d", restaurantId)).
 		JsonResponseBody(&category).
 		Do(context.Background())
 	t.Require().NoError(err)
-	t.Require().Equal(domain.DishCategory{Id: categoryId, Name: "Напиток"}, category)
+	t.Require().Equal(domain.Restaurant{Id: restaurantId, Name: "Вкусно"}, category)
 }
 
-func (t *DishCategoriesSuite) Test_AddCategory_HappyPath() {
+func (t *RestaurantSuite) Test_AddRestaurant_HappyPath() {
 	categoryName := fake.It[string]()
-	req := domain.AddCategoryRequest{Name: categoryName}
-	var resp domain.AddCategoryResponse
-	_, err := t.cli.Post("/dishes/categories").
+	req := domain.AddRestaurantRequest{Name: categoryName}
+	var resp domain.AddRestaurantResponse
+	_, err := t.cli.Post("/restaurants").
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	category, err := t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 }
 
-func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
+func (t *RestaurantSuite) Test_DeleteRestaurant_HappyPath() {
 	categoryName := fake.It[string]()
-	req := domain.AddCategoryRequest{Name: categoryName}
-	var resp domain.AddCategoryResponse
-	_, err := t.cli.Post("/dishes/categories").
+	req := domain.AddRestaurantRequest{Name: categoryName}
+	var resp domain.AddRestaurantResponse
+	_, err := t.cli.Post("/restaurants").
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	category, err := t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
-	err = t.cli.Delete(fmt.Sprintf("dishes/categories/%d", resp.Id)).
+	err = t.cli.Delete(fmt.Sprintf("restaurants/%d", resp.Id)).
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		DoWithoutResponse(context.Background())
 	t.Require().NoError(err)
 
-	getResp, err := t.cli.Get(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+	getResp, err := t.cli.Get(fmt.Sprintf("/restaurants/%d", resp.Id)).
 		Do(context.Background())
 	t.Require().NoError(err)
 	t.Require().NoError(err)
@@ -234,68 +176,68 @@ func (t *DishCategoriesSuite) Test_DeleteCategory_HappyPath() {
 	var errorResp apierrors.Error
 	err = json.Unmarshal(respBody, &errorResp)
 	t.Require().NoError(err)
-	t.Require().EqualValues(domain.ErrCodeDishCategoryNotFound, errorResp.ErrorCode)
+	t.Require().EqualValues(domain.ErrCodeRestaurantNotFound, errorResp.ErrorCode)
 }
 
-func (t *DishCategoriesSuite) Test_RenameCategory_HappyPath() {
+func (t *RestaurantSuite) Test_RenameRestaurant_HappyPath() {
 	categoryName := fake.It[string]()
-	req := domain.AddCategoryRequest{Name: categoryName}
-	var resp domain.AddCategoryResponse
-	_, err := t.cli.Post("/dishes/categories").
+	req := domain.AddRestaurantRequest{Name: categoryName}
+	var resp domain.AddRestaurantResponse
+	_, err := t.cli.Post("/restaurants").
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	category, err := t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
-	newCategoryName := fake.It[string]()
-	renameReq := domain.RenameCategoryRequest{Name: newCategoryName}
-	_, err = t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+	newRestaurantName := fake.It[string]()
+	renameReq := domain.RenameRestaurantRequest{Name: newRestaurantName}
+	_, err = t.cli.Post(fmt.Sprintf("/restaurants/%d", resp.Id)).
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(renameReq).
 		StatusCodeToError().
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	category, err = t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	category, err = t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
-	t.Require().Equal(newCategoryName, category.Name)
+	t.Require().Equal(newRestaurantName, category.Name)
 }
 
-func (t *DishCategoriesSuite) Test_RenameCategory_Conflict() {
+func (t *RestaurantSuite) Test_RenameRestaurant_Conflict() {
 	categoryName := fake.It[string]()
-	req := domain.AddCategoryRequest{Name: categoryName}
-	var resp domain.AddCategoryResponse
-	_, err := t.cli.Post("/dishes/categories").
+	req := domain.AddRestaurantRequest{Name: categoryName}
+	var resp domain.AddRestaurantResponse
+	_, err := t.cli.Post("/restaurants").
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(req).
 		JsonResponseBody(&resp).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	category, err := t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	category, err := t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().Equal(categoryName, category.Name)
 
 	categoryName = fake.It[string]()
-	_, err = t.cli.Post("/dishes/categories").
+	_, err = t.cli.Post("/restaurants").
 		Header(domain.AuthHeaderName, t.adminAccessToken).
-		JsonRequestBody(domain.AddCategoryRequest{Name: categoryName}).
+		JsonRequestBody(domain.AddRestaurantRequest{Name: categoryName}).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	renameReq := domain.RenameCategoryRequest{Name: categoryName}
-	renameResp, err := t.cli.Post(fmt.Sprintf("/dishes/categories/%d", resp.Id)).
+	renameReq := domain.RenameRestaurantRequest{Name: categoryName}
+	renameResp, err := t.cli.Post(fmt.Sprintf("/restaurants/%d", resp.Id)).
 		Header(domain.AuthHeaderName, t.adminAccessToken).
 		JsonRequestBody(renameReq).
 		Do(context.Background())
 	t.Require().NoError(err)
 
-	_, err = t.dishCategoriesRepo.GetCategory(context.Background(), resp.Id)
+	_, err = t.restaurantsRepo.GetRestaurant(context.Background(), resp.Id)
 	t.Require().NoError(err)
 	t.Require().EqualValues(http.StatusConflict, renameResp.StatusCode())
 }

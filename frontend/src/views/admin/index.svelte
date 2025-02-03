@@ -19,6 +19,10 @@
       text: "Категории",
     },
     {
+      url: "/admin/restaurants",
+      text: "рестораны",
+    },
+    {
       url: "/orders",
       text: "Мои заказы",
     },

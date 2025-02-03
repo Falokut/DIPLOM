@@ -54,6 +54,7 @@ func (s UserOrder) NotifySuccessPayment(ctx context.Context, order *entity.Order
 	for _, chatId := range adminIds {
 		message := telegram_bot.NewMessage(chatId, orderInfoString)
 		message.ReplyMarkup = markup
+		message.ParseMode = telegram_bot.ModeMarkdownV2
 		err = s.bot.Send(message)
 		if err != nil {
 			return errors.WithMessagef(err, "send notification to chat: %d", chatId)
@@ -129,15 +130,40 @@ func (s UserOrder) getOrderInfoString(order *entity.Order, user *entity.User) st
 	Telegram ник заказавшего: @%s
 	Стоимость заказа: %d.%d руб
 	Пожелания: '%s'
-	Дата заказа: %s
-	`
-	items := make([]string, len(order.Items))
-	for i, item := range order.Items {
-		items[i] = fmt.Sprintf("[%d] dish_id=%d %s x %d", i+1, item.DishId, item.Name, item.Count)
+	Дата заказа: %s`
+
+	itemsByRestaurant := make(map[string][]entity.OrderItem, len(order.Items))
+	for _, item := range order.Items {
+		itemsByRestaurant[item.RestaurantName] = append(itemsByRestaurant[item.RestaurantName], item)
 	}
-	return fmt.Sprintf(template,
-		order.Id, strings.Join(items, "\n"),
-		user.Name, user.Username, order.Total/100, order.Total%100, // nolint:mnd
-		order.Wishes, order.CreatedAt.Local().Format(time.DateTime), // nolint:gosmopolitan
+
+	dishTableHeader := `
+	|id|название блюда|количество в заказе|
+	|:-|:-|:-:|`
+	infoStr := make([]string, 0, len(order.Items)+len(itemsByRestaurant))
+	for restName, items := range itemsByRestaurant {
+		infoStr = append(infoStr, fmt.Sprintf("Название ресторана '%s':", restName), dishTableHeader)
+		for _, item := range items {
+			dishInfoStr := fmt.Sprintf("|%d|%s|%d|", item.DishId, item.Name, item.Count)
+			infoStr = append(infoStr, dishInfoStr)
+		}
+		infoStr = append(infoStr, "\n")
+	}
+
+	orderInfoStr := fmt.Sprintf(template,
+		order.Id, strings.Join(infoStr, "\n"),
+		user.Name,
+		user.Username,
+		order.Total/100, // nolint:mnd
+		order.Total%100, // nolint:mnd
+		order.Wishes,
+		order.CreatedAt.Local().Format(time.DateTime), // nolint:gosmopolitan
 	)
+
+	orderInfoStr = strings.ReplaceAll(orderInfoStr, "-", "\\-")
+	orderInfoStr = strings.ReplaceAll(orderInfoStr, "_", "\\_")
+	orderInfoStr = strings.ReplaceAll(orderInfoStr, "*", "\\*")
+	orderInfoStr = strings.ReplaceAll(orderInfoStr, "[", "\\[")
+	orderInfoStr = strings.ReplaceAll(orderInfoStr, "]", "\\]")
+	return orderInfoStr
 }

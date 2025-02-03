@@ -27,10 +27,26 @@ definitions:
       price:
         minimum: 800
         type: integer
+      restaurantId:
+        type: integer
+    required:
+    - name
+    - restaurantId
+    type: object
+  domain.AddRestaurantRequest:
+    properties:
+      name:
+        minLength: 1
+        type: string
     required:
     - name
     type: object
   domain.DeleteCategoryRequest:
+    properties:
+      id:
+        type: integer
+    type: object
+  domain.DeleteRestaurantRequest:
     properties:
       id:
         type: integer
@@ -49,6 +65,8 @@ definitions:
         type: string
       price:
         type: integer
+      restaurantName:
+        type: string
       url:
         type: string
     type: object
@@ -80,11 +98,19 @@ definitions:
       price:
         minimum: 800
         type: integer
+      restaurantId:
+        type: integer
     required:
     - id
     - name
+    - restaurantId
     type: object
   domain.GetDishesCategory:
+    properties:
+      id:
+        type: integer
+    type: object
+  domain.GetDishesRestaurant:
     properties:
       id:
         type: integer
@@ -151,6 +177,23 @@ definitions:
     required:
     - id
     - name
+    type: object
+  domain.RenameRestaurantRequest:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    required:
+    - id
+    - name
+    type: object
+  domain.Restaurant:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   domain.TokenResponse:
     properties:
@@ -677,6 +720,166 @@ paths:
       summary: Получить заказы
       tags:
       - order
+  /restaurants:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Restaurant'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Получить все рестораны
+      tags:
+      - restaurants
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AddRestaurantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Restaurant'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
+      summary: Создать ресторан
+      tags:
+      - restaurants
+  /restaurants/{id}:
+    delete:
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.DeleteRestaurantRequest'
+      - description: Идентификатор ресторана
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      security:
+      - Bearer: []
+      summary: Удалить ресторан
+      tags:
+      - restaurants
+    get:
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.GetDishesRestaurant'
+      - description: Идентификатор ресторана
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Restaurant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Получить ресторан
+      tags:
+      - restaurants
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Идентификатор ресторана
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RenameRestaurantRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Falokut_go-kit_http_apierrors.Error'
+      summary: Переименовать ресторан
+      tags:
+      - restaurants
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.

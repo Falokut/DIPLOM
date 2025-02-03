@@ -20,20 +20,10 @@ CREATE TABLE users_telegrams (
     telegram_id BIGINT NOT NULL UNIQUE
 );
 
-CREATE TABLE categories (
+CREATE TABLE restaurants (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
 );
-
-INSERT INTO
-    categories (name)
-VALUES ('Горячее'),
-    ('Холодное'),
-    ('Напиток'),
-    ('Острое'),
-    ('Рыба'),
-    ('Вегетарианское'),
-    ('Мясное');
 
 CREATE TABLE dish (
     id SERIAL PRIMARY KEY,
@@ -41,7 +31,13 @@ CREATE TABLE dish (
     description TEXT,
     -- Цена в минимальных единицах валюты, например, в копейках
     price INT NOT NULL CHECK (price > 0),
-    image_id TEXT
+    image_id TEXT,
+    restaurant_id INT REFERENCES restaurants (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE dish_categories (
@@ -49,6 +45,7 @@ CREATE TABLE dish_categories (
     category_id INT REFERENCES categories (id) ON DELETE CASCADE ON UPDATE CASCADE,
     PRIMARY KEY (dish_id, category_id)
 );
+
 
 CREATE TABLE orders (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid (),

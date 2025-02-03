@@ -100,11 +100,12 @@ func (s Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
 	}
 
 	err = s.repo.AddDish(ctx, &entity.AddDishRequest{
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Categories:  req.Categories,
-		ImageId:     imageId,
+		Name:         req.Name,
+		Description:  req.Description,
+		Price:        req.Price,
+		Categories:   req.Categories,
+		ImageId:      imageId,
+		RestaurantId: req.RestaurantId,
 	})
 	if err != nil {
 		if len(req.Image) > 0 {
@@ -155,12 +156,13 @@ func (s Dish) EditDish(ctx context.Context, req domain.EditDishRequest) error {
 		}
 	}
 	err = s.repo.EditDish(ctx, &entity.EditDishRequest{
-		Id:          req.Id,
-		Name:        req.Name,
-		Description: req.Description,
-		ImageId:     imageId,
-		Categories:  req.Categories,
-		Price:       req.Price,
+		Id:           req.Id,
+		Name:         req.Name,
+		Description:  req.Description,
+		ImageId:      imageId,
+		Categories:   req.Categories,
+		Price:        req.Price,
+		RestaurantId: req.RestaurantId,
 	})
 	if err != nil {
 		return errors.WithMessage(err, "edit dish")
@@ -200,11 +202,12 @@ func (s Dish) dishFromEntity(dish entity.Dish) domain.Dish {
 		categories = strings.Split(dish.Categories, ",")
 	}
 	return domain.Dish{
-		Id:          dish.Id,
-		Name:        dish.Name,
-		Description: dish.Description,
-		Price:       dish.Price,
-		Url:         s.imagesRepo.GetImageUrl(dishImageCategory, dish.ImageId),
-		Categories:  categories,
+		Id:             dish.Id,
+		Name:           dish.Name,
+		Description:    dish.Description,
+		Price:          dish.Price,
+		Url:            s.imagesRepo.GetImageUrl(dishImageCategory, dish.ImageId),
+		Categories:     categories,
+		RestaurantName: dish.RestaurantName,
 	}
 }

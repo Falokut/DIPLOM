@@ -14,6 +14,7 @@ type Router struct {
 	Dish             controller.Dish
 	DishesCategories controller.DishesCategories
 	Order            controller.Order
+	Restaurant       controller.Restaurant
 }
 
 func (r Router) InitRoutes(authMiddleware AuthMiddleware, wrapper endpoint.Wrapper) *router.Router {
@@ -98,6 +99,35 @@ func endpointDescriptors(r Router) []EndpointDescriptor {
 			IsAdmin: true,
 			Handler: r.DishesCategories.DeleteCategory,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/restaurants",
+			Handler: r.Restaurant.GetAllRestaurants,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/restaurants/:id",
+			Handler: r.Restaurant.GetRestaurant,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/restaurants",
+			IsAdmin: true,
+			Handler: r.Restaurant.AddRestaurant,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/restaurants/:id",
+			IsAdmin: true,
+			Handler: r.Restaurant.RenameDishesRestaurant,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/restaurants/:id",
+			IsAdmin: true,
+			Handler: r.Restaurant.DeleteRestaurant,
+		},
+
 		{
 			Method:       http.MethodPost,
 			Path:         "/orders",

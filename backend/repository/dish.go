@@ -23,12 +23,19 @@ func NewDish(cli *db.Client) Dish {
 
 func (r Dish) List(ctx context.Context, limit, offset int32) ([]entity.Dish, error) {
 	query := `
-	SELECT d.id, d.name, d.description, d.price, COALESCE(d.image_id,'') AS image_id,
-	array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
+	SELECT
+		d.id,
+		d.name,
+		d.description,
+	    d.price, 
+		COALESCE(d.image_id,'') AS image_id,
+		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories,
+		r.name AS restaurant_name 
 	FROM dish AS d
+	JOIN restaurants AS r ON d.restaurant_id = r.id
 	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
 	LEFT JOIN categories AS c ON f_c.category_id=c.id
-	GROUP BY d.id, d.name, d.description, d.price, d.image_id
+	GROUP BY d.id, d.name, d.description, d.price, d.image_id, r.name
 	ORDER BY d.id
 	LIMIT $1 OFFSET $2`
 	var res []entity.Dish
@@ -48,9 +55,9 @@ func (r Dish) AddDish(ctx context.Context, req *entity.AddDishRequest) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
-	query := `INSERT INTO dish(name, description, price, image_id) VALUES($1,$2,$3,$4) RETURNING id;`
+	query := `INSERT INTO dish(name, description, price, image_id, restaurant_id) VALUES($1,$2,$3,$4,$5) RETURNING id;`
 	var id int32
-	err = tx.GetContext(ctx, &id, query, req.Name, req.Description, req.Price, req.ImageId)
+	err = tx.GetContext(ctx, &id, query, req.Name, req.Description, req.Price, req.ImageId, req.RestaurantId)
 	if err != nil {
 		return errors.WithMessage(err, "insert dish")
 	}
@@ -76,12 +83,14 @@ func (r Dish) GetDishesByIds(ctx context.Context, ids []int32) ([]entity.Dish, e
 		d.description,
 		d.price,
 		COALESCE(d.image_id,'') AS image_id,
-		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
+		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories,
+		r.name AS restaurant_name 
 	FROM dish AS d
+	JOIN restaurants AS r ON d.restaurant_id = r.id
 	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
 	LEFT JOIN categories AS c ON f_c.category_id=c.id
 	WHERE d.id=ANY($1)
-	GROUP BY d.id,d.name,d.description,d.price,d.image_id
+	GROUP BY d.id, d.name, d.description, d.price, d.image_id, r.name
 	ORDER BY d.id;`
 
 	var res []entity.Dish
@@ -100,11 +109,13 @@ func (r Dish) GetDishesByCategories(ctx context.Context, limit int32, offset int
 		d.description,
 		d.price,
 		COALESCE(d.image_id,'') AS image_id,
-		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories
+		array_to_string(ARRAY_AGG(COALESCE(c.name,'')),',') AS categories,
+		r.name AS restaurant_name 
 	FROM dish AS d
+	JOIN restaurants AS r ON d.restaurant_id = r.id
 	LEFT JOIN dish_categories AS f_c ON d.id=f_c.dish_id
 	LEFT JOIN categories AS c ON f_c.category_id=c.id
-	GROUP BY d.id, d.name, d.description, d.price, d.image_id
+	GROUP BY d.id, d.name, d.description, d.price, d.image_id, r.name
 	HAVING array_agg(c.id) @> $1
 	ORDER BY d.id
 	LIMIT $2 OFFSET $3;`
@@ -126,11 +137,12 @@ func (r Dish) EditDish(ctx context.Context, req *entity.EditDishRequest) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
-	query := `UPDATE dish SET name=$1, description=$2, price=$3, image_id=$4 WHERE id=$5`
-	_, err = tx.ExecContext(ctx, query, req.Name, req.Description, req.Price, req.ImageId, req.Id)
+	query := `UPDATE dish SET name=$1, description=$2, price=$3, image_id=$4, restaurant_id=$5 WHERE id=$6`
+	_, err = tx.ExecContext(ctx, query, req.Name, req.Description, req.Price, req.ImageId, req.RestaurantId, req.Id)
 	if err != nil {
 		return errors.WithMessage(err, "update dish")
 	}
+
 	_, err = tx.ExecContext(ctx, "DELETE FROM dish_categories WHERE dish_id=$1", req.Id)
 	if err != nil {
 		return errors.WithMessage(err, "delete dish categories")

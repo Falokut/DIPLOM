@@ -52,16 +52,16 @@ func Locator(
 	userBotContr := bcontroller.NewUser(userService)
 
 	authService := service.NewAuth(cfg.Auth, cfg.Bot.Token, userRepo)
-	authController := controller.NewAuth(authService)
+	authCtrl := controller.NewAuth(authService)
 
 	imagesRepo := repository.NewImage(imagesCli, cfg.Images.BaseImagePath)
 	dishRepo := repository.NewDish(dbCli)
 	dishService := service.NewDish(dishRepo, imagesRepo, logger)
-	dishContrl := controller.NewDish(dishService)
+	dishCtrl := controller.NewDish(dishService)
 
 	dishesCategoriesRepo := repository.NewDishesCategories(dbCli)
 	dishesCategoriesService := service.NewDishesCategories(dishesCategoriesRepo)
-	dishesCategoriesContrl := controller.NewDishesCategories(dishesCategoriesService)
+	dishesCategoriesCtrl := controller.NewDishesCategories(dishesCategoriesService)
 
 	authMiddleware := routes.NewAuthMiddleware(cfg.Auth.Access.Secret)
 	orderRepo := repository.NewOrder(dbCli)
@@ -84,13 +84,20 @@ func Locator(
 	paymentService := payment.NewPayment(logger, paymentMethods, expirationService)
 
 	orderService := service.NewOrder(paymentService, orderRepo, dishRepo)
-	orderControl := controller.NewOrder(orderService)
+	orderCtrl := controller.NewOrder(orderService)
+
+	restaurantRepo := repository.NewRestaurant(dbCli)
+	restaurantService := service.NewRestaurant(restaurantRepo)
+	restaurantCtrl := controller.NewRestaurant(restaurantService)
+
 	hrouter := routes.Router{
-		Auth:             authController,
-		Dish:             dishContrl,
-		DishesCategories: dishesCategoriesContrl,
-		Order:            orderControl,
+		Auth:             authCtrl,
+		Dish:             dishCtrl,
+		DishesCategories: dishesCategoriesCtrl,
+		Order:            orderCtrl,
+		Restaurant:       restaurantCtrl,
 	}
+
 	orderUserService := bot_service.NewOrderUserService(tgBot, userRepo, orderRepo)
 	orderCsvExporter := service.NewCvsOrderExporter(orderRepo)
 	orderBotContrl := bcontroller.NewOrder(orderService, orderUserService, orderCsvExporter)

@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import DishPreview from "./dish_preview.svelte";
   import { GetAllDishesCategories } from "../../client/dishes_categories";
+  import { GetAllRestaurants } from "../../client/restaurant";
   import { AddDish } from "../../client/dish";
   import { ToBase64 } from "../../utils/base64";
   import { navigate } from "svelte-routing";
@@ -16,6 +17,7 @@
     categories: [],
     url: "",
     price: "",
+    restaurantId: 0,
   };
 
   var selectedCategories = [];
@@ -70,6 +72,7 @@
       categories: dish.categories,
       price: price * 100,
       image: null,
+      restaurantId: dish.restaurantId,
     };
     if (image != null && image.size > 0) {
       await ToBase64(image).then((data) => (req.image = data));
@@ -95,6 +98,18 @@
       bind:file={image}
       uploadLabel={"выбрать файл"}
     />
+    <div class="input-div">
+      <div class="input-label">Название ресторана:</div>
+      <select bind:value={dish.restaurantId}>
+        {#await GetAllRestaurants() then restaurants}
+          {#each restaurants as restaurant}
+            <option value={restaurant.id}>
+              {restaurant.name}
+            </option>
+          {/each}
+        {/await}
+      </select>
+    </div>
     {#await loadDishesCategories() then dishCategories}
       <MultiSelectInput
         options={dishCategories}

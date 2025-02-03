@@ -1,36 +1,33 @@
 <script lang="ts">
-  import {
-    RenameDishesCategory,
-    DeleteDishesCategory,
-  } from "../../client/dishes_categories";
+  import { RenameRestaurant, DeleteRestaurant } from "../../client/restaurant";
   import TextInput from "../components/text_input.svelte";
 
-  export let category = {
+  export let restaurant = {
     name: "",
     id: 0,
   };
   export let remove = function (id) {};
 
-  async function updateCategory() {
-    RenameDishesCategory(category.name, category.id);
+  async function updateRestaurant() {
+    RenameRestaurant(restaurant.name, restaurant.id);
   }
 
-  async function deleteCategory() {
-    await DeleteDishesCategory(category.id);
-    remove(category.id);
+  async function deleteRestaurant() {
+    await DeleteRestaurant(restaurant.id);
+    remove(restaurant.id);
   }
 </script>
 
-<section class="category-container">
-  <TextInput bind:value={category.name} />
+<section class="restaurant-container">
+  <TextInput bind:value={restaurant.name} />
   <div class="buttons-container">
-    <button class="apply-button" on:click={() => updateCategory()}>✓</button>
-    <button class="remove-button" on:click={() => deleteCategory()}>✕</button>
+    <button class="apply-button" on:click={() => updateRestaurant()}>✓</button>
+    <button class="remove-button" on:click={() => deleteRestaurant()}>✕</button>
   </div>
 </section>
 
 <style>
-  .category-container {
+  .restaurant-container {
     display: flex;
     flex-direction: row;
     align-items: center;
