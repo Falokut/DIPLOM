@@ -13,7 +13,7 @@
   ];
 </script>
 
-<main class="grid grid-cols-1 medium-grid-cols-3 grid-gap">
+<main class="btn-grid">
   {#each buttons as item}
     <button class="btn" on:click={() => navigate(item.url, { replace: true })}
       >{item.text}
@@ -22,11 +22,6 @@
 </main>
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
   .btn {
     width: 40vw;
     height: 20vh;

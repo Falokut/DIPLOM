@@ -60,20 +60,14 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 	if err != nil {
 		return nil, apierrors.NewBusinessError(domain.ErrCodeInvalidArgument, "invalid categories ids", err)
 	}
-	var dishes []domain.Dish
 	switch {
 	case len(ids) > 0:
-		dishes, err = c.service.GetByIds(ctx, ids)
+		return c.service.GetByIds(ctx, ids)
 	case len(categoriesIds) > 0:
-		dishes, err = c.service.GetByCategories(ctx, req.Limit, req.Offset, categoriesIds)
+		return c.service.GetByCategories(ctx, req.Limit, req.Offset, categoriesIds)
 	default:
-		dishes, err = c.service.List(ctx, req.Limit, req.Offset)
+		return c.service.List(ctx, req.Limit, req.Offset)
 	}
-
-	if err != nil {
-		return nil, err
-	}
-	return dishes, nil
 }
 
 // Add dish
@@ -90,11 +84,7 @@ func (c Dish) List(ctx context.Context, req domain.GetDishesRequest) ([]domain.D
 //	@Failure	500	{object}	apierrors.Error
 //	@Router		/dishes [POST]
 func (c Dish) AddDish(ctx context.Context, req domain.AddDishRequest) error {
-	err := c.service.AddDish(ctx, req)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.service.AddDish(ctx, req)
 }
 
 // Edit dish

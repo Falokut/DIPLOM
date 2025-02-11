@@ -69,6 +69,7 @@ select {
 
 horizontalSpacer {
   flex-grow: 1;
+
   .y-5 {
     height: 5vh;
   }
@@ -76,6 +77,18 @@ horizontalSpacer {
   .small {
     height: 5px;
   }
+}
+
+.btn-grid {
+  display: flex;
+  gap: 1rem;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
 }
 
 .primary-bg {
@@ -105,7 +118,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
   transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
-  
+
   .selected {
     color: var(--secondary-text-color)
   }
